@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://src/data/upgrade_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/wall.png" id="2_icon"]
+[ext_resource type="Resource" path="res://data/upgrades/meta/healer.tres" id="3_requires"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"moat"
+display_name = "Moat"
+icon = ExtResource("2_icon")
+description = "Spirits move {value} slower."
+scope = 0
+category = 1
+stat = &"enemy_slow"
+value_per_level = 0.1
+percent = true
+max_level = 3
+requires = ExtResource("3_requires")
+requires_level = 1
+tree_position = Vector2(10, 2)
+base_cost = 16
+cost_per_level = 16
+min_night = 1

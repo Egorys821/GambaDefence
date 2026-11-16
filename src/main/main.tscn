@@ -1,0 +1,51 @@
+[gd_scene format=3 uid="uid://bw2at8kb5ef3p"]
+
+[ext_resource type="Script" uid="uid://d216ebn8bhpw1" path="res://src/main/main.gd" id="1_main"]
+[ext_resource type="PackedScene" path="res://src/battle/battlefield.tscn" id="2_field"]
+[ext_resource type="PackedScene" uid="uid://csgof0qaeeoqu" path="res://src/ui/hud.tscn" id="3_hud"]
+[ext_resource type="PackedScene" path="res://src/day/day_phase.tscn" id="4_day"]
+[ext_resource type="PackedScene" path="res://src/ui/night_panel.tscn" id="5_night"]
+[ext_resource type="PackedScene" path="res://src/ui/message_screen.tscn" id="6_message"]
+[ext_resource type="PackedScene" path="res://src/meta/time_forge.tscn" id="7_forge"]
+[ext_resource type="PackedScene" path="res://src/meta/kingdom_map.tscn" id="8_map"]
+[ext_resource type="PackedScene" path="res://src/ui/settings_screen.tscn" id="9_settings"]
+[ext_resource type="PackedScene" path="res://src/meta/main_menu.tscn" id="10_menu"]
+[ext_resource type="PackedScene" path="res://src/meta/codex.tscn" id="11_codex"]
+
+[node name="Main" type="Node" unique_id=405593275]
+script = ExtResource("1_main")
+
+[node name="Battlefield" parent="." unique_id=1934639563 instance=ExtResource("2_field")]
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=1051985552]
+layer = 2
+
+[node name="NightPanel" parent="UI" unique_id=422770714 instance=ExtResource("5_night")]
+unique_name_in_owner = true
+
+[node name="Hud" parent="UI" unique_id=756491760 instance=ExtResource("3_hud")]
+unique_name_in_owner = true
+
+[node name="DayPhase" parent="UI" unique_id=1259737343 instance=ExtResource("4_day")]
+unique_name_in_owner = true
+
+[node name="MainMenu" parent="UI" instance=ExtResource("10_menu")]
+unique_name_in_owner = true
+
+[node name="Codex" parent="UI" instance=ExtResource("11_codex")]
+unique_name_in_owner = true
+
+[node name="TimeForge" parent="UI" instance=ExtResource("7_forge")]
+unique_name_in_owner = true
+
+[node name="KingdomMap" parent="UI" instance=ExtResource("8_map")]
+unique_name_in_owner = true
+
+[node name="Overlay" type="CanvasLayer" parent="."]
+layer = 5
+
+[node name="MessageScreen" parent="Overlay" unique_id=1622334604 instance=ExtResource("6_message")]
+unique_name_in_owner = true
+
+[node name="SettingsScreen" parent="Overlay" instance=ExtResource("9_settings")]
+unique_name_in_owner = true

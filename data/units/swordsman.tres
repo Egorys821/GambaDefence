@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="UnitData" format=3]
+
+[ext_resource type="Script" path="res://src/data/unit_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/units/swordsman.png" id="2_tex"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"swordsman"
+display_name = "Swordsman"
+texture = ExtResource("2_tex")
+sprite_scale = 1.0
+max_hp = 32.0
+damage = 6.0
+attack_range = 14.0
+attack_cooldown = 0.8
+move_speed = 34.0
+aggro_range = 70.0
+gold_reward = 0
+attack_sound = &"sword"
+death_sound = &"troop_death"

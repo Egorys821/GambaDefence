@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="UnitData" format=3]
+
+[ext_resource type="Script" path="res://src/data/unit_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/grave_golem.png" id="2_tex"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"grave_golem"
+display_name = "Grave Golem"
+texture = ExtResource("2_tex")
+sprite_scale = 2.6
+max_hp = 700.0
+damage = 22.0
+attack_range = 18.0
+attack_cooldown = 1.8
+move_speed = 8.0
+aggro_range = 40.0
+death_sound = &"castle_hit"
+gold_reward = 70
+is_boss = true
+armor = 8.0

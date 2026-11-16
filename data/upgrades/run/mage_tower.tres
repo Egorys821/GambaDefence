@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://src/data/upgrade_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/environment/mage_tower.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"mage_tower"
+display_name = "Mage Tower"
+icon = ExtResource("2_icon")
+description = "Upgrades a watchtower into a Mage Tower: magic orbs hit groups."
+scope = 1
+category = 1
+stat = &"mage_towers"
+value_per_level = 1.0
+percent = false
+max_level = 4
+base_cost = 20
+cost_per_level = 10
+min_night = 2

@@ -1,0 +1,89 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/ui/night_panel.gd" id="1_night"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_status"]
+content_margin_left = 8.0
+content_margin_top = 1.0
+content_margin_right = 8.0
+content_margin_bottom = 1.0
+bg_color = Color(0.05, 0.04, 0.1, 0.65)
+border_width_top = 1
+border_color = Color(0.4, 0.4, 0.8, 0.6)
+
+[node name="NightPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_night")
+
+[node name="Banner" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 120.0
+offset_top = 120.0
+offset_right = 520.0
+offset_bottom = 160.0
+theme_override_colors/font_outline_color = Color(0.05, 0.03, 0.12, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 32
+text = "Night 1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Subtitle" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 120.0
+offset_top = 162.0
+offset_right = 520.0
+offset_bottom = 178.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 10
+text = "The spirits rise from their graves..."
+horizontal_alignment = 1
+
+[node name="StatusBar" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 220.0
+offset_top = 344.0
+offset_right = 420.0
+offset_bottom = 360.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_status")
+
+[node name="Row" type="HBoxContainer" parent="StatusBar"]
+layout_mode = 2
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 16
+
+[node name="EnemiesLabel" type="Label" parent="StatusBar/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.55, 0.6, 1)
+theme_override_font_sizes/font_size = 10
+text = "Spirits: 0"
+
+[node name="DefendersLabel" type="Label" parent="StatusBar/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.82, 1, 1)
+theme_override_font_sizes/font_size = 10
+text = "Defenders: 0"
+
+[node name="SpeedButton" type="Button" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 572.0
+offset_top = 338.0
+offset_right = 636.0
+offset_bottom = 356.0
+focus_mode = 0
+text = "Speed x1"

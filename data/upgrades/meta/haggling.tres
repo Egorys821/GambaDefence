@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://src/data/upgrade_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/cart.png" id="2_icon"]
+[ext_resource type="Resource" path="res://data/upgrades/meta/cart.tres" id="3_requires"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"haggling"
+display_name = "Haggling"
+icon = ExtResource("2_icon")
+description = "Merchant prices are {value} lower."
+scope = 0
+category = 0
+stat = &"shop_discount"
+value_per_level = 0.1
+percent = true
+max_level = 3
+requires = ExtResource("3_requires")
+requires_level = 1
+tree_position = Vector2(3, 3)
+base_cost = 18
+cost_per_level = 18
+min_night = 1

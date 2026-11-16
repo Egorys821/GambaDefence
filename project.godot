@@ -1,0 +1,45 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Gamba Defence"
+config/description="Medieval roguelike: upgrade a magic slot machine by day, defend the castle from spirits by night."
+run/main_scene="res://src/main/main.tscn"
+config/features=PackedStringArray("4.6", "GL Compatibility")
+config/icon="res://assets/sprites/ui/icon.png"
+
+[autoload]
+
+MetaProgress="*res://src/autoload/meta_progress.gd"
+GameState="*res://src/autoload/game_state.gd"
+Audio="*res://src/autoload/audio.gd"
+
+[display]
+
+window/size/viewport_width=640
+window/size/viewport_height=360
+window/size/window_width_override=1280
+window/size/window_height_override=720
+window/stretch/mode="canvas_items"
+
+[dotnet]
+
+project/assembly_name="Gamba Defence"
+
+[gui]
+
+theme/custom="res://assets/theme/main_theme.tres"
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=0
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

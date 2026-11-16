@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SymbolData" format=3]
+
+[ext_resource type="Script" path="res://src/data/symbol_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/skull.png" id="2_tex"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"skull"
+display_name = "Cursed Skull"
+texture = ExtResource("2_tex")
+description = "Useless junk clogging the reels. Banish it at the merchant."
+effect = 0
+power = 0
+passive_gold = 0
+in_shop = false
+shop_cost = 0
+min_night = 1

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://src/data/upgrade_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/helm.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"drill"
+display_name = "Drill Sergeant"
+icon = ExtResource("2_icon")
+description = "Summoned troops have +{value} HP and damage."
+scope = 1
+category = 2
+stat = &"troop_power"
+value_per_level = 0.15
+percent = true
+max_level = 3
+base_cost = 14
+cost_per_level = 8
+min_night = 2

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SymbolData" format=3]
+
+[ext_resource type="Script" path="res://src/data/symbol_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/coin.png" id="2_tex"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"coin"
+display_name = "Gold Coin"
+texture = ExtResource("2_tex")
+description = "A line of coins pays 5 gold (more for 4 or 5)."
+effect = 1
+power_per_level = 2
+power = 5
+passive_gold = 0
+in_shop = true
+shop_cost = 4
+min_night = 1
+upgrade_cost_base = 12
+upgrade_cost_per_level = 10

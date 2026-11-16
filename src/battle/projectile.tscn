@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/battle/projectile.gd" id="1_projectile"]
+
+[node name="Projectile" type="Node2D"]
+script = ExtResource("1_projectile")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]

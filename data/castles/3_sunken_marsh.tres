@@ -1,0 +1,95 @@
+[gd_resource type="Resource" script_class="CastleData" format=3]
+
+[ext_resource type="Script" path="res://src/data/castle_data.gd" id="castle_script"]
+[ext_resource type="Script" path="res://src/data/pool_entry.gd" id="pool_script"]
+[ext_resource type="Script" path="res://src/data/spawn_entry.gd" id="spawn_script"]
+[ext_resource type="Script" path="res://src/data/symbol_data.gd" id="symbol_script"]
+[ext_resource type="Resource" path="res://data/symbols/bow.tres" id="sym_bow"]
+[ext_resource type="Resource" path="res://data/symbols/clover.tres" id="sym_clover"]
+[ext_resource type="Resource" path="res://data/symbols/coin.tres" id="sym_coin"]
+[ext_resource type="Resource" path="res://data/symbols/crossbow.tres" id="sym_crossbow"]
+[ext_resource type="Resource" path="res://data/symbols/hammer.tres" id="sym_hammer"]
+[ext_resource type="Resource" path="res://data/symbols/pike.tres" id="sym_pike"]
+[ext_resource type="Resource" path="res://data/symbols/quiver.tres" id="sym_quiver"]
+[ext_resource type="Resource" path="res://data/symbols/sigil.tres" id="sym_sigil"]
+[ext_resource type="Resource" path="res://data/symbols/staff.tres" id="sym_staff"]
+[ext_resource type="Resource" path="res://data/symbols/sword.tres" id="sym_sword"]
+[ext_resource type="Resource" path="res://data/units/banshee.tres" id="unit_banshee"]
+[ext_resource type="Resource" path="res://data/units/ghost.tres" id="unit_ghost"]
+[ext_resource type="Resource" path="res://data/units/storm_wraith.tres" id="unit_storm_wraith"]
+[ext_resource type="Resource" path="res://data/units/wisp.tres" id="unit_wisp"]
+[ext_resource type="Resource" path="res://data/units/wraith.tres" id="unit_wraith"]
+
+[sub_resource type="Resource" id="pool_0"]
+script = ExtResource("pool_script")
+symbol = ExtResource("sym_coin")
+copies = 4
+
+[sub_resource type="Resource" id="pool_1"]
+script = ExtResource("pool_script")
+symbol = ExtResource("sym_bow")
+copies = 3
+
+[sub_resource type="Resource" id="pool_2"]
+script = ExtResource("pool_script")
+symbol = ExtResource("sym_sword")
+copies = 3
+
+[sub_resource type="Resource" id="pool_3"]
+script = ExtResource("pool_script")
+symbol = ExtResource("sym_crossbow")
+copies = 1
+
+[sub_resource type="Resource" id="spawn_0"]
+script = ExtResource("spawn_script")
+unit = ExtResource("unit_ghost")
+cost = 1
+first_night = 1
+
+[sub_resource type="Resource" id="spawn_1"]
+script = ExtResource("spawn_script")
+unit = ExtResource("unit_wisp")
+cost = 1
+first_night = 1
+
+[sub_resource type="Resource" id="spawn_2"]
+script = ExtResource("spawn_script")
+unit = ExtResource("unit_banshee")
+cost = 2
+first_night = 2
+
+[sub_resource type="Resource" id="spawn_3"]
+script = ExtResource("spawn_script")
+unit = ExtResource("unit_wisp")
+cost = 1
+first_night = 3
+
+[sub_resource type="Resource" id="spawn_4"]
+script = ExtResource("spawn_script")
+unit = ExtResource("unit_wraith")
+cost = 2
+first_night = 4
+
+[resource]
+script = ExtResource("castle_script")
+id = &"sunken_marsh"
+display_name = "Sunken Marsh"
+description = "Will-o'-wisps fly over your soldiers straight at the walls. Bring archers, crossbows, mages and towers."
+order = 2
+map_position = Vector2(200, 150)
+nights = 10
+ground_tint = Color(0.8, 1.0, 0.75, 1)
+starting_pool = Array[ExtResource("pool_script")]([SubResource("pool_0"), SubResource("pool_1"), SubResource("pool_2"), SubResource("pool_3")])
+merchant_symbols = Array[ExtResource("symbol_script")]([ExtResource("sym_coin"), ExtResource("sym_sword"), ExtResource("sym_bow"), ExtResource("sym_crossbow"), ExtResource("sym_staff"), ExtResource("sym_hammer"), ExtResource("sym_pike"), ExtResource("sym_quiver"), ExtResource("sym_sigil"), ExtResource("sym_clover")])
+payline_tier = 2
+enemies = Array[ExtResource("spawn_script")]([SubResource("spawn_0"), SubResource("spawn_1"), SubResource("spawn_2"), SubResource("spawn_3"), SubResource("spawn_4")])
+boss = ExtResource("unit_storm_wraith")
+budget_base = 3
+budget_per_night = 5
+budget_ramp_divisor = 5
+power_base = 1.5
+power_per_night = 0.2
+spawn_interval = 1.25
+curse_start_night = 3
+curses_per_dawn = 1
+shard_multiplier = 1.75

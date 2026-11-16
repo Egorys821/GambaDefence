@@ -1,0 +1,107 @@
+[gd_scene format=3 uid="uid://csgof0qaeeoqu"]
+
+[ext_resource type="Script" uid="uid://d2eecvdaar3pa" path="res://src/ui/hud.gd" id="1_hud"]
+[ext_resource type="Texture2D" uid="uid://bgqag4flkgo3d" path="res://assets/sprites/symbols/coin.png" id="2_coin"]
+[ext_resource type="Texture2D" uid="uid://dkn27oi3kd6l3" path="res://assets/sprites/symbols/sword.png" id="3_sword"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud"]
+content_margin_left = 6.0
+content_margin_top = 1.0
+content_margin_right = 6.0
+content_margin_bottom = 1.0
+bg_color = Color(0.08, 0.05, 0.05, 0.6)
+
+[node name="Hud" type="PanelContainer" unique_id=1608075839]
+offset_right = 640.0
+offset_bottom = 16.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_hud")
+script = ExtResource("1_hud")
+
+[node name="Row" type="HBoxContainer" parent="." unique_id=115757640]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 5
+
+[node name="NightLabel" type="Label" parent="Row" unique_id=158276192]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 10
+text = "Night 1 / 10"
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="PhaseLabel" type="Label" parent="Row" unique_id=1641963838]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Day"
+
+[node name="CurseLabel" type="Label" parent="Row"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+tooltip_text = "Cursed symbols added these spirits to tonight's wave."
+mouse_filter = 1
+theme_override_colors/font_color = Color(1, 0.3, 0.35, 1)
+text = "Curse +0"
+
+[node name="GoldIcon" type="TextureRect" parent="Row" unique_id=1035980608]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(12, 12)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("2_coin")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="GoldLabel" type="Label" parent="Row" unique_id=293780815]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.97, 0.82, 0.22, 1)
+theme_override_font_sizes/font_size = 10
+text = "0"
+
+[node name="ArmyIcon" type="TextureRect" parent="Row" unique_id=1989769631]
+custom_minimum_size = Vector2(12, 12)
+layout_mode = 2
+size_flags_vertical = 4
+tooltip_text = "Defenders in front of the castle"
+texture = ExtResource("3_sword")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ArmyLabel" type="Label" parent="Row" unique_id=272729839]
+unique_name_in_owner = true
+mouse_filter = 1
+custom_minimum_size = Vector2(18, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "0"
+
+[node name="CastleTitle" type="Label" parent="Row" unique_id=1317475977]
+layout_mode = 2
+text = "Castle"
+
+[node name="CastleBar" type="ProgressBar" parent="Row" unique_id=961704707]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(60, 8)
+layout_mode = 2
+size_flags_vertical = 4
+value = 100.0
+show_percentage = false
+
+[node name="CastleLabel" type="Label" parent="Row" unique_id=815537164]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+text = "100/100"
+
+[node name="SettingsButton" type="Button" parent="Row"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 7
+text = "Settings"

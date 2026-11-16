@@ -1,0 +1,160 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/meta/main_menu.gd" id="1_menu"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/shard.png" id="2_shard"]
+
+[sub_resource type="Gradient" id="Gradient_fade"]
+offsets = PackedFloat32Array(0, 0.5, 1)
+colors = PackedColorArray(0.03, 0.02, 0.06, 0.25, 0.03, 0.02, 0.06, 0.55, 0.03, 0.02, 0.06, 0.9)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_fade"]
+gradient = SubResource("Gradient_fade")
+width = 8
+height = 64
+fill_to = Vector2(0, 1)
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu")
+
+[node name="Fade" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_fade")
+expand_mode = 1
+
+[node name="Menu" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 104.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="Title" type="Label" parent="Menu"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.97, 0.82, 0.22, 1)
+theme_override_colors/font_outline_color = Color(0.35, 0.16, 0.04, 1)
+theme_override_constants/outline_size = 10
+theme_override_font_sizes/font_size = 40
+text = "GAMBA DEFENCE"
+horizontal_alignment = 1
+
+[node name="Tagline" type="Label" parent="Menu"]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 9
+text = "Spin the magic machine by day. Defend the castle by night."
+horizontal_alignment = 1
+
+[node name="Gap" type="Control" parent="Menu"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+
+[node name="Buttons" type="VBoxContainer" parent="Menu"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 5
+
+[node name="PlayButton" type="Button" parent="Menu/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 28)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 14
+text = "Play"
+
+[node name="UpgradesButton" type="Button" parent="Menu/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 20)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 10
+text = "Upgrades - Time Forge"
+
+[node name="SettingsButton" type="Button" parent="Menu/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 20)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 10
+text = "Settings"
+
+[node name="PreviewButton" type="Button" parent="Menu/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 20)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 10
+text = "Preview - Troops & Spirits"
+
+[node name="AboutButton" type="Button" parent="Menu/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 20)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 10
+text = "About"
+
+[node name="QuitButton" type="Button" parent="Menu/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 20)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 10
+text = "Quit"
+
+[node name="Footer" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -20.0
+offset_right = -8.0
+offset_bottom = -4.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="ProgressLabel" type="Label" parent="Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 8
+text = "Castles conquered"
+
+[node name="ShardIcon" type="TextureRect" parent="Footer"]
+custom_minimum_size = Vector2(12, 12)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("2_shard")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ShardLabel" type="Label" parent="Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.38, 0.85, 0.97, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 9
+text = "0 Chrono Shards"

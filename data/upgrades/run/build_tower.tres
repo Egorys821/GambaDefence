@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://src/data/upgrade_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/environment/tower.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"build_tower"
+display_name = "Build Watchtower"
+icon = ExtResource("2_icon")
+description = "Builds a watchtower on the field that shoots spirits."
+scope = 1
+category = 1
+stat = &"extra_towers"
+value_per_level = 1.0
+percent = false
+max_level = 4
+base_cost = 16
+cost_per_level = 8
+min_night = 1

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="UnitData" format=3]
+
+[ext_resource type="Script" path="res://src/data/unit_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/units/mage.png" id="2_tex"]
+[ext_resource type="Texture2D" path="res://assets/sprites/projectiles/magic_orb.png" id="3_proj"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"mage"
+display_name = "Mage"
+texture = ExtResource("2_tex")
+sprite_scale = 1.0
+max_hp = 20.0
+damage = 7.0
+attack_range = 115.0
+attack_cooldown = 1.8
+move_speed = 28.0
+aggro_range = 115.0
+projectile_texture = ExtResource("3_proj")
+splash_radius = 22.0
+gold_reward = 0
+attack_sound = &"magic"
+death_sound = &"troop_death"
+upkeep = 2.0

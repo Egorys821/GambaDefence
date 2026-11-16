@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SymbolData" format=3]
+
+[ext_resource type="Script" path="res://src/data/symbol_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/rune.png" id="2_tex"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"rune"
+display_name = "Magic Rune"
+texture = ExtResource("2_tex")
+description = "Wild for ANY symbol (not curses). A full line of runes pays 8 gold. Unlocked in the Time Forge."
+effect = 4
+power = 8
+passive_gold = 0
+in_shop = true
+shop_cost = 30
+min_night = 3
+unlock_stat = &"unlock_rune"

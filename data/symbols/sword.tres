@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SymbolData" format=3]
+
+[ext_resource type="Script" path="res://src/data/symbol_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/sword.png" id="2_tex"]
+[ext_resource type="Resource" path="res://data/units/swordsman.tres" id="3_unit"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"sword"
+display_name = "Sword"
+texture = ExtResource("2_tex")
+description = "A line summons 2 Swordsmen: sturdy melee fighter."
+effect = 2
+power = 2
+unit = ExtResource("3_unit")
+passive_gold = 0
+in_shop = true
+shop_cost = 5
+min_night = 1

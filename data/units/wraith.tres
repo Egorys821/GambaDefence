@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://coqx464mt17fi"]
+
+[ext_resource type="Script" uid="uid://bh74k3a1kx5vd" path="res://src/data/unit_data.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://d0aqnbx6a6wsn" path="res://assets/sprites/enemies/wraith.png" id="2_tex"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"wraith"
+display_name = "Wraith"
+texture = ExtResource("2_tex")
+max_hp = 12.0
+damage = 4.0
+attack_cooldown = 0.8
+move_speed = 46.0
+aggro_range = 30.0
+gold_reward = 1
+
+death_sound = &"spirit_death"

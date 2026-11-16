@@ -1,0 +1,87 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/day/day_phase.gd" id="1_day"]
+[ext_resource type="Script" path="res://src/day/paytable.gd" id="2_paytable"]
+[ext_resource type="PackedScene" path="res://src/slot_machine/slot_machine.tscn" id="3_slot"]
+[ext_resource type="PackedScene" path="res://src/shop/shop.tscn" id="4_shop"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_machine"]
+
+[node name="DayPhase" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_day")
+
+[node name="Paytable" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_top = 16.0
+offset_right = 150.0
+offset_bottom = 360.0
+theme_type_variation = &"SidePanel"
+script = ExtResource("2_paytable")
+
+[node name="MachinePanel" type="Panel" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 150.0
+offset_top = 154.0
+offset_right = 490.0
+offset_bottom = 360.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_machine")
+
+[node name="Center" type="VBoxContainer" parent="MachinePanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="SlotMachine" parent="MachinePanel/Center" instance=ExtResource("3_slot")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="SpinButton" type="Button" parent="MachinePanel/Center"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 24)
+layout_mode = 2
+size_flags_horizontal = 4
+tooltip_text = "Spin the reels (Space)"
+focus_mode = 0
+theme_override_font_sizes/font_size = 12
+text = "SPIN"
+
+[node name="ShopPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 490.0
+offset_top = 16.0
+offset_right = 640.0
+offset_bottom = 360.0
+theme_type_variation = &"SidePanel"
+
+[node name="Column" type="VBoxContainer" parent="ShopPanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Shop" parent="ShopPanel/Column" instance=ExtResource("4_shop")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="StartNightButton" type="Button" parent="ShopPanel/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 26)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 10
+text = "Face the Night"

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SymbolData" format=3]
+
+[ext_resource type="Script" path="res://src/data/symbol_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/holy.png" id="2_tex"]
+[ext_resource type="Resource" path="res://data/units/cleric.tres" id="3_unit"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"holy"
+display_name = "Holy Relic"
+texture = ExtResource("2_tex")
+description = "A line summons a Cleric who heals wounded troops."
+effect = 2
+power = 1
+unit = ExtResource("3_unit")
+in_shop = true
+shop_cost = 10
+min_night = 2
+unlock_stat = &"unlock_clerics"

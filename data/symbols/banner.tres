@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SymbolData" format=3]
+
+[ext_resource type="Script" path="res://src/data/symbol_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/banner.png" id="2_tex"]
+[ext_resource type="Resource" path="res://data/symbols/sword.tres" id="t_sword"]
+[ext_resource type="Resource" path="res://data/symbols/pike.tres" id="t_pike"]
+[ext_resource type="Resource" path="res://data/symbols/helm.tres" id="t_helm"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"banner"
+display_name = "War Banner"
+texture = ExtResource("2_tex")
+description = "Wild for Swords, Pikes and Knight's Helms only."
+effect = 4
+power = 0
+wild_for = Array[ExtResource("1_script")]([ExtResource("t_sword"), ExtResource("t_pike"), ExtResource("t_helm")])
+in_shop = true
+shop_cost = 14
+min_night = 1

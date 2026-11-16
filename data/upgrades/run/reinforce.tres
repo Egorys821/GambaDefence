@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://src/data/upgrade_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/wall.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"reinforce"
+display_name = "Reinforce Walls"
+icon = ExtResource("2_icon")
+description = "+{value} castle max HP (and repairs it)."
+scope = 1
+category = 1
+stat = &"castle_max_hp"
+value_per_level = 20.0
+percent = false
+max_level = 3
+base_cost = 10
+cost_per_level = 6
+min_night = 1

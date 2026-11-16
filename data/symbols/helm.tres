@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SymbolData" format=3]
+
+[ext_resource type="Script" path="res://src/data/symbol_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/helm.png" id="2_tex"]
+[ext_resource type="Resource" path="res://data/units/knight.tres" id="3_unit"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"helm"
+display_name = "Knight's Helm"
+texture = ExtResource("2_tex")
+description = "A line summons a Knight: heavy armored warrior."
+effect = 2
+power = 1
+unit = ExtResource("3_unit")
+passive_gold = 0
+in_shop = true
+shop_cost = 9
+min_night = 2

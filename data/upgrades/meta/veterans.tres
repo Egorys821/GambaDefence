@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://src/data/upgrade_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/helm.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"veterans"
+display_name = "Veteran Recruits"
+icon = ExtResource("2_icon")
+description = "Summoned troops have +{value} HP and damage."
+scope = 0
+category = 2
+stat = &"troop_power"
+value_per_level = 0.1
+percent = true
+max_level = 5
+tree_position = Vector2(13, 0)
+base_cost = 10
+cost_per_level = 10
+min_night = 1

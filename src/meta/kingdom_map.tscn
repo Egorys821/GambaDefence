@@ -1,0 +1,106 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/meta/kingdom_map.gd" id="1_map"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_parchment"]
+content_margin_left = 10.0
+content_margin_top = 6.0
+content_margin_right = 10.0
+content_margin_bottom = 8.0
+bg_color = Color(0.87, 0.78, 0.58, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.45, 0.29, 0.14, 1)
+
+[node name="KingdomMap" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_map")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.04, 0.03, 0.08, 0.86)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Parchment" type="PanelContainer" parent="Center"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_parchment")
+
+[node name="Box" type="VBoxContainer" parent="Center/Parchment"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Title" type="Label" parent="Center/Parchment/Box"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.22, 0.1, 1)
+theme_override_font_sizes/font_size = 16
+text = "The Kingdom"
+horizontal_alignment = 1
+
+[node name="MapArea" type="Control" parent="Center/Parchment/Box"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(400, 210)
+layout_mode = 2
+
+[node name="Info" type="HBoxContainer" parent="Center/Parchment/Box"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Text" type="VBoxContainer" parent="Center/Parchment/Box/Info"]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
+
+[node name="InfoTitle" type="Label" parent="Center/Parchment/Box/Info/Text"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.22, 0.1, 1)
+theme_override_font_sizes/font_size = 10
+text = "Castle"
+
+[node name="InfoBody" type="Label" parent="Center/Parchment/Box/Info/Text"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.2, 0.12, 1)
+theme_override_font_sizes/font_size = 7
+text = "Description"
+autowrap_mode = 3
+
+[node name="Buttons" type="VBoxContainer" parent="Center/Parchment/Box/Info"]
+layout_mode = 2
+alignment = 1
+
+[node name="MarchButton" type="Button" parent="Center/Parchment/Box/Info/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 24)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 9
+text = "March"
+
+[node name="BackButton" type="Button" parent="Center/Parchment/Box/Info/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 7
+text = "Back to menu"

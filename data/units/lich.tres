@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://rsw01kxxljox"]
+
+[ext_resource type="Script" uid="uid://bh74k3a1kx5vd" path="res://src/data/unit_data.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://bj5dv3bva1o3r" path="res://assets/sprites/enemies/lich.png" id="2_tex"]
+[ext_resource type="Texture2D" uid="uid://cbsamjomihwqv" path="res://assets/sprites/projectiles/dark_orb.png" id="3_proj"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"lich"
+display_name = "Lich King"
+texture = ExtResource("2_tex")
+sprite_scale = 2.0
+max_hp = 260.0
+damage = 8.0
+attack_range = 95.0
+attack_cooldown = 2.0
+move_speed = 10.0
+aggro_range = 95.0
+projectile_texture = ExtResource("3_proj")
+splash_radius = 14.0
+gold_reward = 25
+attack_sound = &"magic"
+death_sound = &"spirit_death"
+is_boss = true

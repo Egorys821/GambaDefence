@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="UnitData" format=3]
+
+[ext_resource type="Script" path="res://src/data/unit_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/units/knight.png" id="2_tex"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"knight"
+display_name = "Knight"
+texture = ExtResource("2_tex")
+sprite_scale = 1.0
+max_hp = 75.0
+damage = 11.0
+attack_range = 16.0
+attack_cooldown = 1.0
+move_speed = 40.0
+aggro_range = 90.0
+gold_reward = 0
+attack_sound = &"sword"
+death_sound = &"troop_death"
+upkeep = 2.0

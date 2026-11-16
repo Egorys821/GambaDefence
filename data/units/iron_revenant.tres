@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="UnitData" format=3]
+
+[ext_resource type="Script" path="res://src/data/unit_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/iron_revenant.png" id="2_tex"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"iron_revenant"
+display_name = "Iron Revenant"
+texture = ExtResource("2_tex")
+sprite_scale = 1.0
+max_hp = 60.0
+damage = 9.0
+attack_range = 14.0
+attack_cooldown = 1.2
+move_speed = 14.0
+aggro_range = 30.0
+death_sound = &"castle_hit"
+gold_reward = 3
+armor = 5.0

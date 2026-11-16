@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="UnitData" format=3]
+
+[ext_resource type="Script" path="res://src/data/unit_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/demon_lord.png" id="2_tex"]
+[ext_resource type="Texture2D" path="res://assets/sprites/projectiles/fire_orb.png" id="3_proj"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"demon_lord"
+display_name = "Demon Lord"
+texture = ExtResource("2_tex")
+sprite_scale = 2.4
+max_hp = 520.0
+damage = 12.0
+attack_range = 105.0
+attack_cooldown = 1.7
+move_speed = 9.0
+aggro_range = 105.0
+projectile_texture = ExtResource("3_proj")
+splash_radius = 22.0
+attack_sound = &"burst"
+death_sound = &"spirit_death"
+gold_reward = 60
+is_boss = true
