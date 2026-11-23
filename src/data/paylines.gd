@@ -1,88 +1,113 @@
 class_name Paylines
 extends RefCounted
-## Payline shapes for the slot machine (5 reels, 3 to 5 rows).
-## Each line lists the row it passes through on every reel (0 = top).
+## Pattern shapes for the slot machines and the rules for placing them.
 ##
-## Row lines ("row" key) are owned automatically for every row the machine has.
-## The other lines are sold by the merchant in this order, once the machine has
-## enough rows and the castle's payline tier allows them ("tier", default 1).
+## Each machine style pays on one table of shapes (MachineStyle.line_table).
+## A shape lists, for each reel, a row offset (0 = its top row). Owning a
+## shape gives one line at every height where it fits on the machine, e.g.
+## Valley (3 rows tall) gives 1 line on a 3-row machine and 3 lines on a
+## 5-row machine. See Payline for one concrete line.
+##
+## The merchant sells shapes in table order, when the castle's payline tier and
+## the machine's rows allow them ("tier" defaults to 1).
 
-const ALL := [
-	{"name": "Top Row", "rows": [0, 0, 0, 0, 0], "row": 0},
-	{"name": "Middle Row", "rows": [1, 1, 1, 1, 1], "row": 1},
-	{"name": "Bottom Row", "rows": [2, 2, 2, 2, 2], "row": 2},
-	{"name": "Fourth Row", "rows": [3, 3, 3, 3, 3], "row": 3},
-	{"name": "Fifth Row", "rows": [4, 4, 4, 4, 4], "row": 4},
-	# Tier 1: every castle.
-	{"name": "Valley", "rows": [0, 1, 2, 1, 0]},
-	{"name": "Peak", "rows": [2, 1, 0, 1, 2]},
-	{"name": "Stairs Down", "rows": [0, 0, 1, 2, 2]},
-	{"name": "Stairs Up", "rows": [2, 2, 1, 0, 0]},
-	{"name": "Crown", "rows": [1, 0, 0, 0, 1]},
-	{"name": "Chalice", "rows": [1, 2, 2, 2, 1]},
-	# Tier 2: Frostpeak Citadel and later.
-	{"name": "Bridge", "rows": [0, 1, 1, 1, 0], "tier": 2},
-	{"name": "Hammock", "rows": [2, 1, 1, 1, 2], "tier": 2},
-	{"name": "Snake", "rows": [0, 1, 0, 1, 0], "tier": 2},
-	{"name": "Wave", "rows": [2, 1, 2, 1, 2], "tier": 2},
-	# Tier 3: Ashen Throne.
-	{"name": "Fangs", "rows": [0, 2, 0, 2, 0], "tier": 3},
-	{"name": "Spikes", "rows": [2, 0, 2, 0, 2], "tier": 3},
-	{"name": "Arrowhead", "rows": [1, 0, 2, 0, 1], "tier": 3},
-	{"name": "Lantern", "rows": [1, 2, 0, 2, 1], "tier": 3},
-	# Need 4-5 rows.
-	{"name": "Deep Valley", "rows": [1, 2, 3, 2, 1]},
-	{"name": "Zigzag", "rows": [3, 2, 3, 2, 3]},
-	{"name": "Lightning", "rows": [0, 1, 2, 3, 4]},
-	{"name": "Thunder", "rows": [4, 3, 2, 1, 0]},
+## Every table starts with its straight row.
+const STRAIGHT := 0
+
+## 5 reels: the standard machine, Tome of Ages and Dragon's Hoard.
+const STANDARD := [
+	{"name": "Straight", "offsets": [0, 0, 0, 0, 0]},
+	{"name": "Valley", "offsets": [0, 1, 2, 1, 0]},
+	{"name": "Peak", "offsets": [2, 1, 0, 1, 2]},
+	{"name": "Crown", "offsets": [1, 0, 0, 0, 1]},
+	{"name": "Cup", "offsets": [0, 1, 1, 1, 0]},
+	{"name": "Stairs Down", "offsets": [0, 0, 1, 2, 2]},
+	{"name": "Stairs Up", "offsets": [2, 2, 1, 0, 0]},
+	{"name": "Snake", "offsets": [0, 1, 0, 1, 0], "tier": 2},
+	{"name": "Wave", "offsets": [1, 0, 1, 0, 1], "tier": 2},
+	{"name": "Hook", "offsets": [0, 0, 0, 1, 2], "tier": 2},
+	{"name": "Swoop", "offsets": [2, 1, 0, 0, 0], "tier": 2},
+	{"name": "Fangs", "offsets": [0, 2, 0, 2, 0], "tier": 3},
+	{"name": "Spikes", "offsets": [2, 0, 2, 0, 2], "tier": 3},
+	{"name": "Arrowhead", "offsets": [1, 0, 2, 0, 1], "tier": 3},
+	{"name": "Lantern", "offsets": [1, 2, 0, 2, 1], "tier": 3},
+	# Tall shapes: only fit machines with 4-5 rows.
+	{"name": "Deep V", "offsets": [0, 2, 3, 2, 0]},
+	{"name": "Lightning", "offsets": [0, 1, 2, 3, 4]},
+	{"name": "Thunder", "offsets": [4, 3, 2, 1, 0]},
 ]
 
-## Symbols must match starting from the leftmost reel. Reward multiplier by match length.
-const MIN_MATCH := 3
-const MATCH_MULTIPLIER := {3: 1, 4: 2, 5: 4}
+## 4 reels x 3 rows: Jester's 81. All owned from the start: 3 rows + 4 shapes = 7 lines.
+const JESTER := [
+	{"name": "Straight", "offsets": [0, 0, 0, 0]},
+	{"name": "Dip", "offsets": [0, 2, 2, 0]},
+	{"name": "Bump", "offsets": [2, 0, 0, 2]},
+	{"name": "Slide", "offsets": [0, 1, 2, 2]},
+	{"name": "Climb", "offsets": [2, 1, 0, 0]},
+]
+
+## 3 reels x 3 rows: Old Cellar. The classic 5 lines: 3 rows + 2 diagonals.
+const CELLAR := [
+	{"name": "Straight", "offsets": [0, 0, 0]},
+	{"name": "Diagonal", "offsets": [0, 1, 2]},
+	{"name": "Rise", "offsets": [2, 1, 0]},
+]
+
+const TABLES := {
+	&"standard": STANDARD,
+	&"jester": JESTER,
+	&"cellar": CELLAR,
+}
 
 const COLORS := [
 	Color("#f8d038"), Color("#ff6060"), Color("#60d8f8"), Color("#80f060"),
 	Color("#f080f0"), Color("#ffa040"), Color("#a0a0ff"), Color("#ffffff"),
 	Color("#40f0c0"), Color("#f0a0a0"), Color("#c0f080"), Color("#80c0ff"),
 	Color("#ffd0a0"), Color("#d0a0ff"), Color("#a0ffd0"), Color("#ff9090"),
-	Color("#90ff90"), Color("#9090ff"), Color("#ffff90"), Color("#ff90ff"),
-	Color("#90ffff"), Color("#ffc060"), Color("#c0c0c0"), Color("#60ffa0"),
+	Color("#90ff90"), Color("#ffc060"),
 ]
 
 
-static func rows_of(index: int) -> Array:
-	return ALL[index]["rows"]
+## The shapes of a table, or none for machines that don't use lines.
+static func table(table_id: StringName) -> Array:
+	return TABLES.get(table_id, [])
 
 
-static func name_of(index: int) -> String:
-	return ALL[index]["name"]
+static func shape_name(shapes: Array, shape: int) -> String:
+	return shapes[shape]["name"]
 
 
-static func color_of(index: int) -> Color:
-	return COLORS[index % COLORS.size()]
+static func shape_offsets(shapes: Array, shape: int) -> Array:
+	return shapes[shape]["offsets"]
 
 
-static func tier_of(index: int) -> int:
-	return ALL[index].get("tier", 1)
+static func shape_tier(shapes: Array, shape: int) -> int:
+	return shapes[shape].get("tier", 1)
 
 
-static func is_row_line(index: int) -> bool:
-	return ALL[index].has("row")
+static func shape_color(shape: int) -> Color:
+	return COLORS[shape % COLORS.size()]
 
 
-## Rows the machine needs for this line.
-static func height_of(index: int) -> int:
+## Rows the shape spans.
+static func shape_height(shapes: Array, shape: int) -> int:
 	var deepest := 0
-	for row: int in rows_of(index):
-		deepest = maxi(deepest, row)
+	for offset: int in shape_offsets(shapes, shape):
+		deepest = maxi(deepest, offset)
 	return deepest + 1
 
 
-## Row lines for a machine with `row_count` rows.
-static func row_lines(row_count: int) -> Array[int]:
-	var result: Array[int] = []
-	for i in ALL.size():
-		if is_row_line(i) and ALL[i]["row"] < row_count:
-			result.append(i)
-	return result
+## Every placement of `shape` on a machine with `rows` rows (top to bottom).
+static func lines_of(shapes: Array, shape: int, rows: int) -> Array[Payline]:
+	var lines: Array[Payline] = []
+	for shift in rows - shape_height(shapes, shape) + 1:
+		lines.append(Payline.new(shapes, shape, shift))
+	return lines
+
+
+## All lines for a set of owned shapes.
+static func lines_for(shapes: Array, owned: Array[int], rows: int) -> Array[Payline]:
+	var lines: Array[Payline] = []
+	for shape in owned:
+		lines.append_array(lines_of(shapes, shape, rows))
+	return lines

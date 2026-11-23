@@ -1,7 +1,6 @@
 [gd_resource type="Resource" script_class="CastleData" format=3]
 
 [ext_resource type="Script" path="res://src/data/castle_data.gd" id="castle_script"]
-[ext_resource type="Resource" path="res://data/symbols/clover.tres" id="sym_clover"]
 [ext_resource type="Resource" path="res://data/symbols/quiver.tres" id="sym_quiver"]
 [ext_resource type="Resource" path="res://data/symbols/banner.tres" id="sym_banner"]
 [ext_resource type="Resource" path="res://data/symbols/sigil.tres" id="sym_sigil"]
@@ -63,7 +62,7 @@ map_position = Vector2(40, 160)
 nights = 10
 ground_tint = Color(1, 1, 1, 1)
 starting_pool = Array[ExtResource("pool_script")]([SubResource("pool_0"), SubResource("pool_1"), SubResource("pool_2")])
-merchant_symbols = Array[ExtResource("symbol_script")]([ExtResource("sym_coin"), ExtResource("sym_sword"), ExtResource("sym_bow"), ExtResource("sym_hammer"), ExtResource("sym_helm"), ExtResource("sym_staff"), ExtResource("sym_quiver"), ExtResource("sym_banner"), ExtResource("sym_sigil"), ExtResource("sym_clover")])
+merchant_symbols = Array[ExtResource("symbol_script")]([ExtResource("sym_coin"), ExtResource("sym_sword"), ExtResource("sym_bow"), ExtResource("sym_hammer"), ExtResource("sym_helm"), ExtResource("sym_staff"), ExtResource("sym_quiver"), ExtResource("sym_banner"), ExtResource("sym_sigil")])
 payline_tier = 1
 enemies = Array[ExtResource("spawn_script")]([SubResource("spawn_0"), SubResource("spawn_1"), SubResource("spawn_2")])
 boss = ExtResource("unit_lich")

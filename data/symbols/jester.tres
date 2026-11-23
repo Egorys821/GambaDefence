@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SymbolData" format=3]
+
+[ext_resource type="Script" path="res://src/data/symbol_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/jester.png" id="2_tex"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"jester"
+display_name = "Jester"
+texture = ExtResource("2_tex")
+description = "Jester's 81 wild: counts as ANY symbol (not curses). While a Jester is on the reels, every left-to-right combination of 4 pays (81 ways). 4 Jesters pay gold."
+effect = 4
+power = 6
+in_shop = true
+max_copies = 2
+shop_cost = 9

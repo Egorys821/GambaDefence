@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="MachineStyle" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://src/data/machine_style.gd" id="script"]
+[ext_resource type="Script" path="res://src/data/pool_entry.gd" id="pool_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/tome.png" id="icon"]
+[ext_resource type="Resource" path="res://data/symbols/tome.tres" id="sym_tome"]
+[ext_resource type="Script" path="res://src/data/symbol_data.gd" id="sym_script"]
+
+[sub_resource type="Resource" id="start_0"]
+script = ExtResource("pool_script")
+symbol = ExtResource("sym_tome")
+copies = 1
+
+[resource]
+script = ExtResource("script")
+id = &"tome_of_ages"
+display_name = "Tome of Ages"
+icon = ExtResource("icon")
+description = "High risk: small base wins, big free spins. The Tome is wild AND scatter: Tomes on 3 reels start free spins with one expanding symbol that fills whole reels and pays, even on reels that aren't next to each other."
+rules_hint = "Lines from the LEFT, small base wins. The Tome is WILD + SCATTER: Tomes on 3 reels start FREE SPINS. One symbol expands: on 4+ reels (anywhere) it fills them and pays."
+order = 4
+unlock_stat = &"unlock_tome"
+reel_count = 5
+feature_count = 3
+length_stat = &"free_spins_bonus"
+eval_mode = 0
+line_table = &"standard"
+match_multiplier = {3: 0.4, 4: 0.7, 5: 1.4}
+ways_cap = 1
+feature = 3
+feature_length = 3
+one_per_reel = true
+feature_symbol = ExtResource("sym_tome")
+merchant_symbols = []
+frame_color = Color(0.7216, 0.5647, 0.251, 1)
+bg_color = Color(0.1647, 0.102, 0.06275, 1)
+reel_colors = PackedColorArray(0.9412, 0.8941, 0.7843, 1, 0.8941, 0.8314, 0.6902, 1)
+start_symbols = Array[ExtResource("pool_script")]([SubResource("start_0")])

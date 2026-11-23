@@ -11,6 +11,7 @@ display_name = "Pike"
 texture = ExtResource("2_tex")
 description = "A line summons 2 Pikemen: long reach, sturdy front line."
 effect = 2
+group = &"melee"
 power = 2
 unit = ExtResource("3_unit")
 in_shop = true

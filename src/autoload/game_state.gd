@@ -16,11 +16,16 @@ signal curse_changed(threat: int)
 const SYMBOLS_DIR := "res://data/symbols/"
 const UPGRADE_DIRS := ["res://data/upgrades/meta/", "res://data/upgrades/run/"]
 const CASTLES_DIR := "res://data/castles/"
+const MACHINES_DIR := "res://data/machines/"
 const SKULL_ID := &"skull"
 ## The cursed symbol the curse spreads every dawn.
 const CURSE_ID := &"tombstone"
 ## Troop hp/damage bonus per symbol level above 1 (0.35 = +35%).
 const LEVEL_POWER_BONUS := 0.35
+## Reward bonus per row upgrade on machines with fixed rows (0.3 = +30%).
+const ROW_REWARD_BONUS := 0.3
+## Extra feature symbols needed per row above 3, as a share (hoard chests).
+const TRIGGER_PER_ROW := 0.2
 
 ## Every symbol in the game, by id.
 var symbols: Dictionary = {}
@@ -30,6 +35,10 @@ var upgrades: Dictionary = {}
 var castles: Array[CastleData] = []
 ## The castle this run is defending.
 var castle: CastleData
+## Every machine style, by id.
+var machines: Dictionary = {}
+## The slot machine used this run (picked in the Time Forge).
+var machine: MachineStyle
 
 var night := 1
 var gold := 0
@@ -40,8 +49,9 @@ var machine_rows := 3
 var pool: Dictionary = {}
 ## Symbol id -> level (starts at 1).
 var levels: Dictionary = {}
-## Indices into Paylines.ALL that currently pay out.
-var paylines: Array[int] = []
+## Pattern shapes owned (indices into the machine's line table). Each one pays
+## at every height it fits on the machine, see active_paylines().
+var shapes: Array[int] = []
 ## RUN upgrade id -> level bought this run.
 var run_upgrades: Dictionary = {}
 var kills := 0
@@ -56,6 +66,7 @@ func _ready() -> void:
 		castles.append(loaded)
 	castles.sort_custom(func(a: CastleData, b: CastleData) -> bool: return a.order < b.order)
 	castle = castles[0]
+	machines = _load_resources([MACHINES_DIR])
 	reset()
 
 
@@ -83,18 +94,10 @@ func reset() -> void:
 	gold = stat_int(Stats.START_GOLD)
 	castle_max_hp = stat_int(Stats.CASTLE_MAX_HP)
 	castle_hp = castle_max_hp
-	machine_rows = stat_int(Stats.MACHINE_ROWS)
-	pool.clear()
-	for entry in castle.starting_pool:
-		pool[entry.symbol.id] = pool.get(entry.symbol.id, 0) + entry.copies
-	var skulls := stat_int(Stats.STARTING_SKULLS)
-	if skulls > 0:
-		pool[SKULL_ID] = skulls
-	paylines.assign(Paylines.row_lines(machine_rows))
-	for i in stat_int(Stats.START_PAYLINES):
-		var line := next_locked_payline()
-		if line >= 0:
-			paylines.append(line)
+	machine = selected_machine()
+	machine_rows = machine.rows_for(stat_int(Stats.MACHINE_ROWS))
+	_fill_starting_pool()
+	_own_starting_shapes()
 	gold_changed.emit(gold)
 	castle_hp_changed.emit(castle_hp, castle_max_hp)
 	machine_changed.emit()
@@ -131,6 +134,10 @@ func prerequisites_met(upgrade: UpgradeData) -> bool:
 		return false
 	if upgrade.scope == UpgradeData.Scope.RUN and upgrade.stat in [Stats.MAGE_TOWERS, Stats.BALLISTA_TOWERS]:
 		return plain_towers() > 0
+	# Don't sell rows the machine can't hold.
+	if upgrade.scope == UpgradeData.Scope.RUN and upgrade.stat == Stats.MACHINE_ROWS \
+			and (machine.ignores_row_upgrades() or machine_rows >= int(Stats.LIMITS[Stats.MACHINE_ROWS].y)):
+		return false
 	return true
 
 
@@ -158,12 +165,9 @@ func _apply_stat_changes() -> void:
 		castle_max_hp = new_max
 		castle_hp = mini(castle_hp, castle_max_hp)
 		castle_hp_changed.emit(castle_hp, castle_max_hp)
-	var new_rows := stat_int(Stats.MACHINE_ROWS)
+	var new_rows := machine.rows_for(stat_int(Stats.MACHINE_ROWS))
 	if new_rows != machine_rows:
-		machine_rows = new_rows
-		for line in Paylines.row_lines(machine_rows):
-			if line not in paylines:
-				paylines.append(line)
+		machine_rows = new_rows  # every owned shape now fits at more heights
 		machine_changed.emit()
 
 
@@ -173,7 +177,92 @@ func plain_towers() -> int:
 
 
 func spins_per_day() -> int:
-	return stat_int(Stats.SPINS_PER_DAY)
+	return stat_int(Stats.SPINS_PER_DAY) + machine.spins_per_day_bonus
+
+
+# --- Machine style ----------------------------------------------------------
+
+func is_machine_unlocked(style: MachineStyle) -> bool:
+	return style.unlock_stat == &"" or stat(style.unlock_stat) >= 1.0
+
+
+## Every machine the player can pick, in Time Forge order.
+func unlocked_machines() -> Array[MachineStyle]:
+	var result: Array[MachineStyle] = []
+	for style: MachineStyle in machines.values():
+		if is_machine_unlocked(style):
+			result.append(style)
+	result.sort_custom(func(a: MachineStyle, b: MachineStyle) -> bool: return a.order < b.order)
+	return result
+
+
+## The machine picked in the Time Forge, or the standard one if it is locked.
+func selected_machine() -> MachineStyle:
+	var picked: MachineStyle = machines.get(MetaProgress.selected_machine)
+	if picked and is_machine_unlocked(picked):
+		return picked
+	return machines[MachineStyle.STANDARD_ID]
+
+
+## The machine unlocked by this Time Forge upgrade, if any.
+func machine_unlocked_by(upgrade: UpgradeData) -> MachineStyle:
+	for style: MachineStyle in machines.values():
+		if style.unlock_stat != &"" and style.unlock_stat == upgrade.stat:
+			return style
+	return null
+
+
+## The castle whose conquest unlocks this machine (null = always available).
+func machine_castle(style: MachineStyle) -> CastleData:
+	for upgrade: UpgradeData in upgrades.values():
+		if style.unlock_stat != &"" and upgrade.stat == style.unlock_stat and upgrade.is_castle_reward():
+			return upgrade.unlock_castle
+	return null
+
+
+## The machine unlocked by conquering this castle, if any.
+func machine_reward(of: CastleData) -> MachineStyle:
+	for style: MachineStyle in machines.values():
+		if machine_castle(style) == of:
+			return style
+	return null
+
+
+## Reward multiplier for a match of `count` reels on the current machine.
+## Can be fractional: volatile machines pay less in their base game. Machines
+## that can't grow rows turn each row upgrade into ROW_REWARD_BONUS instead.
+func match_multiplier(count: int) -> float:
+	var multiplier: float = machine.match_multiplier.get(count, 1.0)
+	if count == machine.reel_count and machine.top_match_stat != &"":
+		multiplier += stat(machine.top_match_stat)
+	return multiplier * (1.0 + ROW_REWARD_BONUS * unused_row_upgrades())
+
+
+## Row upgrades the current machine can't use (fixed or variable rows).
+func unused_row_upgrades() -> int:
+	if not machine.ignores_row_upgrades():
+		return 0
+	return stat_int(Stats.MACHINE_ROWS) - int(Stats.BASE[Stats.MACHINE_ROWS])
+
+
+## Free spins or respins the machine's feature gives.
+func feature_length() -> int:
+	var bonus := stat_int(machine.length_stat) if machine.length_stat != &"" else 0
+	return machine.feature_length + bonus
+
+
+## Feature symbols needed to start the machine's feature.
+func feature_trigger() -> int:
+	var ease := stat_int(machine.trigger_stat) if machine.trigger_stat != &"" else 0
+	var count := float(machine.feature_count)
+	if machine.trigger_scales_with_rows:
+		count *= 1.0 + TRIGGER_PER_ROW * (machine_rows - 3)
+	return maxi(1, roundi(count) - ease)
+
+
+## The pattern shapes of the current machine.
+func line_table() -> Array:
+	return Paylines.table(machine.line_table)
 
 
 # --- Curse ------------------------------------------------------------------
@@ -282,19 +371,25 @@ func upgrade_symbol(id: StringName) -> void:
 	machine_changed.emit()
 
 
-func unlock_payline(index: int) -> void:
-	if index not in paylines:
-		paylines.append(index)
+## Every line that pays right now: owned shapes at every height they fit.
+func active_paylines() -> Array[Payline]:
+	return Paylines.lines_for(line_table(), shapes, machine_rows)
+
+
+func unlock_shape(shape: int) -> void:
+	if shape not in shapes:
+		shapes.append(shape)
 		machine_changed.emit()
 
 
-## Next payline the merchant can sell (fits the rows and the castle's tier), or -1.
-func next_locked_payline() -> int:
-	for i in Paylines.ALL.size():
-		if i in paylines or Paylines.is_row_line(i):
+## Next shape the merchant can sell (fits the rows and the castle's tier), or -1.
+func next_locked_shape() -> int:
+	var table := line_table()
+	for shape in table.size():
+		if shape in shapes:
 			continue
-		if Paylines.height_of(i) <= machine_rows and Paylines.tier_of(i) <= castle.payline_tier:
-			return i
+		if Paylines.shape_height(table, shape) <= machine_rows and Paylines.shape_tier(table, shape) <= castle.payline_tier:
+			return shape
 	return -1
 
 
@@ -302,7 +397,9 @@ func next_locked_payline() -> int:
 func is_symbol_available(symbol: SymbolData) -> bool:
 	if not symbol.in_shop or night < symbol.min_night:
 		return false
-	if symbol in castle.merchant_symbols:
+	if symbol.max_copies > 0 and copies_of(symbol.id) >= symbol.max_copies:
+		return false
+	if symbol in castle.merchant_symbols or symbol in machine.merchant_symbols:
 		return true
 	return symbol.unlock_stat != &"" and stat(symbol.unlock_stat) >= 1.0
 
@@ -315,6 +412,35 @@ func roll_symbol() -> SymbolData:
 		if roll < 0:
 			return symbols[id]
 	return symbols[pool.keys()[0]]
+
+
+func _fill_starting_pool() -> void:
+	pool.clear()
+	var entries: Array[PoolEntry] = castle.starting_pool + machine.start_symbols
+	for entry in entries:
+		pool[entry.symbol.id] = copies_of(entry.symbol.id) + entry.copies
+	if machine.signature_symbol and machine.signature_stat != &"":
+		var extra := stat_int(machine.signature_stat)
+		if extra > 0:
+			pool[machine.signature_symbol.id] = copies_of(machine.signature_symbol.id) + extra
+	var skulls := stat_int(Stats.STARTING_SKULLS)
+	if skulls > 0:
+		pool[SKULL_ID] = skulls
+
+
+func _own_starting_shapes() -> void:
+	shapes.clear()
+	if not machine.uses_lines():
+		return
+	if machine.all_lines_owned:
+		for shape in line_table().size():
+			shapes.append(shape)
+		return
+	shapes.append(Paylines.STRAIGHT)
+	for i in stat_int(Stats.START_PAYLINES):
+		var shape := next_locked_shape()
+		if shape >= 0:
+			shapes.append(shape)
 
 
 ## Loads every resource with an `id` property from the given folders.

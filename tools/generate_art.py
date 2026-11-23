@@ -958,6 +958,112 @@ def sigil_symbol() -> Image.Image:
     return img
 
 
+# --------------------------------------------------------------------------
+# Machine styles: feature symbols and machine icons (see data/machines/)
+# --------------------------------------------------------------------------
+def jester_symbol() -> Image.Image:
+    """Jester's 81 wild: a grinning jester with a red and gold hat."""
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    _wild_frame(d, rgba("#5a1020"))
+    d.polygon([(2, 8), (4, 2), (8, 6)], fill=PALETTE["r"], outline=PALETTE["k"])
+    d.polygon([(14, 8), (12, 2), (8, 6)], fill=PALETTE["y"], outline=PALETTE["k"])
+    for x, y in ((4, 1), (12, 1)):
+        d.ellipse([x - 1, y - 1, x + 1, y + 1], fill=PALETTE["y"], outline=PALETTE["k"])
+    d.ellipse([4, 6, 12, 14], fill=PALETTE["s"], outline=PALETTE["k"])
+    img.putpixel((6, 9), PALETTE["k"])
+    img.putpixel((10, 9), PALETTE["k"])
+    d.arc([5, 9, 11, 13], 20, 160, fill=PALETTE["R"])
+    return img
+
+
+def crown_symbol() -> Image.Image:
+    """Old Cellar's x2 wild: a gold crown on a royal blue gem."""
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    _wild_frame(d, rgba("#203878"))
+    d.polygon([(2, 12), (2, 5), (5, 9), (8, 3), (11, 9), (14, 5), (14, 12)], fill=PALETTE["y"], outline=PALETTE["k"])
+    d.line([3, 11, 13, 11], fill=PALETTE["Y"])
+    for x in (5, 8, 11):
+        img.putpixel((x, 10), PALETTE["r"])
+    img.putpixel((8, 3), PALETTE["w"])
+    return img
+
+
+def tome_symbol() -> Image.Image:
+    """Tome of Ages wild + scatter: an open glowing book."""
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    _wild_frame(d, rgba("#3a2410"))
+    d.ellipse([3, 1, 13, 9], fill=rgba("#f8e080"))
+    d.polygon([(1, 5), (8, 7), (8, 14), (1, 12)], fill=rgba("#f0e0b8"), outline=PALETTE["k"])
+    d.polygon([(15, 5), (8, 7), (8, 14), (15, 12)], fill=rgba("#e4d0a0"), outline=PALETTE["k"])
+    for y in (8, 10):
+        d.line([3, y, 6, y + 1], fill=PALETTE["B"])
+        d.line([10, y + 1, 13, y], fill=PALETTE["B"])
+    d.line([8, 7, 8, 14], fill=PALETTE["Y"])
+    return img
+
+
+def chest_symbol() -> Image.Image:
+    """Dragon's Hoard bonus: a treasure chest spilling gold."""
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.rectangle([1, 7, 14, 14], fill=PALETTE["b"], outline=PALETTE["k"])
+    d.pieslice([1, 1, 14, 13], 180, 360, fill=PALETTE["B"], outline=PALETTE["k"])
+    d.line([1, 7, 14, 7], fill=PALETTE["k"])
+    d.rectangle([1, 9, 14, 10], fill=PALETTE["Y"])
+    d.rectangle([6, 7, 9, 11], fill=PALETTE["y"], outline=PALETTE["k"])
+    img.putpixel((7, 9), PALETTE["k"])
+    for x, y in ((3, 6), (5, 5), (11, 5), (12, 6)):
+        img.putpixel((x, y), PALETTE["y"])
+    return img
+
+
+def slot_machine_icon() -> Image.Image:
+    """The standard machine: a little cabinet with three reels and a lever."""
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle([1, 1, 12, 15], radius=2, fill=PALETTE["r"], outline=PALETTE["k"])
+    d.rectangle([3, 4, 10, 9], fill=rgba("#e8d8b0"), outline=PALETTE["k"])
+    d.line([5, 4, 5, 9], fill=PALETTE["k"])
+    d.line([8, 4, 8, 9], fill=PALETTE["k"])
+    for x in (4, 6, 9):
+        img.putpixel((x, 6), PALETTE["y"])
+    d.rectangle([3, 11, 10, 13], fill=PALETTE["Y"], outline=PALETTE["k"])
+    d.line([14, 3, 14, 10], fill=PALETTE["g"])
+    d.ellipse([13, 1, 15, 3], fill=PALETTE["r"], outline=PALETTE["k"])
+    return img
+
+
+def halls_icon() -> Image.Image:
+    """Shifting Halls: a stone arch with uneven glowing columns."""
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    _wild_frame(d, rgba("#1c1c28"))
+    for i, top in enumerate((9, 5, 7, 4)):
+        x = 2 + i * 3
+        d.rectangle([x, top, x + 2, 14], fill=rgba("#a8a8b6"))
+        d.line([x, top, x + 2, top], fill=PALETTE["c"])
+    d.arc([1, 0, 14, 8], 180, 360, fill=PALETTE["c"])
+    return img
+
+
+MACHINE_ART = {
+    "symbols/jester.png": jester_symbol,
+    "symbols/crown.png": crown_symbol,
+    "symbols/tome.png": tome_symbol,
+    "symbols/chest.png": chest_symbol,
+    "ui/machine_standard.png": slot_machine_icon,
+    "ui/machine_halls.png": halls_icon,
+}
+
+
+def machine_art() -> None:
+    for rel_path, build in MACHINE_ART.items():
+        save(build(), rel_path)
+
+
 def forest_tile() -> Image.Image:
     """Seamless 64x64 tile of dense forest, used around the battlefield."""
     size = 64
@@ -973,28 +1079,6 @@ def forest_tile() -> Image.Image:
                 d.ellipse([x - r + 2, y - r + 1, x + r - 3, y + r - 4], fill=rgba("#3c8038"))
                 d.ellipse([x - r + 3, y - r + 2, x - 1, y - 1], fill=rgba("#58a048"))
     return img
-
-
-def clover_symbol() -> Image.Image:
-    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    d.line([8, 9, 13, 15], fill=PALETTE["k"], width=3)
-    d.line([8, 9, 13, 15], fill=PALETTE["L"], width=1)
-    for cx, cy in ((5, 4), (11, 4), (5, 10), (11, 10)):
-        d.ellipse([cx - 4, cy - 4, cx + 3, cy + 3], fill=PALETTE["l"], outline=PALETTE["k"])
-    for cx, cy in ((5, 4), (11, 4), (5, 10), (11, 10)):
-        d.ellipse([cx - 3, cy - 3, cx + 2, cy + 2], fill=PALETTE["l"])
-        img.putpixel((cx - 2, cy - 2), rgba("#a0e080"))
-    d.ellipse([6, 5, 9, 8], fill=PALETTE["y"], outline=PALETTE["Y"])
-    return img
-
-
-ENEMY_VARIANTS.update({
-    "wisp": lambda: recolor(ENEMIES["ghost"], {"m": "y", "M": "o", "e": "w"}),
-    "storm_wraith": lambda: recolor(ENEMIES["wraith"], {"P": "N", "p": "c", "g": "w", "e": "w"}),
-    "iron_revenant": lambda: recolor(ENEMIES["ghoul"], {"l": "g", "L": "G", "B": "k", "b": "G", "e": "r", "w": "y"}),
-    "grave_golem": lambda: recolor(ENEMIES["ghoul"], {"l": "G", "L": "k", "B": "B", "b": "b", "e": "y", "w": "o"}),
-})
 
 
 def slider_grabber(highlight: bool) -> Image.Image:
@@ -1035,9 +1119,9 @@ def main() -> None:
     save(fire_orb(), "projectiles/fire_orb.png")
     save(from_map("tombstone", TOMBSTONE_SYMBOL), "symbols/tombstone.png")
     save(quiver_symbol(), "symbols/quiver.png")
-    save(clover_symbol(), "symbols/clover.png")
     save(banner_symbol(), "symbols/banner.png")
     save(sigil_symbol(), "symbols/sigil.png")
+    machine_art()
     save(mage_tower(), "environment/mage_tower.png")
     save(ballista_tower(), "environment/ballista_tower.png")
     save(from_map("coin", SYMBOLS["coin"]).resize((64, 64), Image.NEAREST), "ui/icon.png")

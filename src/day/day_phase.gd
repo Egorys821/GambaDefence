@@ -22,9 +22,9 @@ var battlefield: Battlefield
 var _spins_left := 0
 ## Spins granted today (grows if an Extra Spin is bought mid-day).
 var _spins_today := 0
-## Free spins won from Lucky Clover lines, played automatically.
-var _free_spins := 0
-var _auto_spinning := false
+## With no spins left, the first Space press highlights "Face the Night",
+## the second one starts the night.
+var _night_armed := false
 ## Panel -> resting position (they slide off screen at night).
 var _rest_positions: Dictionary = {}
 
@@ -47,16 +47,18 @@ func _ready() -> void:
 	_spin_button.pressed.connect(_on_spin_pressed)
 	_start_night_button.pressed.connect(_on_start_night_pressed)
 	_slot_machine.symbols_landed.connect(_on_symbols_landed)
-	_slot_machine.line_won.connect(_on_line_won)
+	_slot_machine.won.connect(_on_won)
+	_slot_machine.announced.connect(_on_announced)
 	_slot_machine.spin_finished.connect(_on_spin_finished)
 	GameState.machine_changed.connect(_on_machine_changed)
 	GameState.upgrades_changed.connect(_on_upgrades_changed)
 
 
 func begin_day() -> void:
-	_slot_machine.configure(GameState.machine_rows)
+	_slot_machine.configure()
 	_spins_today = GameState.spins_per_day()
 	_spins_left = _spins_today
+	_disarm_night_button()
 	_shop.restock()
 	_refresh_buttons()
 	show()
@@ -64,6 +66,16 @@ func begin_day() -> void:
 		var rest: Vector2 = _rest_positions[panel]
 		panel.position = rest + _panels[panel] * _slide_distance(panel)
 		create_tween().tween_property(panel, "position", rest, SLIDE_TIME) 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## Screen rectangles of the day UI, for the tutorial highlights.
+func tutorial_rects() -> Dictionary:
+	return {
+		"machine": (%MachinePanel as Control).get_global_rect(),
+		"paytable": _paytable.get_global_rect(),
+		"merchant": (%ShopPanel as Control).get_global_rect(),
+		"night": _start_night_button.get_global_rect(),
+	}
 
 
 func slide_out() -> void:
@@ -86,10 +98,32 @@ func _slide_distance(panel: Control) -> float:
 	return (panel.size.x if _panels[panel].x != 0.0 else panel.size.y) + 8.0
 
 
+## Space spins; once the spins are used up it first highlights "Face the
+## Night" and a second press starts the night.
 func _unhandled_key_input(event: InputEvent) -> void:
-	if visible and event.is_pressed() and not event.is_echo() and (event as InputEventKey).keycode == KEY_SPACE:
+	if not visible or not event.is_pressed() or event.is_echo() or (event as InputEventKey).keycode != KEY_SPACE:
+		return
+	get_viewport().set_input_as_handled()
+	if _slot_machine.is_awaiting_choice():
+		_slot_machine.decline_choice()  # Space = the safe answer (Collect, Skip)
+		return
+	if is_busy():
+		return
+	if _spins_left > 0:
 		_on_spin_pressed()
-		get_viewport().set_input_as_handled()
+	elif not _night_armed:
+		_arm_night_button()
+	else:
+		_on_start_night_pressed()
+
+
+func _arm_night_button() -> void:
+	_night_armed = true
+	Audio.play(&"click", 1.3)
+	_start_night_button.text = "Press Space again: Face the Night"
+	_start_night_button.pivot_offset = _start_night_button.size * 0.5
+	Fx.pop(_start_night_button, 1.1, 0.25)
+	_start_night_button.modulate = Color(1.4, 1.25, 0.8)
 
 
 func _on_spin_pressed() -> void:
@@ -101,9 +135,9 @@ func _on_spin_pressed() -> void:
 	_refresh_buttons()
 
 
-## True while the machine spins or free spins are still queued.
+## True while the machine is spinning or presenting wins.
 func is_busy() -> bool:
-	return _slot_machine.is_spinning or _free_spins > 0 or _auto_spinning
+	return _slot_machine.is_spinning
 
 
 func _on_start_night_pressed() -> void:
@@ -114,57 +148,56 @@ func _on_start_night_pressed() -> void:
 
 
 func _on_machine_changed() -> void:
-	_slot_machine.configure(GameState.machine_rows)
+	_slot_machine.configure()
 	_refresh_buttons()
 
 
 # --- Rewards ------------------------------------------------------------------
 
 ## Symbols like coins pay a little just for landing anywhere.
-func _on_symbols_landed(grid: Array) -> void:
+func _on_symbols_landed(grid: Array, cells: Array[Vector2i]) -> void:
 	var total := 0
 	var delay := 0.0
 	var threat := 0
-	for reel in grid.size():
-		for row in grid[reel].size():
-			var symbol: SymbolData = grid[reel][row]
-			if symbol.passive_threat > 0:
-				threat += symbol.passive_threat
-				_popup("+%d spirit" % symbol.passive_threat, _slot_machine.cell_center(reel, row), CURSE_COLOR, 7)
-			if symbol.passive_gold <= 0:
-				continue
-			total += symbol.passive_gold
-			_fly_coins(1, _slot_machine.cell_center(reel, row), delay, 0.95 + total * 0.03)
-			delay += 0.04
+	for cell in cells:
+		var symbol: SymbolData = grid[cell.x][cell.y]
+		var at := _slot_machine.cell_center(cell.x, cell.y)
+		if symbol.passive_threat > 0:
+			threat += symbol.passive_threat
+			_popup("+%d spirit" % symbol.passive_threat, at, CURSE_COLOR, 7)
+		if symbol.passive_gold <= 0:
+			continue
+		total += symbol.passive_gold
+		_fly_coins(1, at, delay, 0.95 + total * 0.03)
+		delay += 0.04
 	GameState.add_gold(total)
 	if threat > 0:
 		GameState.add_curse_threat(threat)
 		Audio.play(&"spirit_death", 0.7, -6.0)
 
 
-func _on_line_won(win: LineWin, _index: int) -> void:
+func _on_won(win: SlotWin, _index: int) -> void:
 	var symbol := win.symbol
-	var level := GameState.level_of(symbol.id)
-	var line_rows := Paylines.rows_of(win.payline)
-	var last_cell := _slot_machine.cell_center(win.count - 1, line_rows[win.count - 1])
-	var amount := symbol.reward_amount(win.count, level)
-	var popup_size := 9 + (win.count - 3) * 3
+	var cell := win.last_cell()
+	var last_cell := _slot_machine.cell_center(cell.x, cell.y)
+	var amount := win.amount()
+	var popup_size := 9 + clampi(win.count - 3, 0, 3) * 3
 	_paytable.flash(symbol.id)
 	# Says exactly what won: which line, how many, and the reward.
-	var headline := "%s: %dx %s" % [Paylines.name_of(win.payline), win.count, symbol.display_name]
-	_popup(headline, last_cell + Vector2(0, -26), Paylines.color_of(win.payline), 7)
-	match symbol.effect:
+	_popup(win.headline(), last_cell + Vector2(0, -26), win.color, 7)
+	match win.effect():
 		SymbolData.Effect.GOLD, SymbolData.Effect.WILD:
 			GameState.add_gold(amount)
+			if amount < 0:
+				_popup("%d gold" % amount, last_cell + Vector2(0, -14), CURSE_COLOR, popup_size)
+				Audio.play(&"denied")
+				return
 			_popup("+%d gold!" % amount, last_cell + Vector2(0, -14), GOLD_COLOR, popup_size)
 			_fly_coins(mini(amount, MAX_FLYING_COINS), last_cell, 0.1, 1.0)
 		SymbolData.Effect.SPAWN_UNIT:
 			_popup("+%d %s!" % [amount, symbol.unit.display_name], last_cell + Vector2(0, -14), TROOP_COLOR, popup_size)
 			var tween := Fx.fly_icon(self, symbol.texture, last_cell, battlefield.gate_screen_position(), 0.55, 18.0)
 			tween.finished.connect(troops_requested.emit.bind(symbol.unit, amount, GameState.power_for(symbol.id)))
-		SymbolData.Effect.RESPIN:
-			_free_spins += amount
-			_popup("FREE SPIN x%d!" % amount, last_cell + Vector2(0, -14), Color("#80ff80"), popup_size)
 		SymbolData.Effect.CURSE:
 			GameState.add_curse_threat(amount)
 			_popup("CURSED! +%d spirits tonight" % amount, last_cell + Vector2(0, -14), CURSE_COLOR, popup_size)
@@ -180,10 +213,8 @@ func _on_repair_arrived(amount: int) -> void:
 	Audio.play(&"buy", 0.8)
 
 
-func _on_spin_finished(wins: Array[LineWin], _grid: Array) -> void:
+func _on_spin_finished(wins: Array[SlotWin]) -> void:
 	_refresh_buttons()
-	if _free_spins > 0:
-		_play_free_spin()
 	var best := 0
 	for win in wins:
 		best = maxi(best, win.count)
@@ -191,19 +222,6 @@ func _on_spin_finished(wins: Array[LineWin], _grid: Array) -> void:
 		_celebrate("MEGA WIN!", 3)
 	elif best >= 4 or wins.size() >= 3:
 		_celebrate("BIG WIN!", 2)
-
-
-## Plays one queued free spin after a short pause (does not use a spin).
-func _play_free_spin() -> void:
-	_auto_spinning = true
-	_free_spins -= 1
-	_refresh_buttons()
-	await get_tree().create_timer(0.7).timeout
-	_popup("FREE SPIN", _slot_machine.global_position + Vector2(_slot_machine.size.x * 0.5, -6), Color("#80ff80"), 12)
-	Audio.play(&"spin", 1.3)
-	_auto_spinning = false
-	_slot_machine.spin()
-	_refresh_buttons()
 
 
 ## Banner, coin fountain and shake for big spins.
@@ -214,11 +232,19 @@ func _celebrate(title: String, strength: int) -> void:
 	Fx.shake_control(_slot_machine, 3.0 * strength, 0.4)
 	if battlefield:
 		battlefield.shake(1.5 * strength, 0.4)
+	_show_banner(title, 22 + strength * 6, GOLD_COLOR)
 
+
+## The machine calls out a feature ("FREE SPINS!", "81 WAYS!").
+func _on_announced(text: String, color: Color) -> void:
+	_show_banner(text, 20, color)
+
+
+func _show_banner(title: String, font_size: int, color: Color) -> void:
 	var banner := Label.new()
 	banner.text = title
-	banner.add_theme_font_size_override("font_size", 22 + strength * 6)
-	banner.add_theme_color_override("font_color", GOLD_COLOR)
+	banner.add_theme_font_size_override("font_size", font_size)
+	banner.add_theme_color_override("font_color", color)
 	banner.add_theme_color_override("font_outline_color", Color("#5a2a08"))
 	banner.add_theme_constant_override("outline_size", 8)
 	banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -260,8 +286,16 @@ func _popup(message: String, global_at: Vector2, color: Color, font_size: int) -
 
 # --- UI -------------------------------------------------------------------------
 
+func _disarm_night_button() -> void:
+	_night_armed = false
+	_start_night_button.modulate = Color.WHITE
+
+
 func _refresh_buttons() -> void:
 	_spin_button.disabled = _spins_left <= 0 or is_busy()
 	_spin_button.text = "SPIN  %d / %d" % [_spins_left, _spins_today]
 	_start_night_button.disabled = is_busy()
-	_start_night_button.text = "Face the Night" if _spins_left == 0 else "Face the Night (%d left)" % _spins_left
+	if _spins_left > 0:
+		_disarm_night_button()
+	if not _night_armed:
+		_start_night_button.text = "Face the Night" if _spins_left == 0 else "Face the Night (%d left)" % _spins_left

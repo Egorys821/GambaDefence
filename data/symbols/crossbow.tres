@@ -11,6 +11,7 @@ display_name = "Crossbow"
 texture = ExtResource("2_tex")
 description = "A line summons a Crossbowman: slow, heavy bolts from very far."
 effect = 2
+group = &"ranged"
 power = 1
 unit = ExtResource("3_unit")
 in_shop = true

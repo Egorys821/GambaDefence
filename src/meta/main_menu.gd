@@ -5,6 +5,7 @@ extends Control
 signal chosen(choice: StringName)
 
 const CHOICE_PLAY := &"play"
+const CHOICE_TUTORIAL := &"tutorial"
 const CHOICE_UPGRADES := &"upgrades"
 const CHOICE_SETTINGS := &"settings"
 const CHOICE_PREVIEW := &"preview"
@@ -19,6 +20,7 @@ var _time := 0.0
 @onready var _progress_label: Label = %ProgressLabel
 @onready var _buttons := {
 	CHOICE_PLAY: %PlayButton,
+	CHOICE_TUTORIAL: %TutorialButton,
 	CHOICE_UPGRADES: %UpgradesButton,
 	CHOICE_SETTINGS: %SettingsButton,
 	CHOICE_PREVIEW: %PreviewButton,

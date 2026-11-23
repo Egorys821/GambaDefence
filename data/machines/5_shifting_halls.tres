@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="MachineStyle" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/data/machine_style.gd" id="script"]
+[ext_resource type="Script" path="res://src/data/pool_entry.gd" id="pool_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/machine_halls.png" id="icon"]
+[ext_resource type="Resource" path="res://data/symbols/rune.tres" id="sym_rune"]
+
+[resource]
+script = ExtResource("script")
+id = &"shifting_halls"
+display_name = "Shifting Halls"
+icon = ExtResource("icon")
+description = "6 reels that change height every spin. 5+ adjacent reels from the left pay on any row: thousands of ways. Winning symbols vanish and new ones fall in, with a growing chain multiplier. Row upgrades give +30% rewards instead of rows."
+rules_hint = "6 reels change height every spin. A symbol on 5+ adjacent reels from the LEFT pays on ANY row (WAYS). Wins vanish, new symbols fall in: each cascade raises the chain multiplier."
+order = 5
+unlock_stat = &"unlock_halls"
+reel_count = 6
+min_rows = 2
+max_rows = 4
+variable_rows = true
+min_rows_stat = &"halls_min_rows"
+signature_stat = &"rune_copies"
+eval_mode = 1
+line_table = &"none"
+match_multiplier = {5: 0.5, 6: 1.0}
+min_match = 5
+ways_cap = 1
+feature = 5
+signature_symbol = ExtResource("sym_rune")
+merchant_symbols = []
+frame_color = Color(0.251, 0.8471, 0.9412, 1)
+bg_color = Color(0.1098, 0.1098, 0.1569, 1)
+reel_colors = PackedColorArray(0.8471, 0.8471, 0.8941, 1, 0.7843, 0.7843, 0.8471, 1)
+start_symbols = []

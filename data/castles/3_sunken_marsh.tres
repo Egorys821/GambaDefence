@@ -5,7 +5,6 @@
 [ext_resource type="Script" path="res://src/data/spawn_entry.gd" id="spawn_script"]
 [ext_resource type="Script" path="res://src/data/symbol_data.gd" id="symbol_script"]
 [ext_resource type="Resource" path="res://data/symbols/bow.tres" id="sym_bow"]
-[ext_resource type="Resource" path="res://data/symbols/clover.tres" id="sym_clover"]
 [ext_resource type="Resource" path="res://data/symbols/coin.tres" id="sym_coin"]
 [ext_resource type="Resource" path="res://data/symbols/crossbow.tres" id="sym_crossbow"]
 [ext_resource type="Resource" path="res://data/symbols/hammer.tres" id="sym_hammer"]
@@ -80,7 +79,7 @@ map_position = Vector2(200, 150)
 nights = 10
 ground_tint = Color(0.8, 1.0, 0.75, 1)
 starting_pool = Array[ExtResource("pool_script")]([SubResource("pool_0"), SubResource("pool_1"), SubResource("pool_2"), SubResource("pool_3")])
-merchant_symbols = Array[ExtResource("symbol_script")]([ExtResource("sym_coin"), ExtResource("sym_sword"), ExtResource("sym_bow"), ExtResource("sym_crossbow"), ExtResource("sym_staff"), ExtResource("sym_hammer"), ExtResource("sym_pike"), ExtResource("sym_quiver"), ExtResource("sym_sigil"), ExtResource("sym_clover")])
+merchant_symbols = Array[ExtResource("symbol_script")]([ExtResource("sym_coin"), ExtResource("sym_sword"), ExtResource("sym_bow"), ExtResource("sym_crossbow"), ExtResource("sym_staff"), ExtResource("sym_hammer"), ExtResource("sym_pike"), ExtResource("sym_quiver"), ExtResource("sym_sigil")])
 payline_tier = 2
 enemies = Array[ExtResource("spawn_script")]([SubResource("spawn_0"), SubResource("spawn_1"), SubResource("spawn_2"), SubResource("spawn_3"), SubResource("spawn_4")])
 boss = ExtResource("unit_storm_wraith")

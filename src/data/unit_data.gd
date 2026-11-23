@@ -39,7 +39,7 @@ extends Resource
 @export_group("Enemy")
 ## Gold earned when this spirit is destroyed.
 @export var gold_reward: int = 0
-## Bosses draw every troop into the fight, wherever they are.
+## While a boss is alive, troops spot spirits from much farther away.
 @export var is_boss: bool = false
 
 @export_group("Traits")

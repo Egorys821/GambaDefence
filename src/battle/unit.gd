@@ -117,7 +117,8 @@ func _think_troop(delta: float) -> void:
 		return
 	# Melee troops guard the area around their spot; ranged troops shoot from it.
 	var search_from := position if data.is_ranged() else home_position
-	var target := battlefield.nearest_unit(search_from, data.aggro_range, Team.ENEMY, data.is_ranged())
+	var aggro := data.aggro_range * battlefield.troop_aggro_multiplier()
+	var target := battlefield.nearest_unit(search_from, aggro, Team.ENEMY, data.is_ranged())
 	var charging := false
 	if target == null:
 		# Nothing close: go after a boss, or a ranged spirit that can hit us.

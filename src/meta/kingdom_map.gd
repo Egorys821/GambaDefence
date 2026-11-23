@@ -100,6 +100,10 @@ func _select(castle: CastleData) -> void:
 			spirits.append(entry.unit.display_name)
 		_info_body.text = "%s\nSpirits: %s. Boss: %s.\nChrono Shards x%.1f" % [
 			castle.description, ", ".join(spirits), castle.boss.display_name, castle.shard_multiplier]
+		var reward := GameState.machine_reward(castle)
+		if reward:
+			_info_body.text += "\nVictory reward: the %s slot machine%s" % [
+				reward.display_name, " (unlocked)" if MetaProgress.is_conquered(castle) else "!"]
 	_march_button.disabled = not unlocked
 	_march_button.text = "March to %s" % castle.display_name if unlocked else "Locked"
 	_map_area.queue_redraw()

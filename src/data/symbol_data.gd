@@ -10,7 +10,6 @@ enum Effect {
 	REPAIR,     ## Line repairs the castle.
 	WILD,       ## Counts as any symbol. A full line of wilds pays gold.
 	CURSE,      ## Bad symbol: a line adds spirits to tonight's wave.
-	RESPIN,     ## A line grants free spins that start automatically.
 }
 
 @export var id: StringName
@@ -21,7 +20,7 @@ enum Effect {
 @export_group("Effect")
 @export var effect: Effect = Effect.NONE
 ## Reward for a 3-of-a-kind at level 1: gold, troops summoned or HP repaired.
-## 4 and 5 of a kind multiply it (see Paylines.MATCH_MULTIPLIER).
+## Longer matches multiply it (see MachineStyle.match_multiplier).
 @export var power: int = 1
 ## Added to `power` for every level above 1 (gold and repair symbols).
 ## Levels add, they don't multiply, so upgrades can't explode the economy.
@@ -34,9 +33,20 @@ enum Effect {
 @export var passive_threat: int = 0
 ## WILD only: the symbols this wild can stand in for. Empty = any symbol.
 @export var wild_for: Array[SymbolData] = []
+## WILD only: a winning line through this wild is multiplied by this (Old Cellar's Crown).
+@export var wild_multiplier: int = 1
+## Family for mixed wins: three different symbols of one group pay (MachineStyle.group_pays).
+@export var group: StringName
+## Starts a feature when enough land anywhere (Tome of Ages' Tome).
+@export var is_scatter: bool = false
+## Bonus symbol for a machine feature, never junk (Dragon's Hoard's chest).
+@export var is_bonus: bool = false
 
 @export_group("Shop")
 @export var in_shop: bool = true
+## The merchant stops selling it once this many are on the reels (0 = no limit).
+## Keeps feature symbols (Tomes, chests...) from triggering every spin.
+@export var max_copies: int = 0
 @export var shop_cost: int = 5
 ## First night on which the merchant may offer this symbol.
 @export var min_night: int = 1
@@ -51,15 +61,14 @@ enum Effect {
 ## What a line of `count` matching symbols gives at this symbol `level`
 ## (gold, troops or HP). Troop count does not grow with level; troop power does.
 func reward_amount(count: int, level: int) -> int:
-	var multiplier: int = Paylines.MATCH_MULTIPLIER.get(count, 1)
-	if effect == Effect.RESPIN:
-		return power * (count - Paylines.MIN_MATCH + 1)  # 1 / 2 / 3 free spins
+	var multiplier := GameState.match_multiplier(count)
 	if effect == Effect.SPAWN_UNIT or effect == Effect.CURSE:
-		return power * multiplier
+		return maxi(1, roundi(power * multiplier))
 	var base := power + power_per_level * (level - 1)
+	var amount := maxi(1, roundi(base * multiplier)) if base > 0 else 0
 	if effect == Effect.GOLD:
-		return base * multiplier + GameState.stat_int(Stats.COIN_LINE_BONUS)
-	return base * multiplier
+		return amount + GameState.stat_int(Stats.COIN_LINE_BONUS)
+	return amount
 
 
 ## Short noun for the reward, e.g. "gold", "Swordsman", "HP".
@@ -75,8 +84,6 @@ func reward_label() -> String:
 			return "HP"
 		Effect.CURSE:
 			return "spirits"
-		Effect.RESPIN:
-			return "free spins"
 	return ""
 
 
@@ -92,6 +99,11 @@ func wild_targets_text() -> String:
 
 func is_wild() -> bool:
 	return effect == Effect.WILD
+
+
+## Useless symbol the merchant offers to banish.
+func is_junk() -> bool:
+	return effect == Effect.NONE and not is_bonus
 
 
 ## True if this wild can count as `other` on a payline.

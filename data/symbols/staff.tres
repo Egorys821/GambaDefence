@@ -11,6 +11,7 @@ display_name = "Arcane Staff"
 texture = ExtResource("2_tex")
 description = "A line summons a Mage: magic orbs hit groups of spirits."
 effect = 2
+group = &"arcane"
 power = 1
 unit = ExtResource("3_unit")
 passive_gold = 0

@@ -5,6 +5,8 @@ extends Control
 ## Every META upgrade (res://data/upgrades/meta/) is a node placed at its
 ## `tree_position`, linked to its `requires` parent. Only roots and children
 ## of owned nodes can be bought; the rest stays dimmed until reached.
+## The "Slot Machines" branch unlocks other machine styles: an owned machine
+## node gets a "Use machine" button that picks it for the next runs.
 ## The tree can be zoomed (mouse wheel / buttons) and dragged around.
 
 signal closed
@@ -19,7 +21,9 @@ const BRANCHES := {
 	UpgradeData.Category.MACHINE: "Slot Machine",
 	UpgradeData.Category.CASTLE: "Castle",
 	UpgradeData.Category.ARMY: "Army",
+	UpgradeData.Category.MACHINES: "Slot Machines",
 }
+const HINT := "  Machine: %s.  Forge an upgrade to open the ones below it.  Wheel: zoom, drag: move."
 const LINE_OWNED := Color("#c08820")
 const LINE_LOCKED := Color(0.4, 0.35, 0.3, 0.6)
 
@@ -36,6 +40,8 @@ var _dragging := false
 @onready var _detail_title: Label = %DetailTitle
 @onready var _detail_body: Label = %DetailBody
 @onready var _buy_button: Button = %BuyButton
+@onready var _use_button: Button = %UseButton
+@onready var _hint: Label = %Hint
 @onready var _begin_button: Button = %BeginButton
 @onready var _reset_button: Button = %ResetButton
 @onready var _settings_button: Button = %SettingsButton
@@ -48,6 +54,7 @@ func _ready() -> void:
 	%ZoomOutButton.pressed.connect(func() -> void: _zoom_at(_tree_view.size * 0.5, 1.0 / ZOOM_STEP))
 	%FitButton.pressed.connect(_fit_tree)
 	_buy_button.pressed.connect(_on_buy_pressed)
+	_use_button.pressed.connect(_on_use_pressed)
 	_begin_button.pressed.connect(_on_back_pressed)
 	_reset_button.pressed.connect(_on_reset_pressed)
 	_settings_button.pressed.connect(settings_pressed.emit)
@@ -80,16 +87,20 @@ func _build_tree() -> void:
 	# Branch titles above each group of roots.
 	for category: UpgradeData.Category in BRANCHES:
 		var columns: Array[float] = []
+		var top_row := INF
 		for node in _nodes:
 			if node.upgrade.category == category:
 				columns.append(node.upgrade.tree_position.x)
+				top_row = minf(top_row, node.upgrade.tree_position.y)
+		if columns.is_empty():
+			continue
 		var label := Label.new()
 		label.text = BRANCHES[category]
 		label.add_theme_font_size_override("font_size", 9)
 		label.add_theme_color_override("font_color", Color("#f8d038"))
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		var center_x: float = ORIGIN.x + ((columns.min() + columns.max()) * 0.5 + 0.5) * CELL.x
-		label.position = Vector2(center_x - 60, ORIGIN.y - 22)
+		label.position = Vector2(center_x - 60, ORIGIN.y + top_row * CELL.y - 22)
 		label.size = Vector2(120, 12)
 		_tree.add_child(label)
 
@@ -170,6 +181,7 @@ func _select(upgrade: UpgradeData) -> void:
 
 func _refresh() -> void:
 	_shard_label.text = "%d Chrono Shards" % MetaProgress.shards
+	_hint.text = HINT % GameState.selected_machine().display_name
 	for node in _nodes:
 		node.refresh()
 		node.selected = node.upgrade == _selected
@@ -190,12 +202,36 @@ func _refresh_detail() -> void:
 	if not GameState.prerequisites_met(_selected) and level == 0:
 		body += "\nRequires: %s level %d." % [_selected.requires.display_name, _selected.requires_level]
 	_detail_body.text = body
-	if _selected.is_maxed(level):
+	if _selected.is_castle_reward():
+		var castle_name := _selected.unlock_castle.display_name
+		_buy_button.text = "Unlocked" if level > 0 else "Conquer\n%s" % castle_name
+		_buy_button.disabled = true
+		_detail_body.text = body + ("" if level > 0 else "\nReward for conquering %s." % castle_name)
+	elif _selected.is_maxed(level):
 		_buy_button.text = "Maxed"
 		_buy_button.disabled = true
 	else:
 		_buy_button.text = "Forge - %d shards" % _selected.cost_at(level)
 		_buy_button.disabled = not MetaProgress.can_buy(_selected)
+	_refresh_use_button()
+
+
+## Owned machine unlocks can be picked (or put back to the standard machine).
+func _refresh_use_button() -> void:
+	var machine := GameState.machine_unlocked_by(_selected)
+	_use_button.visible = machine != null and GameState.is_machine_unlocked(machine)
+	if _use_button.visible:
+		var in_use := GameState.selected_machine() == machine
+		_use_button.text = "In use: back to\nstandard machine" if in_use else "Use machine"
+
+
+func _on_use_pressed() -> void:
+	var machine := GameState.machine_unlocked_by(_selected)
+	if machine == null:
+		return
+	var in_use := GameState.selected_machine() == machine
+	MetaProgress.select_machine(MachineStyle.STANDARD_ID if in_use else machine.id)
+	Audio.play(&"buy", 1.2)
 
 
 func _on_buy_pressed() -> void:

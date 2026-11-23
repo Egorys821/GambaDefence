@@ -63,7 +63,7 @@ func _fill_symbols() -> void:
 			SymbolData.Effect.WILD:
 				pays = "WILD - counts as %s." % symbol.wild_targets_text()
 			SymbolData.Effect.NONE:
-				pays = "Pays nothing."
+				pays = "Bonus symbol: pays nothing on lines." if symbol.is_bonus else "Pays nothing."
 			SymbolData.Effect.CURSE:
 				pays = "x3 / x4 / x5: +%d / +%d / +%d spirits tonight, +%d per copy that lands" % [
 					symbol.reward_amount(3, 1), symbol.reward_amount(4, 1), symbol.reward_amount(5, 1), symbol.passive_threat]

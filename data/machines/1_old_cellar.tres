@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="MachineStyle" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://src/data/machine_style.gd" id="script"]
+[ext_resource type="Script" path="res://src/data/pool_entry.gd" id="pool_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/crown.png" id="icon"]
+[ext_resource type="Resource" path="res://data/symbols/crown.tres" id="sym_crown"]
+[ext_resource type="Script" path="res://src/data/symbol_data.gd" id="sym_script"]
+
+[resource]
+script = ExtResource("script")
+id = &"old_cellar"
+display_name = "Old Cellar"
+icon = ExtResource("icon")
+description = "A classic 3-reel fruit machine: steady small wins. Three different weapons of one kind pay, a Coin in the middle of reel 1 pays a little and the Crown doubles a line. Losing spins may offer a nudge. Row upgrades give +30% rewards instead of rows."
+rules_hint = "3 reels: 3 in a row on a line pays. 3 different weapons of one kind pay half. A Coin in the middle of reel 1 pays 1 gold on a losing spin. A Crown doubles a line. Losses may offer a NUDGE."
+order = 1
+unlock_stat = &"unlock_cellar"
+reel_count = 3
+fixed_rows = 3
+
+group_pays = true
+consolation_coin = true
+signature_stat = &"crown_copies"
+eval_mode = 0
+line_table = &"cellar"
+match_multiplier = {3: 1}
+feature = 2
+signature_symbol = ExtResource("sym_crown")
+merchant_symbols = Array[ExtResource("sym_script")]([ExtResource("sym_crown")])
+frame_color = Color(0.6275, 0.6588, 0.6902, 1)
+bg_color = Color(0.1255, 0.1412, 0.1569, 1)
+reel_colors = PackedColorArray(0.9412, 0.9412, 0.9098, 1, 0.8784, 0.8784, 0.8471, 1)
+start_symbols = []

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SymbolData" format=3]
+
+[ext_resource type="Script" path="res://src/data/symbol_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/crown.png" id="2_tex"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"crown"
+display_name = "Royal Crown"
+texture = ExtResource("2_tex")
+description = "Old Cellar wild: counts as any symbol and DOUBLES the line it helps. Only one fits on the reels."
+effect = 4
+power = 6
+wild_multiplier = 2
+in_shop = true
+max_copies = 1
+shop_cost = 12

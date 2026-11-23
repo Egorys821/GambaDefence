@@ -7,7 +7,8 @@ extends Resource
 ## Instances live in res://data/upgrades/meta/ and res://data/upgrades/run/.
 
 enum Scope { META, RUN }
-enum Category { MACHINE, CASTLE, ARMY }
+## MACHINES: unlocks for other slot machines (see MachineStyle) and their upgrades.
+enum Category { MACHINE, CASTLE, ARMY, MACHINES }
 
 @export var id: StringName
 @export var display_name: String
@@ -32,6 +33,11 @@ enum Category { MACHINE, CASTLE, ARMY }
 ## Grid cell in the Time Forge tree (column, row). Fractions are fine.
 @export var tree_position: Vector2
 
+@export_group("Castle reward")
+## If set, this upgrade can't be bought: it is owned (level 1) once this
+## castle is conquered. Used for the slot machine unlocks.
+@export var unlock_castle: CastleData
+
 @export_group("Cost")
 ## Price of level 1. Each further level costs `cost_per_level` more.
 ## Chrono Shards for META upgrades, gold for RUN upgrades.
@@ -39,6 +45,10 @@ enum Category { MACHINE, CASTLE, ARMY }
 @export var cost_per_level: int = 5
 ## RUN only: first night the merchant may offer it.
 @export var min_night: int = 1
+
+
+func is_castle_reward() -> bool:
+	return unlock_castle != null
 
 
 func cost_at(current_level: int) -> int:

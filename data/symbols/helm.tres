@@ -11,6 +11,7 @@ display_name = "Knight's Helm"
 texture = ExtResource("2_tex")
 description = "A line summons a Knight: heavy armored warrior."
 effect = 2
+group = &"melee"
 power = 1
 unit = ExtResource("3_unit")
 passive_gold = 0

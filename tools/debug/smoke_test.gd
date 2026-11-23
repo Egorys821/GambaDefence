@@ -9,6 +9,9 @@ extends Node
 ##   --idle         no spins, no shopping: tests the castle alone
 ##   --shards=N     start with N Chrono Shards and buy Time Forge upgrades first
 ##   --castle=N     castle to play (1 = first); earlier castles count as conquered
+##   --machine=ID   slot machine style to play (data/machines/, e.g. jester_81);
+##                  conquers the castle that unlocks it first. Gamble and nudge
+##                  questions are declined.
 ##   --shots=DIR    save screenshots (needs a window, so no --headless)
 
 const MAIN_SCENE := preload("res://src/main/main.tscn")
@@ -18,7 +21,9 @@ var _nights := 3
 var _shots_dir := ""
 var _idle := false
 var _shards := 0
+var _tutorial := false
 var _castle := 1
+var _machine := MachineStyle.STANDARD_ID
 var _main: Node
 
 
@@ -26,8 +31,12 @@ func _ready() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--nights="):
 			_nights = int(arg.get_slice("=", 1))
+		elif arg == "--tutorial":
+			_tutorial = true  # step through the tutorial and screenshot each step
 		elif arg == "--idle":
 			_idle = true
+		elif arg.begins_with("--machine="):
+			_machine = StringName(arg.get_slice("=", 1))
 		elif arg.begins_with("--castle="):
 			_castle = int(arg.get_slice("=", 1))
 		elif arg.begins_with("--shards="):
@@ -40,9 +49,11 @@ func _ready() -> void:
 	MetaProgress.levels.clear()
 	MetaProgress.shards = _shards
 	MetaProgress.runs = 1
+	MetaProgress.tutorial_done = not _tutorial
 	MetaProgress.conquered.clear()
 	for i in _castle - 1:
 		MetaProgress.conquered.append(GameState.castles[i].id)
+	_unlock_machine(_machine)
 	_main = MAIN_SCENE.instantiate()
 	add_child(_main)
 	await _run()
@@ -72,9 +83,12 @@ func _run() -> void:
 	await _wait(0.6)
 	var map: KingdomMap = _main.get_node("UI/KingdomMap")
 	await _shot("00_map")
-	map.get_node("%MarchButton").pressed.emit()  # the map preselects the newest open castle
+	map._select(GameState.castles[_castle - 1])  # machine unlocks may have opened later castles
+	map.get_node("%MarchButton").pressed.emit()
 	await _wait(0.6)
-	print("Castle: %s" % GameState.castle.display_name)
+	print("Castle: %s | Machine: %s" % [GameState.castle.display_name, GameState.machine.display_name])
+	if _tutorial:
+		await _step_through_tutorial()
 
 	var day: DayPhase = _main.get_node("UI/DayPhase")
 	var machine: SlotMachine = day.get_node("%SlotMachine")
@@ -85,6 +99,8 @@ func _run() -> void:
 		for i in spins:
 			day.get_node("%SpinButton").pressed.emit()
 			while day.is_busy():
+				if machine.is_awaiting_choice():
+					machine.decline_choice()
 				await get_tree().process_frame
 			if i == 0:
 				await _wait(0.1)
@@ -103,8 +119,9 @@ func _run() -> void:
 		await _shot("%02d_day_after_shopping" % night)
 		print("Night %d | gold %d | castle %d/%d | troops %d | rows %d | lines %d | run upgrades %s" % [
 			night, GameState.gold, GameState.castle_hp, GameState.castle_max_hp, field.get_troops().size(),
-			GameState.machine_rows, GameState.paylines.size(), GameState.run_upgrades])
+			GameState.machine_rows, GameState.active_paylines().size(), GameState.run_upgrades])
 		day.get_node("%StartNightButton").pressed.emit()
+		await _wait(1.0)  # the night panel applies the saved speed; override it after
 		Engine.time_scale = BATTLE_SPEED
 		await _wait(3.0)
 		await _shot("%02d_night_battle" % night)
@@ -119,6 +136,28 @@ func _run() -> void:
 			return
 		await _wait(2.5)
 		print("  dawn: gold %d, morale %d%%" % [GameState.gold, roundi(field.morale * 100.0)])
+
+
+## Unlocks (by conquering its castle) and picks a machine (in-memory progress only).
+func _unlock_machine(id: StringName) -> void:
+	var style: MachineStyle = GameState.machines.get(id)
+	assert(style != null, "Unknown machine: %s" % id)
+	var castle := GameState.machine_castle(style)
+	if castle and castle.id not in MetaProgress.conquered:
+		MetaProgress.conquered.append(castle.id)
+	MetaProgress.selected_machine = id
+
+
+func _step_through_tutorial() -> void:
+	await _wait(1.0)
+	var tutorial: Tutorial = _main.get("_tutorial")
+	var step := 1
+	while tutorial.visible:
+		await _shot("tut_%02d" % step)
+		tutorial._next_button.pressed.emit()
+		step += 1
+		await _wait(0.4)
+	print("Tutorial steps: %d" % (step - 1))
 
 
 func _buy_forge_upgrades(_forge: TimeForge) -> void:

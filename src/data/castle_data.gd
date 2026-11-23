@@ -18,7 +18,7 @@ extends Resource
 @export var starting_pool: Array[PoolEntry] = []
 ## Symbols the merchant can sell here (Time Forge unlocks add more).
 @export var merchant_symbols: Array[SymbolData] = []
-## Highest payline tier sold here (see Paylines.ALL "tier").
+## Highest pattern tier sold here (see Paylines.SHAPES "tier").
 @export var payline_tier: int = 1
 
 @export_group("Spirits")

@@ -51,6 +51,9 @@ const NIGHT_TINT := Color(0.36, 0.38, 0.7)
 const GOLD_COLOR := Color("#f8d038")
 ## Damage multiplier when no upkeep at all could be paid.
 const MIN_MORALE := 0.5
+## While a boss is on the field, troops spot spirits this much farther away
+## (they still fight the nearest one rather than all rushing the boss).
+const BOSS_AGGRO_MULTIPLIER := 2.5
 
 var is_night := false
 ## Troop damage multiplier from paying upkeep (see pay_upkeep).
@@ -60,6 +63,7 @@ var _spawn_timer := 0.0
 var _spawn_interval := 1.0
 var _enemy_power := 1.0
 var _enemies_alive := 0
+var _bosses_alive := 0
 var _shake_strength := 0.0
 var _shake_time := 0.0
 var _watchtowers: Array[Watchtower] = []
@@ -246,6 +250,7 @@ func start_night(night: int) -> void:
 	_enemy_power = WaveGenerator.enemy_power(night)
 	_spawn_timer = FIRST_SPAWN_DELAY
 	_enemies_alive = 0
+	_bosses_alive = 0
 	is_night = true
 	_set_view(true)
 	_emit_status()
@@ -275,6 +280,8 @@ func _spawn_enemy(data: UnitData) -> void:
 	enemy.position = Vector2(randf_range(SPAWN_AREA.position.x, SPAWN_AREA.end.x),
 			randf_range(SPAWN_AREA.position.y, SPAWN_AREA.end.y))
 	enemy.died.connect(_on_enemy_died)
+	if data.is_boss:
+		_bosses_alive += 1
 	_units.add_child(enemy)
 	enemy.play_rise()
 	_enemies_alive += 1
@@ -283,6 +290,8 @@ func _spawn_enemy(data: UnitData) -> void:
 
 func _on_enemy_died(enemy: Unit) -> void:
 	_enemies_alive -= 1
+	if enemy.data.is_boss:
+		_bosses_alive -= 1
 	GameState.kills += 1
 	Fx.burst(_effects, enemy.get_aim_point(), Color("#d0f4ec"), 10, 40.0, null, 0.6, -30.0)
 	var reward := enemy.data.gold_reward + GameState.stat_int(Stats.KILL_BOUNTY)
@@ -387,8 +396,13 @@ func nearest_unit(from: Vector2, max_distance: float, team: Unit.Team, can_hit_f
 	return best
 
 
-## A spirit worth leaving the formation for: a boss anywhere, or a ranged
-## spirit close enough to shoot this troop. Nearest first.
+## Multiplier on troops' aggro range (bigger while a boss is on the field).
+func troop_aggro_multiplier() -> float:
+	return BOSS_AGGRO_MULTIPLIER if _bosses_alive > 0 else 1.0
+
+
+## A spirit worth leaving the formation for: a ranged spirit close enough to
+## shoot this troop. Nearest first.
 func priority_target(troop: Unit) -> Unit:
 	var best: Unit = null
 	var best_distance := INF
@@ -399,7 +413,7 @@ func priority_target(troop: Unit) -> Unit:
 		if enemy.data.flying and not troop.data.is_ranged():
 			continue
 		var distance := troop.position.distance_to(enemy.position)
-		var threat := enemy.data.is_boss or (enemy.data.is_ranged() and distance <= enemy.data.attack_range + 24.0)
+		var threat := enemy.data.is_ranged() and distance <= enemy.data.attack_range + 24.0
 		if threat and distance < best_distance:
 			best = enemy
 			best_distance = distance

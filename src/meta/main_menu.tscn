@@ -80,6 +80,14 @@ focus_mode = 0
 theme_override_font_sizes/font_size = 14
 text = "Play"
 
+[node name="TutorialButton" type="Button" parent="Menu/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 20)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 10
+text = "How to Play - Tutorial"
+
 [node name="UpgradesButton" type="Button" parent="Menu/Buttons"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 20)

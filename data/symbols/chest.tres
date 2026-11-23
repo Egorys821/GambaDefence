@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SymbolData" format=3]
+
+[ext_resource type="Script" path="res://src/data/symbol_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/chest.png" id="2_tex"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"chest"
+display_name = "Treasure Chest"
+texture = ExtResource("2_tex")
+description = "Dragon's Hoard bonus: pays nothing on lines, but 6+ anywhere start the Hoard: chests lock with prizes and the rest respins."
+effect = 0
+power = 0
+is_bonus = true
+in_shop = true
+max_copies = 3
+shop_cost = 8

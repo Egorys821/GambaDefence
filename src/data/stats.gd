@@ -45,6 +45,35 @@ const UNLOCK_CROSSBOWS := &"unlock_crossbows"
 const UNLOCK_CLERICS := &"unlock_clerics"
 const UNLOCK_RUNE := &"unlock_rune"
 
+# --- Machine styles (Time Forge "Machines" branch, see MachineStyle) ---
+## Machine unlocks (1 = the machine can be picked in the Time Forge).
+const UNLOCK_CELLAR := &"unlock_cellar"
+const UNLOCK_JESTER := &"unlock_jester"
+const UNLOCK_HOARD := &"unlock_hoard"
+const UNLOCK_TOME := &"unlock_tome"
+const UNLOCK_HALLS := &"unlock_halls"
+## Extra copies of a machine's signature symbol at run start (MachineStyle.signature_stat).
+const CROWN_COPIES := &"crown_copies"
+const JESTER_COPIES := &"jester_copies"
+const RUNE_COPIES := &"rune_copies"
+const CHEST_COPIES := &"chest_copies"
+## Old Cellar.
+const NUDGE_CHANCE := &"nudge_chance"          ## Chance of a nudge after a losing spin.
+const CONSOLATION_GOLD := &"consolation_gold"  ## Gold for a lone coin on the first reel of a line.
+## Jester's 81.
+const JESTER_FOUR_BONUS := &"jester_four_bonus"  ## Added to the 4-of-a-kind multiplier.
+const GAMBLE_EDGE := &"gamble_edge"              ## Added to the 50% gamble win chance.
+## Dragon's Hoard.
+const HOARD_RESPINS_BONUS := &"hoard_respins_bonus"
+const HOARD_GOLD_BONUS := &"hoard_gold_bonus"      ## Extra hoard gold (0.25 = +25%).
+## Tome of Ages.
+const FREE_SPINS_BONUS := &"free_spins_bonus"
+const EXPAND_EASE := &"expand_ease"  ## The expanding symbol needs this many fewer reels.
+const TOME_SCATTER_BONUS := &"tome_scatter_bonus"  ## Extra gold per Tome when free spins start.
+## Shifting Halls.
+const HALLS_MIN_ROWS := &"halls_min_rows"  ## Added to the shortest possible reel.
+const CASCADE_STEP := &"cascade_step"      ## Multiplier gained per cascade in a chain.
+
 const BASE := {
 	MACHINE_ROWS: 3,
 	SPINS_PER_DAY: 6,
@@ -62,6 +91,9 @@ const BASE := {
 	TROOP_POWER: 1.0,
 	GARRISON: 0,
 	FREE_TROOPS: 10,
+	NUDGE_CHANCE: 0.15,
+	CONSOLATION_GOLD: 1,
+	CASCADE_STEP: 1,
 }
 
 ## Hard limits so upgrades can never break the game.
@@ -73,4 +105,8 @@ const LIMITS := {
 	EXTRA_TOWERS: Vector2(0, 4),
 	SHOP_DISCOUNT: Vector2(0, 0.6),
 	ENEMY_SLOW: Vector2(0, 0.6),
+	NUDGE_CHANCE: Vector2(0, 0.8),
+	GAMBLE_EDGE: Vector2(0, 0.2),
+	EXPAND_EASE: Vector2(0, 2),
+	HALLS_MIN_ROWS: Vector2(0, 2),
 }

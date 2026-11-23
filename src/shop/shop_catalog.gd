@@ -13,8 +13,8 @@ const BANISH_COST := 4
 const BANISH_CURSE_COST := 8
 ## Symbols can't be upgraded past this level.
 const MAX_SYMBOL_LEVEL := 5
-const PAYLINE_BASE_COST := 8
-const PAYLINE_COST_STEP := 4
+const PAYLINE_BASE_COST := 10
+const PAYLINE_COST_STEP := 6
 
 const PAYLINE_ICON := preload("res://assets/sprites/ui/payline.png")
 
@@ -31,15 +31,15 @@ static func roll_offers() -> Array[ShopOffer]:
 		if GameState.is_symbol_available(symbol):
 			candidates.append(add_symbol_offer(symbol))
 		if GameState.copies_of(symbol.id) > 0:
-			if symbol.effect == SymbolData.Effect.NONE or symbol.effect == SymbolData.Effect.CURSE:
+			if symbol.is_junk() or symbol.effect == SymbolData.Effect.CURSE:
 				candidates.append(banish_offer(symbol))
 				if symbol.effect == SymbolData.Effect.CURSE:
 					candidates.append(banish_offer(symbol))  # cursed symbols show up twice as often
-			elif not symbol.is_wild() and symbol.effect != SymbolData.Effect.RESPIN 					and GameState.level_of(symbol.id) < MAX_SYMBOL_LEVEL:
+			elif not symbol.is_wild() and not symbol.is_bonus and GameState.level_of(symbol.id) < MAX_SYMBOL_LEVEL:
 				candidates.append(upgrade_symbol_offer(symbol))
-	var line := GameState.next_locked_payline()
-	if line >= 0:
-		candidates.append(payline_offer(line))
+	var shape := GameState.next_locked_shape()
+	if shape >= 0:
+		candidates.append(pattern_offer(shape))
 	for upgrade in GameState.get_upgrades(UpgradeData.Scope.RUN):
 		if GameState.night >= upgrade.min_night and not upgrade.is_maxed(GameState.upgrade_level(upgrade)) 				and GameState.prerequisites_met(upgrade):
 			candidates.append(run_upgrade_offer(upgrade))
@@ -82,14 +82,15 @@ static func banish_offer(symbol: SymbolData) -> ShopOffer:
 		func() -> void: GameState.remove_symbol(symbol.id))
 
 
-static func payline_offer(line: int) -> ShopOffer:
-	var extra_lines := GameState.paylines.size() - Paylines.row_lines(GameState.machine_rows).size()
+static func pattern_offer(shape: int) -> ShopOffer:
+	var table := GameState.line_table()
+	var lines := Paylines.lines_of(table, shape, GameState.machine_rows).size()
 	return ShopOffer.new(
-		"Payline: %s" % Paylines.name_of(line),
-		"A new line shape that pays out.",
+		"Pattern: %s" % Paylines.shape_name(table, shape),
+		"New winning shape. Works at every height it fits: +%d lines now, more with extra rows." % lines,
 		PAYLINE_ICON,
-		PAYLINE_BASE_COST + PAYLINE_COST_STEP * extra_lines,
-		func() -> void: GameState.unlock_payline(line))
+		PAYLINE_BASE_COST + PAYLINE_COST_STEP * (GameState.shapes.size() - 1),
+		func() -> void: GameState.unlock_shape(shape))
 
 
 static func run_upgrade_offer(upgrade: UpgradeData) -> ShopOffer:

@@ -11,6 +11,7 @@ display_name = "Bow"
 texture = ExtResource("2_tex")
 description = "A line summons 2 Archers: shoots spirits from afar."
 effect = 2
+group = &"ranged"
 power = 2
 unit = ExtResource("3_unit")
 passive_gold = 0

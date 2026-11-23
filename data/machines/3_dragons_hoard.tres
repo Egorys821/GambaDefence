@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="MachineStyle" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://src/data/machine_style.gd" id="script"]
+[ext_resource type="Script" path="res://src/data/pool_entry.gd" id="pool_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/chest.png" id="icon"]
+[ext_resource type="Resource" path="res://data/symbols/chest.tres" id="sym_chest"]
+[ext_resource type="Script" path="res://src/data/symbol_data.gd" id="sym_script"]
+
+[sub_resource type="Resource" id="start_0"]
+script = ExtResource("pool_script")
+symbol = ExtResource("sym_chest")
+copies = 2
+
+[resource]
+script = ExtResource("script")
+id = &"dragons_hoard"
+display_name = "Dragon's Hoard"
+icon = ExtResource("icon")
+description = "Pays on lines like the standard machine. 6+ Treasure Chests anywhere start the Hoard: chests lock with prizes (gold, troops, repairs, jackpots) and the empty cells respin. Fill the grid for the Grand."
+rules_hint = "Lines from the LEFT. 6+ Treasure Chests anywhere (a few more with extra rows) start the HOARD: chests lock with prizes, empty cells respin 3 times, a new chest resets the respins. Fill the grid for the GRAND."
+order = 3
+unlock_stat = &"unlock_hoard"
+reel_count = 5
+feature_count = 6
+trigger_scales_with_rows = true
+feature_length = 3
+length_stat = &"hoard_respins_bonus"
+eval_mode = 0
+line_table = &"standard"
+match_multiplier = {3: 1, 4: 2, 5: 4}
+feature = 4
+feature_symbol = ExtResource("sym_chest")
+signature_symbol = ExtResource("sym_chest")
+signature_stat = &"chest_copies"
+merchant_symbols = Array[ExtResource("sym_script")]([ExtResource("sym_chest")])
+frame_color = Color(0.1882, 0.7529, 0.4392, 1)
+bg_color = Color(0.06275, 0.1647, 0.1098, 1)
+reel_colors = PackedColorArray(0.8784, 0.9255, 0.8471, 1, 0.8157, 0.8784, 0.7843, 1)
+start_symbols = Array[ExtResource("pool_script")]([SubResource("start_0")])

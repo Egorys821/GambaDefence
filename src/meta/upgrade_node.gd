@@ -6,6 +6,7 @@ extends Button
 const NODE_SIZE := Vector2(36, 36)
 const LOCKED_COLOR := Color(0.25, 0.22, 0.25)
 const GOLD := Color("#f8d038")
+const IN_USE := Color("#60f080")
 
 var upgrade: UpgradeData
 var selected := false:
@@ -53,6 +54,8 @@ func _process(delta: float) -> void:
 
 
 func is_open() -> bool:
+	if upgrade.is_castle_reward():
+		return MetaProgress.level_of(upgrade.id) > 0
 	return GameState.prerequisites_met(upgrade) or MetaProgress.level_of(upgrade.id) > 0
 
 
@@ -78,3 +81,11 @@ func _draw() -> void:
 	if selected:
 		draw_rect(Rect2(Vector2(-3, -3), NODE_SIZE + Vector2(6, 6)), Color("#60d8f8"), false, 2.0)
 	draw_rect(Rect2(Vector2.ZERO, NODE_SIZE), border, false, 2.0)
+	if _is_machine_in_use():
+		# Green corner flag: this machine is used for the next runs.
+		draw_colored_polygon(PackedVector2Array([Vector2(NODE_SIZE.x - 12, 0), Vector2(NODE_SIZE.x, 0), Vector2(NODE_SIZE.x, 12)]), IN_USE)
+
+
+func _is_machine_in_use() -> bool:
+	var machine := GameState.machine_unlocked_by(upgrade)
+	return machine != null and GameState.selected_machine() == machine

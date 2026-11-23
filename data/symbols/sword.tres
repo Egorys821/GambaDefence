@@ -11,6 +11,7 @@ display_name = "Sword"
 texture = ExtResource("2_tex")
 description = "A line summons 2 Swordsmen: sturdy melee fighter."
 effect = 2
+group = &"melee"
 power = 2
 unit = ExtResource("3_unit")
 passive_gold = 0

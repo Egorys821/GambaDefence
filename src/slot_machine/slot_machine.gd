@@ -1,269 +1,312 @@
 class_name SlotMachine
 extends Panel
-## The magic slot machine: 5 reels, 3 to 5 rows (GameState.machine_rows).
-## Rolls symbols from GameState.pool, scrolls the reels, then presents each
-## winning payline one after another. Rewards are applied by DayPhase.
+## The magic slot machine. Its layout and rules come from the run's
+## MachineStyle (GameState.machine): 3 to 6 reels, fixed or variable heights,
+## lines or ways, and one bonus feature (see MachineFeature).
+##
+## Runs a spin from start to finish: rolls the result, spins and stops the
+## Reels (with suspense when a big win is building), evaluates with
+## MachineRules, presents each win, then lets the feature continue the spin
+## (free spins, respins, cascades, a gamble...). Rewards are applied by
+## DayPhase through the signals below.
 
-## All reels stopped; nothing has been evaluated yet.
-signal symbols_landed(grid: Array)
-## Fired once per winning line, in presentation order (smallest win first).
-signal line_won(win: LineWin, index: int)
-## Every line has been presented.
-signal spin_finished(wins: Array[LineWin], grid: Array)
+## Reels stopped. `cells` are the cells that just landed (passive effects).
+signal symbols_landed(grid: Array, cells: Array[Vector2i])
+## Fired once per win, in presentation order.
+signal won(win: SlotWin, index: int)
+## A big moment worth a banner ("FREE SPINS!", "81 WAYS!").
+signal announced(text: String, color: Color)
+## The spin and its feature are over.
+signal spin_finished(wins: Array[SlotWin])
 
-enum ReelState { IDLE, SPINNING, STOPPING, LANDING }
-
-const REELS := 5
 const PADDING := 6
 ## Cell size per row count. Multiples of 8 keep the 16px pixel art crisp.
 const CELL_SIZE_BY_ROWS := {3: 40, 4: 40, 5: 32}
-const SPIN_SPEED := 720.0  # pixels per second
+## Machines with few reels get bigger cells.
+const SMALL_MACHINE_CELL := 48
+## Variable-height machines: every reel fits this box, cells shrink to fit.
+const VARIABLE_REEL_WIDTH := 40
+const VARIABLE_HEIGHT := 160
 const SPIN_TIME := 0.45  # before the first reel stops
 const REEL_STAGGER := 0.16
-## Extra suspense before a reel that could extend a win to 4 or 5 of a kind.
+## Extra suspense before a reel that could make the win bigger.
 const TEASE_TIME := 0.75
 const LINE_SHOW_TIME := 0.45
-const REEL_COLOR := Color("#e8d8b0")
-const REEL_COLOR_ALT := Color("#dccaa0")
-const TEASE_COLOR := Color("#f8d038")
+const CURSE_COLOR := Color("#ff3040")
 
 var is_spinning := false
+var style: MachineStyle
 var rows := 0
 var cell_size := 40
 ## grid[reel][row] -> SymbolData currently shown.
-var _grid: Array = []
-## Per reel: rows + 1 symbols, index 0 is hidden just above the window.
-var _strips: Array = []
-## Per reel: TextureRects matching _strips.
-var _cells: Array = []
-var _offsets: Array[float] = []
-var _states: Array[int] = []  # ReelState per reel
-## Per reel: final symbols still to scroll in while stopping.
-var _queues: Array = []
-var _tease_glows: Array[ColorRect] = []
+var grid: Array = []
+var _reels: Array[Reel] = []
+## While a hold-and-win round runs, every cell is its own one-row reel.
+var _cell_reels: Dictionary = {}
+var _feature: MachineFeature
+var _spin_wins: Array[SlotWin] = []
 
-@onready var _reels: Control = %Reels
+@onready var _reel_area: Control = %Reels
 @onready var _overlay: LineOverlay = %LineOverlay
+var _prompt: ChoicePrompt
+var _status: Label
 
 
 func _ready() -> void:
-	add_theme_stylebox_override("panel", _make_frame_style())
-	configure(GameState.machine_rows)
+	_overlay.cell_rect = _cell_rect
+	_prompt = ChoicePrompt.new()
+	add_child(_prompt)
+	_status = Label.new()
+	_status.add_theme_font_size_override("font_size", 8)
+	_status.add_theme_color_override("font_color", Color("#f8d038"))
+	_status.add_theme_color_override("font_outline_color", Color.BLACK)
+	_status.add_theme_constant_override("outline_size", 4)
+	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_status)
+	configure()
 
 
-## (Re)builds the reels for a row count. Safe to call between spins.
-func configure(row_count: int) -> void:
-	if row_count == rows or is_spinning:
+## (Re)builds the machine for GameState's style and rows. Safe between spins.
+func configure() -> void:
+	if is_spinning or (style == GameState.machine and rows == GameState.machine_rows):
 		return
-	rows = row_count
-	cell_size = CELL_SIZE_BY_ROWS.get(rows, 24)
-	var reels_size := Vector2(REELS, rows) * cell_size
-	custom_minimum_size = reels_size + Vector2.ONE * PADDING * 2
+	style = GameState.machine
+	rows = GameState.machine_rows
+	_feature = MachineFeature.create(style)
+	add_theme_stylebox_override("panel", _make_frame_style())
+	if style.variable_rows:
+		cell_size = VARIABLE_REEL_WIDTH
+	elif style.reel_count <= 4:
+		cell_size = SMALL_MACHINE_CELL
+	else:
+		cell_size = CELL_SIZE_BY_ROWS.get(rows, 32)
+	var area := _area_size()
+	custom_minimum_size = area + Vector2.ONE * PADDING * 2
 	size = custom_minimum_size
-	for control: Control in [_reels, _overlay]:
+	for control: Control in [_reel_area, _overlay]:
 		control.position = Vector2.ONE * PADDING
-		control.size = reels_size
-	_overlay.cell_size = cell_size
+		control.size = area
+	_status.position = Vector2(0, -13)
+	_status.size = Vector2(size.x, 12)
 	_overlay.clear()
+	set_status("")
+	grid = roll_grid()
 	_build_reels()
-	_grid = _roll_grid()
-	for reel in REELS:
-		_strips[reel] = [GameState.roll_symbol()] + _grid[reel]
-		_apply_textures(reel)
-		_layout_reel(reel)
-
-
-func _process(delta: float) -> void:
-	for reel in REELS:
-		if _states[reel] != ReelState.SPINNING and _states[reel] != ReelState.STOPPING:
-			continue
-		_offsets[reel] += SPIN_SPEED * delta * cell_size / 32.0
-		while _offsets[reel] >= cell_size and _states[reel] != ReelState.LANDING:
-			_offsets[reel] -= cell_size
-			_advance_reel(reel)
-		_layout_reel(reel)
 
 
 func spin() -> void:
 	if is_spinning:
 		return
 	is_spinning = true
+	_spin_wins.clear()
 	_overlay.clear()
-	_reset_cell_effects()
-	var result := _roll_grid()
 	Audio.play(&"spin")
-	for reel in REELS:
-		_states[reel] = ReelState.SPINNING
-		_set_blur(reel, true)
-	await _wait(SPIN_TIME)
-	for reel in REELS:
-		if reel > 0:
-			if _should_tease(result, reel):
-				_set_tease(reel, true)
-				Audio.play(&"tease")
-				await _wait(TEASE_TIME)
-			else:
-				await _wait(REEL_STAGGER)
-		# Symbols scroll in at the top, so feed the final column bottom-first,
-		# then one filler that ends up hidden above the window.
-		var queue: Array = result[reel].duplicate()
-		queue.reverse()
-		queue.append(GameState.roll_symbol())
-		_queues[reel] = queue
-		_states[reel] = ReelState.STOPPING
-	while not _all_reels_idle():
-		await get_tree().process_frame
-
-	_grid = result
-	symbols_landed.emit(result)
-	var wins := evaluate(result, GameState.paylines)
-	wins.sort_custom(func(a: LineWin, b: LineWin) -> bool: return a.count < b.count)
-	await _wait(0.15)
-	for i in wins.size():
-		_present_win(wins[i], i)
-		line_won.emit(wins[i], i)
-		await _wait(LINE_SHOW_TIME)
+	await spin_to(roll_grid())
+	if MachineRules.uses_ways(grid, style):
+		_show_ways()
+	await wait(0.15)
+	var wins := evaluate(grid)
+	await present(wins)
+	await _feature.after_spin(self, wins)
 	is_spinning = false
-	spin_finished.emit(wins, result)
+	spin_finished.emit(_spin_wins)
+
+
+# --- API for features -----------------------------------------------------------
+
+## A fresh random result for this machine.
+func roll_grid() -> Array:
+	var bonus := GameState.stat_int(style.min_rows_stat) if style.min_rows_stat != &"" else 0
+	return GridOps.roll(MachineRules.roll_heights(style, rows, bonus), GameState.roll_symbol)
+
+
+func evaluate(p_grid: Array) -> Array[SlotWin]:
+	return MachineRules.evaluate(p_grid, style, GameState.active_paylines())
+
+
+## Spins every reel and stops them left to right on `result`.
+func spin_to(result: Array) -> void:
+	_overlay.clear()
+	for reel in _reels:
+		reel.start_spin()
+	if style.variable_rows:
+		for reel in _reels:
+			reel.reshape(result[reel.index].size(), _variable_cell(result[reel.index].size()))
+		_place_reels(result)
+	await wait(SPIN_TIME)
+	for reel in _reels:
+		if reel.index > 0:
+			if _should_tease(result, reel.index):
+				reel.set_tease(true)
+				Audio.play(&"tease")
+				await wait(TEASE_TIME)
+			else:
+				await wait(REEL_STAGGER)
+		reel.stop_on(result[reel.index])
+	await _until_idle(_reels)
+	grid = result
+	symbols_landed.emit(grid, GridOps.all_cells(grid))
+
+
+## Shows each win in turn and fires `won` for its reward.
+func present(wins: Array[SlotWin]) -> void:
+	for win in wins:
+		var index := _spin_wins.size()
+		_spin_wins.append(win)
+		_present_win(win, index)
+		won.emit(win, index)
+		await wait(LINE_SHOW_TIME)
+
+
+## Asks the player a question over the reels; returns the option index.
+func ask(question: String, options: Array[String]) -> int:
+	return await _prompt.ask(question, options)
+
+
+func is_awaiting_choice() -> bool:
+	return _prompt.is_open()
+
+
+## Picks the safe answer of the open question (Collect, Skip).
+func decline_choice() -> void:
+	_prompt.decline()
+
+
+func announce(text: String, color: Color = Color("#f8d038")) -> void:
+	announced.emit(text, color)
+
+
+## Small text above the reels ("Free spin 2/10", "Respins: 3").
+func set_status(text: String) -> void:
+	_status.text = text
+
+
+## Moves one reel down a row; `new_top` scrolls in.
+func nudge_reel(reel_index: int, new_top: SymbolData) -> void:
+	_overlay.clear()
+	var reel := _reels[reel_index]
+	reel.nudge(new_top)
+	await _until_idle([reel])
+	grid = GridOps.nudge(grid, reel_index, new_top)
+	var landed: Array[Vector2i] = [Vector2i(reel_index, 0)]
+	symbols_landed.emit(grid, landed)
+
+
+## Shows `p_grid` at once without spinning (an expanding symbol filling reels).
+func show_grid(p_grid: Array) -> void:
+	for reel in _reels:
+		if p_grid[reel.index] != grid[reel.index]:
+			reel.show_symbols(p_grid[reel.index])
+			reel.set_tease(true)
+			Fx.burst(self, reel.position + _reel_area.position + reel.size * 0.5, Color("#f8d038"), 14, 60.0)
+	Audio.play(&"big_win", 1.3, -6.0)
+	await wait(0.4)
+	for reel in _reels:
+		reel.set_tease(false)
+
+
+## Cascade, part 1: the winning cells burst and vanish.
+func explode(cells: Array[Vector2i]) -> void:
+	_overlay.clear()
+	for cell in cells:
+		var node := _cell_node(cell)
+		Fx.burst(self, _cell_rect(cell.x, cell.y).get_center() + _reel_area.position, Color.WHITE, 6, 50.0)
+		node.create_tween().tween_property(node, "modulate:a", 0.0, 0.15)
+	Audio.play(&"coin", 0.7, -4.0)
+	await wait(0.2)
+
+
+## Cascade, part 2: the rest falls down and new symbols drop in.
+## `result` comes from GridOps.collapse.
+func cascade_to(result: Dictionary) -> void:
+	var new_grid: Array = result["grid"]
+	for reel in _reels:
+		reel.drop_in(new_grid[reel.index], result["falls"][reel.index])
+	await wait(Reel.DROP_TIME + 0.05)
+	grid = new_grid
+	symbols_landed.emit(grid, result["new_cells"])
+
+
+## Hold and win: every cell becomes its own reel. Cells not showing `keep`
+## turn into `empty`.
+func enter_cell_mode(keep: SymbolData, empty: SymbolData) -> void:
+	for reel_index in grid.size():
+		for row in grid[reel_index].size():
+			if (grid[reel_index][row] as SymbolData).id != keep.id:
+				grid[reel_index][row] = empty
+	_build_cell_reels()
+	await wait(0.3)
+
+
+## Spins only the given cells and stops each on its symbol (cell -> SymbolData).
+func spin_cells(targets: Dictionary) -> void:
+	var spinning: Array[Reel] = []
+	for cell: Vector2i in targets:
+		var reel: Reel = _cell_reels[cell]
+		reel.start_spin()
+		spinning.append(reel)
+	await wait(SPIN_TIME)
+	for cell: Vector2i in targets:
+		_cell_reels[cell].stop_on([targets[cell]])
+		grid[cell.x][cell.y] = targets[cell]
+		await wait(0.05)
+	await _until_idle(spinning)
+
+
+func lock_cell(cell: Vector2i, text: String) -> void:
+	_overlay.set_lock(cell, text)
+	var node := _cell_node(cell)
+	node.pivot_offset = node.size * 0.5
+	Fx.pop(node, 1.3, 0.25)
+
+
+func exit_cell_mode() -> void:
+	_overlay.clear()
+	_build_reels()
 
 
 ## Global position of the centre of a cell, used for reward effects.
 func cell_center(reel: int, row: int) -> Vector2:
-	return _reels.global_position + Vector2(reel + 0.5, row + 0.5) * cell_size
+	return _reel_area.global_position + _cell_rect(reel, row).get_center()
 
 
-## Finds every paying line. Symbols match from the leftmost reel; wilds match
-## anything they are wild for (see SymbolData.wild_for).
-static func evaluate(grid: Array, payline_ids: Array[int]) -> Array[LineWin]:
-	var wins: Array[LineWin] = []
-	for line in payline_ids:
-		var result := best_match(grid, Paylines.rows_of(line), grid.size())
-		var count: int = result[0]
-		var base: SymbolData = result[1]
-		if count < Paylines.MIN_MATCH or base == null or base.effect == SymbolData.Effect.NONE:
-			continue
-		wins.append(LineWin.new(line, base, count))
-	return wins
+func wait(seconds: float) -> void:
+	await get_tree().create_timer(seconds).timeout
 
 
-## Longest match from the left along `rows` within the first `reels` reels.
-## Returns [count, symbol the line pays as]. Every non-wild symbol on the line
-## is tried as the paying symbol, so group wilds pick the one they help most.
-static func best_match(grid: Array, rows: Array, reels: int) -> Array:
-	var candidates: Array[SymbolData] = []
-	for reel in reels:
-		var symbol: SymbolData = grid[reel][rows[reel]]
-		if not symbol.is_wild():
-			if symbol not in candidates:
-				candidates.append(symbol)
-		else:
-			for target in symbol.wild_for:
-				if target not in candidates:
-					candidates.append(target)
-	if candidates.is_empty():
-		# Only wilds: a line of universal wilds pays as the wild itself,
-		# a line of group wilds pays as the first symbol of their group.
-		var first: SymbolData = grid[0][rows[0]]
-		candidates.append(first if first.wild_for.is_empty() else first.wild_for[0])
-	var best_count := 0
-	var best_symbol: SymbolData = null
-	for candidate in candidates:
-		var count := 0
-		for reel in reels:
-			var symbol: SymbolData = grid[reel][rows[reel]]
-			if symbol.id == candidate.id or symbol.is_wild_for(candidate):
-				count += 1
-			else:
-				break
-		if count > best_count:
-			best_count = count
-			best_symbol = candidate
-	return [best_count, best_symbol]
+# --- Presentation -----------------------------------------------------------------
+
+func _should_tease(result: Array, reels: int) -> bool:
+	return MachineRules.is_building_big_win(result, style, GameState.active_paylines(), reels) \
+		or _feature.wants_tease(result, reels)
 
 
-# --- Reel mechanics -----------------------------------------------------------
-
-func _advance_reel(reel: int) -> void:
-	var strip: Array = _strips[reel]
-	strip.pop_back()
-	if _states[reel] == ReelState.STOPPING:
-		strip.push_front(_queues[reel].pop_front())
-		if _queues[reel].is_empty():
-			_land_reel(reel)
-	else:
-		strip.push_front(GameState.roll_symbol())
-	_apply_textures(reel)
+func _show_ways() -> void:
+	var ways := 1
+	for column: Array in grid:
+		ways *= column.size()
+	set_status("%d WAYS" % ways)
+	if style.eval_mode == MachineStyle.Eval.LINES_OR_WAYS:
+		announce("%d WAYS!" % ways, Color("#d090ff"))
+		Audio.play(&"tease")
 
 
-## The last symbol scrolled in: settle back with a little bounce.
-func _land_reel(reel: int) -> void:
-	_states[reel] = ReelState.LANDING
-	_set_blur(reel, false)
-	var tween := create_tween()
-	tween.tween_method(_set_offset.bind(reel), _offsets[reel] + 4.0, 0.0, 0.22) \
-		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tween.tween_callback(_on_reel_landed.bind(reel))
-
-
-func _on_reel_landed(reel: int) -> void:
-	_states[reel] = ReelState.IDLE
-	_set_tease(reel, false)
-	Audio.play(&"reel_stop", 1.0 + reel * 0.05)
-
-
-func _set_offset(value: float, reel: int) -> void:
-	_offsets[reel] = value
-	_layout_reel(reel)
-
-
-func _layout_reel(reel: int) -> void:
-	for i in rows + 1:
-		var cell: TextureRect = _cells[reel][i]
-		cell.position = Vector2(reel * cell_size, (i - 1) * cell_size + _offsets[reel])
-
-
-func _apply_textures(reel: int) -> void:
-	for i in rows + 1:
-		var symbol: SymbolData = _strips[reel][i]
-		var cell: TextureRect = _cells[reel][i]
-		cell.texture = symbol.texture
-		cell.tooltip_text = "%s\n%s" % [symbol.display_name, symbol.description]
-
-
-func _all_reels_idle() -> bool:
-	for state in _states:
-		if state != ReelState.IDLE:
-			return false
-	return true
-
-
-## Tease when every reel so far matches on some payline and a win is already
-## guaranteed, so the next reel decides between a normal and a big win.
-func _should_tease(result: Array, reel: int) -> bool:
-	if reel < Paylines.MIN_MATCH:
-		return false
-	for line in GameState.paylines:
-		if best_match(result, Paylines.rows_of(line), reel)[0] >= reel:
-			return true
-	return false
-
-
-# --- Presentation ---------------------------------------------------------------
-
-func _present_win(win: LineWin, index: int) -> void:
-	var line_rows := Paylines.rows_of(win.payline)
-	var color := Paylines.color_of(win.payline)
+func _present_win(win: SlotWin, index: int) -> void:
 	_overlay.add_win(win)
-	if win.symbol.effect == SymbolData.Effect.CURSE:
+	var color := win.color
+	if win.effect() == SymbolData.Effect.CURSE:
 		Audio.play(&"castle_hit", 0.8)
-		color = Color("#ff3040")
+		color = CURSE_COLOR
 	else:
 		Audio.play(&"win", 1.0 + index * 0.12)
-	for reel in win.count:
-		var cell: TextureRect = _cells[reel][line_rows[reel] + 1]
-		var tween := cell.create_tween()
-		tween.tween_interval(reel * 0.05)
-		tween.tween_callback(_pop_cell.bind(cell, color))
+	for cell in win.cells:
+		var node := _cell_node(cell)
+		if node == null:
+			continue
+		var tween := node.create_tween()
+		tween.tween_interval(cell.x * 0.05)
+		tween.tween_callback(_pop_cell.bind(node, color))
 
 
 func _pop_cell(cell: TextureRect, color: Color) -> void:
@@ -272,86 +315,91 @@ func _pop_cell(cell: TextureRect, color: Color) -> void:
 	cell.modulate = Color(1.8, 1.8, 1.8)
 	Fx.pop(cell, 1.45, 0.3)
 	cell.create_tween().tween_property(cell, "modulate", Color.WHITE, 0.3)
-	Fx.burst(self, cell.position + _reels.position + cell.size * 0.5, color, 10, 70.0)
+	var local := cell.get_global_rect().get_center() - global_position
+	Fx.burst(self, local, color, 10, 70.0)
 
 
-func _reset_cell_effects() -> void:
-	for column: Array in _cells:
-		for cell: TextureRect in column:
-			cell.scale = Vector2.ONE
-			cell.z_index = 0
-			cell.modulate = Color.WHITE
+func _until_idle(reels: Array[Reel]) -> void:
+	while not reels.all(func(reel: Reel) -> bool: return reel.is_idle()):
+		await get_tree().process_frame
 
 
-func _set_blur(reel: int, spinning: bool) -> void:
-	for cell: TextureRect in _cells[reel]:
-		cell.self_modulate = Color(0.85, 0.85, 0.9, 0.85) if spinning else Color.WHITE
+# --- Layout -----------------------------------------------------------------------
+
+func _area_size() -> Vector2:
+	if style.variable_rows:
+		return Vector2(style.reel_count * VARIABLE_REEL_WIDTH, VARIABLE_HEIGHT)
+	return Vector2(style.reel_count, rows) * cell_size
 
 
-func _set_tease(reel: int, on: bool) -> void:
-	var glow := _tease_glows[reel]
-	var tween := glow.create_tween()
-	tween.tween_property(glow, "color:a", 0.55 if on else 0.0, 0.15)
+func _variable_cell(height: int) -> int:
+	return clampi(floori(VARIABLE_HEIGHT / float(height) / 8.0) * 8, 16, VARIABLE_REEL_WIDTH)
 
 
-# --- Setup ------------------------------------------------------------------------
+## A cell's rectangle inside the reel area.
+func _cell_rect(reel: int, row: int) -> Rect2:
+	if not style.variable_rows:
+		return Rect2(Vector2(reel, row) * cell_size, Vector2.ONE * cell_size)
+	var height: int = grid[reel].size()
+	var cell := _variable_cell(height)
+	var top_left := Vector2(
+		reel * VARIABLE_REEL_WIDTH + (VARIABLE_REEL_WIDTH - cell) * 0.5,
+		(VARIABLE_HEIGHT - height * cell) * 0.5 + row * cell)
+	return Rect2(top_left, Vector2.ONE * cell)
 
-func _roll_grid() -> Array:
-	var grid := []
-	for reel in REELS:
-		var column := []
-		for row in rows:
-			column.append(GameState.roll_symbol())
-		grid.append(column)
-	return grid
+
+func _cell_node(cell: Vector2i) -> TextureRect:
+	if not _cell_reels.is_empty():
+		return (_cell_reels[cell] as Reel).cell_at(0)
+	if cell.x >= _reels.size() or cell.y >= _reels[cell.x].rows:
+		return null
+	return _reels[cell.x].cell_at(cell.y)
+
+
+func _reel_color(index: int) -> Color:
+	return style.reel_colors[index % style.reel_colors.size()]
+
+
+func _clear_reels() -> void:
+	for child in _reel_area.get_children():
+		child.queue_free()
+	_reels.clear()
+	_cell_reels.clear()
 
 
 func _build_reels() -> void:
-	for child in _reels.get_children():
-		child.queue_free()
-	_cells.clear()
-	_strips.clear()
-	_offsets.clear()
-	_states.clear()
-	_queues.clear()
-	_tease_glows.clear()
-	for reel in REELS:
-		var strip := ColorRect.new()
-		strip.color = REEL_COLOR if reel % 2 == 0 else REEL_COLOR_ALT
-		strip.position = Vector2(reel * cell_size, 0)
-		strip.size = Vector2(cell_size, rows * cell_size)
-		strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_reels.add_child(strip)
-		var glow := ColorRect.new()
-		glow.color = Color(TEASE_COLOR, 0.0)
-		glow.position = strip.position
-		glow.size = strip.size
-		glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_reels.add_child(glow)
-		_tease_glows.append(glow)
-		var column := []
-		for i in rows + 1:
-			var cell := TextureRect.new()
-			cell.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			cell.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			cell.size = Vector2.ONE * cell_size
-			cell.mouse_filter = Control.MOUSE_FILTER_PASS
-			_reels.add_child(cell)
-			column.append(cell)
-		_cells.append(column)
-		_strips.append([])
-		_offsets.append(0.0)
-		_states.append(ReelState.IDLE)
-		_queues.append([])
+	_clear_reels()
+	for i in style.reel_count:
+		var reel := Reel.new()
+		_reel_area.add_child(reel)
+		var column: Array = grid[i]
+		reel.setup(i, _variable_cell(column.size()) if style.variable_rows else cell_size, column, _reel_color(i))
+		_reels.append(reel)
+	_place_reels(grid)
 
 
-func _wait(seconds: float) -> void:
-	await get_tree().create_timer(seconds).timeout
+func _place_reels(p_grid: Array) -> void:
+	var saved := grid
+	grid = p_grid  # _cell_rect reads the heights
+	for reel in _reels:
+		reel.position = _cell_rect(reel.index, 0).position
+	grid = saved
+
+
+func _build_cell_reels() -> void:
+	_clear_reels()
+	for reel_index in grid.size():
+		for row in grid[reel_index].size():
+			var reel := Reel.new()
+			_reel_area.add_child(reel)
+			reel.setup(reel_index, cell_size, [grid[reel_index][row]], _reel_color(reel_index + row))
+			reel.position = _cell_rect(reel_index, row).position
+			_cell_reels[Vector2i(reel_index, row)] = reel
 
 
 func _make_frame_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#3a2414")
-	style.border_color = Color("#c08820")
-	style.set_border_width_all(3)
-	return style
+	var frame := StyleBoxFlat.new()
+	frame.bg_color = style.bg_color
+	frame.border_color = style.frame_color
+	frame.set_border_width_all(3)
+	return frame

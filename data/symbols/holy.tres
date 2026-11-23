@@ -11,6 +11,7 @@ display_name = "Holy Relic"
 texture = ExtResource("2_tex")
 description = "A line summons a Cleric who heals wounded troops."
 effect = 2
+group = &"arcane"
 power = 1
 unit = ExtResource("3_unit")
 in_shop = true

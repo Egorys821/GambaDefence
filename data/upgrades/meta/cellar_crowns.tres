@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://src/data/upgrade_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/crown.png" id="2_icon"]
+[ext_resource type="Resource" path="res://data/upgrades/meta/machine_cellar.tres" id="3_requires"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"cellar_crowns"
+display_name = "Polished Crowns"
+icon = ExtResource("2_icon")
+description = "Old Cellar: +{value} Royal Crown on the reels at run start."
+scope = 0
+category = 3
+stat = &"crown_copies"
+value_per_level = 1.0
+percent = false
+max_level = 1
+requires = ExtResource("3_requires")
+requires_level = 1
+tree_position = Vector2(0, 6)
+base_cost = 15
+cost_per_level = 10
+min_night = 1

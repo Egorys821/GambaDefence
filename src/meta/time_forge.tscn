@@ -37,6 +37,7 @@ theme_override_font_sizes/font_size = 16
 text = "The Time Forge"
 
 [node name="Hint" type="Label" parent="Header"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 8
@@ -153,6 +154,16 @@ size_flags_vertical = 4
 focus_mode = 0
 theme_override_font_sizes/font_size = 9
 text = "Forge"
+
+[node name="UseButton" type="Button" parent="Bottom/Row"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(90, 26)
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+theme_override_font_sizes/font_size = 8
+text = "Use machine"
 
 [node name="Side" type="VBoxContainer" parent="Bottom/Row"]
 layout_mode = 2
