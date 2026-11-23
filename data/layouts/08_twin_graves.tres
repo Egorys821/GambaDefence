@@ -1,0 +1,98 @@
+[gd_resource type="Resource" script_class="BattleLayout" format=3]
+
+[ext_resource type="Script" path="res://src/data/battle_layout.gd" id="layout_script"]
+[ext_resource type="Script" path="res://src/data/layout_feature.gd" id="feature_script"]
+[ext_resource type="Script" path="res://src/data/rally_point.gd" id="rally_script"]
+
+[sub_resource type="Resource" id="feature_0"]
+script = ExtResource("feature_script")
+kind = 1
+points = PackedVector2Array(427.8, 283.9, 411.2, 298.3, 380.8, 309.3, 341.1, 315.3, 298.1, 315.2, 258.6, 309.2, 228.3, 298.1, 212, 283.7, 212.2, 268.1, 228.8, 253.7, 259.2, 242.7, 298.9, 236.7, 341.9, 236.8, 381.4, 242.8, 411.7, 253.9, 428, 268.3)
+roughness = 4.0
+
+[sub_resource type="Resource" id="feature_1"]
+script = ExtResource("feature_script")
+kind = 0
+points = PackedVector2Array(-20, 322, 100, 316, 220, 326, 330, 318, 440, 328, 560, 316, 660, 322, 660, 380, -20, 380)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_2"]
+script = ExtResource("feature_script")
+kind = 0
+points = PackedVector2Array(-20, 70, 60, 60, 130, 80, 146, 130, 132, 196, 110, 238, 40, 242, -20, 240)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_3"]
+script = ExtResource("feature_script")
+kind = 0
+points = PackedVector2Array(660, 240, 600, 242, 530, 238, 508, 196, 494, 130, 510, 80, 580, 60, 660, 70)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_4"]
+script = ExtResource("feature_script")
+kind = 2
+points = PackedVector2Array(136, 178, 170, 164, 200, 174, 228, 180, 236, 204, 222, 222, 180, 226, 146, 214)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_5"]
+script = ExtResource("feature_script")
+kind = 2
+points = PackedVector2Array(494, 214, 460, 226, 418, 222, 404, 204, 412, 180, 440, 174, 470, 164, 504, 178)
+roughness = 3.0
+
+[sub_resource type="Resource" id="rally_0"]
+script = ExtResource("rally_script")
+id = &"gate"
+display_name = "Castle Gate"
+kind = 0
+position = Vector2(320, 140)
+radius = 40.0
+
+[sub_resource type="Resource" id="rally_1"]
+script = ExtResource("rally_script")
+id = &"west_shore"
+display_name = "West Shore"
+kind = 1
+position = Vector2(238, 234)
+radius = 14.0
+
+[sub_resource type="Resource" id="rally_2"]
+script = ExtResource("rally_script")
+id = &"east_shore"
+display_name = "East Shore"
+kind = 1
+position = Vector2(402, 234)
+radius = 14.0
+
+[sub_resource type="Resource" id="rally_3"]
+script = ExtResource("rally_script")
+id = &"lakeside"
+display_name = "Lakeside"
+kind = 2
+position = Vector2(320, 200)
+radius = 30.0
+
+[sub_resource type="Resource" id="rally_4"]
+script = ExtResource("rally_script")
+id = &"west_graves"
+display_name = "West Graves"
+kind = 3
+position = Vector2(110, 262)
+radius = 18.0
+
+[sub_resource type="Resource" id="rally_5"]
+script = ExtResource("rally_script")
+id = &"east_graves"
+display_name = "East Graves"
+kind = 3
+position = Vector2(530, 262)
+radius = 18.0
+
+[resource]
+script = ExtResource("layout_script")
+id = &"twin_graves"
+display_name = "Twin Graves"
+description = "Spirits rise from graveyards on both flanks and squeeze between groves and a misty lake."
+features = Array[ExtResource("feature_script")]([SubResource("feature_0"), SubResource("feature_1"), SubResource("feature_2"), SubResource("feature_3"), SubResource("feature_4"), SubResource("feature_5")])
+spawn_zones = Array[Rect2]([Rect2(12, 252, 60, 60), Rect2(568, 252, 60, 60)])
+rally_points = Array[ExtResource("rally_script")]([SubResource("rally_0"), SubResource("rally_1"), SubResource("rally_2"), SubResource("rally_3"), SubResource("rally_4"), SubResource("rally_5")])

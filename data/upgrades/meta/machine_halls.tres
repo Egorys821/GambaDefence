@@ -1,23 +1,24 @@
 [gd_resource type="Resource" script_class="UpgradeData" format=3]
 
 [ext_resource type="Script" path="res://src/data/upgrade_data.gd" id="1_script"]
-[ext_resource type="Resource" path="res://data/castles/5_ashen_throne.tres" id="4_castle"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/machine_halls.png" id="2_icon"]
+[ext_resource type="Resource" path="res://data/castles/09_stormcrag.tres" id="4_castle"]
 
 [resource]
 script = ExtResource("1_script")
 id = &"machine_halls"
 display_name = "Shifting Halls Machine"
 icon = ExtResource("2_icon")
-description = "Unlocks SHIFTING HALLS: 6 reels that change height, wins on any row (ways) and cascading chains. Pick it with 'Use machine' once unlocked."
+description = "CROWN KEY: unlocks THE SHIFTING HALLS: reels of changing height and cascading wins. Pick it with 'Use machine'."
 scope = 0
 category = 3
 stat = &"unlock_halls"
 value_per_level = 1.0
 percent = false
 max_level = 1
-tree_position = Vector2(13, 5)
+tree_position = Vector2(9, 0)
+requires_castle = ExtResource("4_castle")
 base_cost = 0
 cost_per_level = 0
+crown_cost = 3
 min_night = 1
-unlock_castle = ExtResource("4_castle")

@@ -5,6 +5,7 @@
 [ext_resource type="Script" uid="uid://c8fj51ddusf6a" path="res://src/battle/castle.gd" id="3_castle"]
 [ext_resource type="Texture2D" uid="uid://w14a1udmis1h" path="res://assets/sprites/environment/castle.png" id="4_castle_tex"]
 [ext_resource type="Texture2D" path="res://assets/sprites/environment/forest_tile.png" id="5_forest"]
+[ext_resource type="Script" path="res://src/battle/layout_view.gd" id="6_terrain"]
 
 [sub_resource type="Gradient" id="Gradient_light"]
 colors = PackedColorArray(1, 0.78, 0.45, 1, 1, 0.7, 0.4, 0)
@@ -43,6 +44,10 @@ region_rect = Rect2(0, 0, 1920, 1152)
 [node name="Background" type="Sprite2D" parent="." unique_id=91262749]
 texture = ExtResource("2_bg")
 centered = false
+
+[node name="Terrain" type="Node2D" parent="."]
+texture_repeat = 2
+script = ExtResource("6_terrain")
 
 [node name="Units" type="Node2D" parent="." unique_id=1863753890]
 y_sort_enabled = true

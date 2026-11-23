@@ -3,8 +3,9 @@ extends MachineFeature
 ## Shifting Halls: winning symbols vanish, the rest fall down and new ones
 ## drop in. New wins pay with a growing chain multiplier, until nothing wins.
 
-## Hard cap on chain length so a spin always ends quickly.
-const MAX_CASCADES := 5
+## Hard cap on chain length so a spin always ends quickly. Also a balance
+## knob: long chains with Echo Chain carry most of the maxed-upgrade value.
+const MAX_CASCADES := 4
 
 
 ## The first cascade pays x1, then each one adds Stats.CASCADE_STEP.
@@ -35,6 +36,7 @@ func after_spin(machine: SlotMachine, wins: Array[SlotWin]) -> void:
 			break
 		var multiplier := chain_multiplier(chain)
 		machine.set_status("Chain %d: x%d" % [chain, multiplier])
+		machine.cabinet.set_chain(chain)
 		for win in current:
 			win.extra_mult *= multiplier
 		await machine.present(current)

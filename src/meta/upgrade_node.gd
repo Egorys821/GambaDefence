@@ -2,11 +2,13 @@ class_name UpgradeNode
 extends Button
 ## One upgrade in the Time Forge tree: an icon with its level underneath.
 ## States: locked (parent not owned), available, maxed; plus selected.
+## Crown nodes (paid with Crowns) get a gold double frame and a little crown.
 
 const NODE_SIZE := Vector2(36, 36)
 const LOCKED_COLOR := Color(0.25, 0.22, 0.25)
 const GOLD := Color("#f8d038")
 const IN_USE := Color("#60f080")
+const CROWN_GOLD := Color("#ffc830")
 
 var upgrade: UpgradeData
 var selected := false:
@@ -54,8 +56,6 @@ func _process(delta: float) -> void:
 
 
 func is_open() -> bool:
-	if upgrade.is_castle_reward():
-		return MetaProgress.level_of(upgrade.id) > 0
 	return GameState.prerequisites_met(upgrade) or MetaProgress.level_of(upgrade.id) > 0
 
 
@@ -66,7 +66,7 @@ func refresh() -> void:
 		_level.text = ""
 	else:
 		_icon.modulate = Color.WHITE
-		_level.text = "%d/%d" % [level, upgrade.max_level]
+		_level.text = "starter" if upgrade.max_level == 0 else "%d/%d" % [level, upgrade.max_level]
 		_level.add_theme_color_override("font_color", GOLD if upgrade.is_maxed(level) else Color.WHITE)
 	queue_redraw()
 
@@ -81,9 +81,23 @@ func _draw() -> void:
 	if selected:
 		draw_rect(Rect2(Vector2(-3, -3), NODE_SIZE + Vector2(6, 6)), Color("#60d8f8"), false, 2.0)
 	draw_rect(Rect2(Vector2.ZERO, NODE_SIZE), border, false, 2.0)
+	if upgrade.is_crown_node():
+		var gold := CROWN_GOLD if is_open() else CROWN_GOLD.darkened(0.55)
+		draw_rect(Rect2(Vector2(2, 2), NODE_SIZE - Vector2(4, 4)), gold, false, 1.0)
+		_draw_crown(Vector2(NODE_SIZE.x * 0.5, -1), gold)
 	if _is_machine_in_use():
 		# Green corner flag: this machine is used for the next runs.
 		draw_colored_polygon(PackedVector2Array([Vector2(NODE_SIZE.x - 12, 0), Vector2(NODE_SIZE.x, 0), Vector2(NODE_SIZE.x, 12)]), IN_USE)
+
+
+## Small three-pointed crown sitting on the top edge.
+func _draw_crown(center: Vector2, color: Color) -> void:
+	var w := 6.0
+	var points := PackedVector2Array([
+		center + Vector2(-w, 3), center + Vector2(-w, -3), center + Vector2(-w * 0.5, 0),
+		center + Vector2(0, -4), center + Vector2(w * 0.5, 0), center + Vector2(w, -3), center + Vector2(w, 3)])
+	draw_colored_polygon(points, color)
+	draw_polyline(points + PackedVector2Array([points[0]]), Color(0.25, 0.15, 0.02), 1.0)
 
 
 func _is_machine_in_use() -> bool:

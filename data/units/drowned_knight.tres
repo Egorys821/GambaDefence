@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="UnitData" format=3]
+
+[ext_resource type="Script" path="res://src/data/unit_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/bone_knight.png" id="2_tex"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"drowned_knight"
+display_name = "Drowned Knight"
+texture = ExtResource("2_tex")
+sprite_scale = 2.0
+max_hp = 320.0
+damage = 14.0
+attack_range = 16.0
+attack_cooldown = 1.5
+move_speed = 9.0
+aggro_range = 40.0
+death_sound = &"troop_death"
+gold_reward = 30
+is_boss = true
+armor = 2.0

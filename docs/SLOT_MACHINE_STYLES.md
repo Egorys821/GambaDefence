@@ -431,7 +431,7 @@ Machines are now **castle rewards**: conquering castle 1 to 5 unlocks Old Cellar
 The simulator now checks every castle's starting reels, mid-run reels (`--night=6`: 2 random merchant buys a day, curse spread, 1 banish a day) and end-game upgrades (`--upgrades`, including the shared slot upgrades). Fixes:
 - **Symbol caps (`SymbolData.max_copies`):** Jester 2, Crown 1, Tome 1 (not sold), Chest 3. Without caps, bought feature symbols made Hoard and Tome trigger on 30-40% of spins (10-30x standard).
 - **Old Cellar:** mixed wins need 3 *different* symbols of one group and no wilds, like a classic "any BAR", and pay half. Nudge chance is 15% (Sticky Reels +10% per level).
-- **Fixed-row machines** (Cellar, Jester, Halls) get +30% rewards per row upgrade, so the shared row upgrades help them too.
+- **Row and pattern upgrades belong to the Gamba Machine:** the Time Forge's Extra Row and Ancient Blueprints (`UpgradeData.machine = &"standard"`) only work on it. Other machines only get rows from the merchant's Arcane Expansion (Hoard and Tome), and fixed-row machines (Cellar, Jester, Halls) no longer turn row upgrades into bonus rewards.
 - **Dragon's Hoard:** chests needed grow 20% per extra row. Respin chest chance is 7%. Gold chests pay 1-2x coin, with a lower 4x big chest. Jackpots are 15 / 40+3 troops / 100+repair / 200+8 troops+repair. Dragon's Nose became Treasure Map (+1 starting chest).
 - **Tome of Ages:** x0.4 / x0.7 / x1.4, Long Chapter +1 spin. Scholar's Tome replaced the extra-Tome upgrade.
 - **Jester's 81:** x0.6 / x0.5. Full House adds +50% per level.
@@ -446,3 +446,26 @@ Value vs the Gamba Machine (5,000 spins per cell):
 | Night 6, all upgrades | 76-113% | 90-151% | 87-99% | 120-158% | 100-181% |
 
 Machines unlocked by later castles are mostly a little stronger there, on purpose: those castles are harder. The night-6 baseline is pessimistic for line machines, because the simulated merchant buys random symbols where a real player would focus on a few.
+
+### Balance pass 3: maxed upgrades (November 2026)
+
+With every Time Forge slot upgrade maxed (shared reel upgrades plus the machine's own branch), the feature machines had pulled far ahead of the Gamba Machine. Without upgrades they were all within 15%. The sim's `--upgrades=shared`, `--upgrades=branch` and `--without=id,id` flags isolate what drives the gap:
+- **Dragon's Hoard:** Treasure Map's 3rd chest (2 → 3 copies) alone took the Hoard from 96% to 242%: features went from 3% to 15% of spins.
+- **Tome of Ages:** most of the lead came from the *shared* row upgrades. The trigger was a flat 3 reels, so 5-row reels landed Tomes on 3 reels in 24% of spins (6% at 3 rows), and the expanding symbol also showed up more often.
+- **Shifting Halls:** its three upgrades multiply each other (Deep Halls x2.2, Rune Stones x1.7, Echo Chain x1.25 per level, x6.5 together), and long chains carried most of the value.
+
+Changes (none of them touches a machine with no upgrades):
+- **Treasure Map:** the Hoard needs 1 fewer chest to start (new `Stats.HOARD_TRIGGER_EASE`, the Hoard's `trigger_stat`). It no longer adds a chest. **Golden Hoard:** +10% per level (was +15%).
+- **Tome of Ages:** `trigger_scales_with_rows = true`, like the Hoard: 3 reels at 3 rows, 4 reels at 4-5 rows. Retriggers use the same count.
+- **Deep Halls:** only the *first* reel is never shorter than 3 rows (was every reel). **Echo Chain:** 1 level (chain step x1 → x2, was up to x3). **Cascade cap** (`CascadeFeature.MAX_CASCADES`): 4 (was 5). Chains that long almost never happen without upgrades.
+
+Value vs the Gamba Machine, castle 1, night 1 (`slot_sim`, 20,000 spins):
+
+| Scenario | Standard (value) | Cellar | Jester | Hoard | Tome | Halls |
+|---|---|---|---|---|---|---|
+| No upgrades, before | 2.3 | 84% | 86% | 102% | 103% | 115% |
+| No upgrades, after | 2.3 | 83% | 85% | 108% | 104% | 113% |
+| All upgrades, before | 49.9 | 71% | 71% | 242% | 433% | 378% |
+| All upgrades, after | 50.3 | 71% | 70% | 146-151% | 113% | 142% |
+
+The Hoard's no-upgrade value moves between about 102% and 109% from run to run (rare jackpots); its maxed value was steady at 146-151% over four runs. Old Cellar and Jester's 81 are still below the standard machine with maxed upgrades (about 70%), because the shared payline and row upgrades help line machines with growing rows the most.

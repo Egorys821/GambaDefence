@@ -22,6 +22,7 @@ order = 3
 unlock_stat = &"unlock_hoard"
 reel_count = 5
 feature_count = 6
+trigger_stat = &"hoard_trigger_ease"
 trigger_scales_with_rows = true
 feature_length = 3
 length_stat = &"hoard_respins_bonus"

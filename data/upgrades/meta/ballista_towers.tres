@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://src/data/upgrade_data.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/sprites/environment/ballista_tower.png" id="2_icon"]
-[ext_resource type="Resource" path="res://data/upgrades/meta/watchtowers.tres" id="3_requires"]
+[ext_resource type="Resource" path="res://data/upgrades/meta/fortified_towers.tres" id="3_requires"]
 
 [resource]
 script = ExtResource("1_script")
@@ -17,8 +17,8 @@ value_per_level = 1.0
 percent = false
 max_level = 2
 requires = ExtResource("3_requires")
-requires_level = 2
-tree_position = Vector2(6.5, 3)
+requires_level = 1
+tree_position = Vector2(1, 4)
 base_cost = 35
 cost_per_level = 35
 min_night = 1

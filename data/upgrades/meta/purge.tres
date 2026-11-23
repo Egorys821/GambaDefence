@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" path="res://src/data/upgrade_data.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/sprites/symbols/skull.png" id="2_icon"]
-[ext_resource type="Resource" path="res://data/upgrades/meta/treasury.tres" id="3_requires"]
 
 [resource]
 script = ExtResource("1_script")
@@ -16,9 +15,7 @@ stat = &"starting_skulls"
 value_per_level = -1.0
 percent = false
 max_level = 2
-requires = ExtResource("3_requires")
-requires_level = 1
-tree_position = Vector2(1, 1)
+tree_position = Vector2(1.5, 0)
 base_cost = 10
 cost_per_level = 15
 min_night = 1

@@ -30,13 +30,18 @@ var _cells: Array[TextureRect] = []
 var _queue: Array[SymbolData] = []
 var _offset := 0.0
 var _color := Color.WHITE
+var _background: Texture2D
 var _glow: ColorRect
+## Shared top/bottom shading that makes the strip look like a drum.
+static var _shade: GradientTexture2D
 
 
-## Builds the reel showing `symbols` (one per row, top first).
-func setup(p_index: int, p_cell_size: int, symbols: Array, color: Color) -> void:
+## Builds the reel showing `symbols` (one per row, top first). `background`
+## is the machine skin's strip texture, tiled and tinted with `color`.
+func setup(p_index: int, p_cell_size: int, symbols: Array, color: Color, background: Texture2D = null) -> void:
 	index = p_index
 	_color = color
+	_background = background
 	clip_contents = true
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	_build(symbols.size(), p_cell_size)
@@ -150,7 +155,17 @@ func _build(p_rows: int, p_cell_size: int) -> void:
 	rows = p_rows
 	cell_size = p_cell_size
 	size = Vector2(cell_size, rows * cell_size)
-	_add_rect(_color)
+	if _background:
+		var strip := TextureRect.new()
+		strip.texture = _background
+		strip.stretch_mode = TextureRect.STRETCH_TILE
+		strip.size = size
+		# Alternate reels slightly darker, like the old flat colours did.
+		strip.modulate = Color.WHITE if index % 2 == 0 else Color(0.93, 0.93, 0.93)
+		strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(strip)
+	else:
+		_add_rect(_color)
 	_glow = _add_rect(Color(TEASE_COLOR, 0.0))
 	for i in rows + 1:
 		var cell := TextureRect.new()
@@ -160,7 +175,29 @@ func _build(p_rows: int, p_cell_size: int) -> void:
 		cell.mouse_filter = Control.MOUSE_FILTER_PASS
 		add_child(cell)
 		_cells.append(cell)
+	if rows > 1:
+		var shade := TextureRect.new()
+		shade.texture = _shade_texture()
+		shade.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		shade.stretch_mode = TextureRect.STRETCH_SCALE
+		shade.size = size
+		shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(shade)
 	_layout()
+
+
+static func _shade_texture() -> GradientTexture2D:
+	if _shade == null:
+		var gradient := Gradient.new()
+		gradient.offsets = PackedFloat32Array([0.0, 0.12, 0.88, 1.0])
+		gradient.colors = PackedColorArray([Color(0, 0, 0, 0.3), Color(0, 0, 0, 0), Color(0, 0, 0, 0), Color(0, 0, 0, 0.3)])
+		_shade = GradientTexture2D.new()
+		_shade.gradient = gradient
+		_shade.fill_from = Vector2(0, 0)
+		_shade.fill_to = Vector2(0, 1)
+		_shade.width = 4
+		_shade.height = 64
+	return _shade
 
 
 func _advance() -> void:

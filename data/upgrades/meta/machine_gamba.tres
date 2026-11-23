@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://src/data/upgrade_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/machine_standard.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"machine_gamba"
+display_name = "Gamba Machine"
+icon = ExtResource("2_icon")
+description = "The castle's own slot machine, yours from the start: 5 reels, paylines from the left. The upgrades below it only work while you use it."
+scope = 0
+category = 3
+max_level = 0
+machine = &"standard"
+tree_position = Vector2(4, 0)
+base_cost = 0
+cost_per_level = 0
+min_night = 1

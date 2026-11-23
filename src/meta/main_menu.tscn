@@ -69,6 +69,7 @@ size_flags_horizontal = 4
 theme_override_constants/separation = 3
 
 [node name="PlayButton" type="Button" parent="Menu/Buttons"]
+theme_type_variation = &"AccentButton"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 28)
 layout_mode = 2

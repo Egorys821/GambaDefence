@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="BattleLayout" format=3]
+
+[ext_resource type="Script" path="res://src/data/battle_layout.gd" id="layout_script"]
+[ext_resource type="Script" path="res://src/data/layout_feature.gd" id="feature_script"]
+[ext_resource type="Script" path="res://src/data/rally_point.gd" id="rally_script"]
+
+[sub_resource type="Resource" id="rally_0"]
+script = ExtResource("rally_script")
+id = &"gate"
+display_name = "Castle Gate"
+kind = 0
+position = Vector2(320, 140)
+radius = 40.0
+
+[sub_resource type="Resource" id="rally_1"]
+script = ExtResource("rally_script")
+id = &"old_road"
+display_name = "Old Road"
+kind = 3
+position = Vector2(320, 280)
+radius = 30.0
+
+[sub_resource type="Resource" id="rally_2"]
+script = ExtResource("rally_script")
+id = &"west_meadow"
+display_name = "West Meadow"
+kind = 4
+position = Vector2(150, 230)
+radius = 24.0
+
+[sub_resource type="Resource" id="rally_3"]
+script = ExtResource("rally_script")
+id = &"east_meadow"
+display_name = "East Meadow"
+kind = 4
+position = Vector2(490, 230)
+radius = 24.0
+
+[resource]
+script = ExtResource("layout_script")
+id = &"open_field"
+display_name = "Open Field"
+description = "Open meadows: spirits come straight up the old road."
+spawn_zones = Array[Rect2]([Rect2(16, 326, 608, 26)])
+rally_points = Array[ExtResource("rally_script")]([SubResource("rally_0"), SubResource("rally_1"), SubResource("rally_2"), SubResource("rally_3")])

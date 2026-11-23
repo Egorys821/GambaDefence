@@ -62,6 +62,16 @@ func _ready() -> void:
 		_message.show_message(INTRO_TITLE, INTRO_TEXT % GameState.castles[0].nights, "Begin")
 		await _message.confirmed
 		Audio.play(&"click")
+	elif MetaProgress.migrated_shards > 0:
+		_message.show_message("The Time Forge Is Rebuilt",
+			("The Time Forge now has four windows: Slot Machines, Castle, Troops and Merchant, with many new skills.\n\n"
+			+ "All %d shards you spent were given back. Conquering a castle for the first time now wins Crowns: "
+			+ "they buy new slot machines and the keys to big subtrees. You have %d Crowns from the castles you already won.")
+			% [MetaProgress.migrated_shards, MetaProgress.crowns()], "To the Forge")
+		MetaProgress.migrated_shards = 0
+		MetaProgress.save_progress()
+		await _message.confirmed
+		Audio.play(&"click")
 	_main_menu_loop()
 
 
@@ -127,7 +137,7 @@ func _run_tutorial() -> void:
 		{"title": "Your kingdom", "rect": _hud.get_global_rect(), "text": "Night, gold, army size (with the upkeep you pay at dawn), and castle health. If the castle falls, the run ends. A red Curse number means extra spirits tonight."},
 		{"title": "Your army", "rect": Battlefield.DAY_VIEW_RECT, "text": "Summoned troops gather in front of the gate. At night they fight; towers shoot too. The first 10 troops are free, the rest cost upkeep every dawn - unpaid troops fight weaker."},
 		{"title": "Face the night", "rect": ui["night"], "text": "When your spins are used, face the night. Spirits rise from the graveyard and march on the castle."},
-		{"title": "Losing is part of it", "text": "Every run earns Chrono Shards. Spend them in the Time Forge upgrade tree, conquer castles on the map and unlock new troops. Good luck!"},
+		{"title": "Losing is part of it", "text": "Every run earns Chrono Shards for the Time Forge: four windows of skills for the slot machine, castle, troops and merchant. Conquering a castle for the first time also wins Crowns, which buy new slot machines and the big crown skills. Good luck!"},
 	]
 	_tutorial.start(steps)
 	await _tutorial.finished
@@ -223,13 +233,15 @@ func _finish_run(victory: bool, title: String, story: String) -> void:
 	Engine.time_scale = 1.0
 	_night_panel.end_night()
 	var nights_survived := GameState.max_nights() if victory else GameState.night - 1
-	var machines_before := GameState.unlocked_machines()
 	var shards := MetaProgress.record_run(nights_survived, GameState.kills, victory, GameState.castle)
 	var body := "%s\n\nNights survived: %d / %d\nSpirits destroyed: %d\n\n+%d Chrono Shards" % [
 		story, nights_survived, GameState.max_nights(), GameState.kills, shards]
-	for machine in GameState.unlocked_machines():
-		if machine not in machines_before:
-			body += "\n\nNew slot machine unlocked: %s!\nPick it in the Time Forge." % machine.display_name
+	if MetaProgress.last_crowns > 0:
+		body += "\n+%d Crown%s! Spend them on the big Time Forge nodes." % [
+			MetaProgress.last_crowns, "" if MetaProgress.last_crowns == 1 else "s"]
+		var machine := GameState.machine_reward(GameState.castle)
+		if machine:
+			body += "\nThe %s slot machine can now be bought with Crowns." % machine.display_name
 	_message.show_message(title, body, "Back to menu")
 	await _message.confirmed
 	Audio.play(&"click")

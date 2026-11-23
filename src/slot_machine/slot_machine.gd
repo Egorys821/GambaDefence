@@ -36,6 +36,7 @@ const CURSE_COLOR := Color("#ff3040")
 
 var is_spinning := false
 var style: MachineStyle
+var skin: MachineSkin
 var rows := 0
 var cell_size := 40
 ## grid[reel][row] -> SymbolData currently shown.
@@ -49,21 +50,23 @@ var _spin_wins: Array[SlotWin] = []
 @onready var _reel_area: Control = %Reels
 @onready var _overlay: LineOverlay = %LineOverlay
 var _prompt: ChoicePrompt
-var _status: Label
+## Frame, marquee, side panels and ornaments (see MachineSkin). Features show
+## their counters on it.
+var cabinet: MachineCabinet
 
 
 func _ready() -> void:
 	_overlay.cell_rect = _cell_rect
+	_overlay.all_cells = func() -> Array[Vector2i]: return GridOps.all_cells(grid)
+	add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	cabinet = MachineCabinet.new()
+	add_child(cabinet)
+	move_child(cabinet, 0)
+	add_child(cabinet.front)
+	move_child(cabinet.front, _reel_area.get_index() + 1)
 	_prompt = ChoicePrompt.new()
 	add_child(_prompt)
-	_status = Label.new()
-	_status.add_theme_font_size_override("font_size", 8)
-	_status.add_theme_color_override("font_color", Color("#f8d038"))
-	_status.add_theme_color_override("font_outline_color", Color.BLACK)
-	_status.add_theme_constant_override("outline_size", 4)
-	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_status)
+	cabinet.reel_chosen.connect(_prompt.choose)
 	configure()
 
 
@@ -74,7 +77,7 @@ func configure() -> void:
 	style = GameState.machine
 	rows = GameState.machine_rows
 	_feature = MachineFeature.create(style)
-	add_theme_stylebox_override("panel", _make_frame_style())
+	skin = MachineSkin.for_style(style)
 	if style.variable_rows:
 		cell_size = VARIABLE_REEL_WIDTH
 	elif style.reel_count <= 4:
@@ -87,9 +90,10 @@ func configure() -> void:
 	for control: Control in [_reel_area, _overlay]:
 		control.position = Vector2.ONE * PADDING
 		control.size = area
-	_status.position = Vector2(0, -13)
-	_status.size = Vector2(size.x, 12)
 	_overlay.clear()
+	_overlay.accent = skin.accent
+	cabinet.build(style, size, Rect2(Vector2.ONE * PADDING, area), cell_size)
+	_prompt.add_theme_stylebox_override("panel", skin.panel_style())
 	set_status("")
 	grid = roll_grid()
 	_build_reels()
@@ -101,10 +105,14 @@ func spin() -> void:
 	is_spinning = true
 	_spin_wins.clear()
 	_overlay.clear()
+	cabinet.on_spin()
+	set_status("")
 	Audio.play(&"spin")
 	await spin_to(roll_grid())
 	if MachineRules.uses_ways(grid, style):
 		_show_ways()
+	else:
+		cabinet.set_ways(0)
 	await wait(0.15)
 	var wins := evaluate(grid)
 	await present(wins)
@@ -128,6 +136,7 @@ func evaluate(p_grid: Array) -> Array[SlotWin]:
 ## Spins every reel and stops them left to right on `result`.
 func spin_to(result: Array) -> void:
 	_overlay.clear()
+	cabinet.clear_overlays()
 	for reel in _reels:
 		reel.start_spin()
 	if style.variable_rows:
@@ -159,9 +168,14 @@ func present(wins: Array[SlotWin]) -> void:
 		await wait(LINE_SHOW_TIME)
 
 
-## Asks the player a question over the reels; returns the option index.
-func ask(question: String, options: Array[String]) -> int:
-	return await _prompt.ask(question, options)
+## Asks the player a question at the bottom of the reels; returns the option
+## index. With `pick_reel`, option i is also offered as an arrow over reel i.
+func ask(question: String, options: Array[String], pick_reel := false) -> int:
+	if pick_reel:
+		cabinet.offer_reels(grid.size())
+	var choice: int = await _prompt.ask(question, options, true)
+	cabinet.clear_reel_offer()
+	return choice
 
 
 func is_awaiting_choice() -> bool:
@@ -177,9 +191,9 @@ func announce(text: String, color: Color = Color("#f8d038")) -> void:
 	announced.emit(text, color)
 
 
-## Small text above the reels ("Free spin 2/10", "Respins: 3").
+## Text on the marquee ("FREE SPIN 2", "CHAIN 2: x3"); empty shows the name.
 func set_status(text: String) -> void:
-	_status.text = text
+	cabinet.set_status(text)
 
 
 ## Moves one reel down a row; `new_top` scrolls in.
@@ -187,6 +201,7 @@ func nudge_reel(reel_index: int, new_top: SymbolData) -> void:
 	_overlay.clear()
 	var reel := _reels[reel_index]
 	reel.nudge(new_top)
+	cabinet.flash_reel(Rect2(reel.position + _reel_area.position, reel.size), Color("#80f060"))
 	await _until_idle([reel])
 	grid = GridOps.nudge(grid, reel_index, new_top)
 	var landed: Array[Vector2i] = [Vector2i(reel_index, 0)]
@@ -199,6 +214,7 @@ func show_grid(p_grid: Array) -> void:
 		if p_grid[reel.index] != grid[reel.index]:
 			reel.show_symbols(p_grid[reel.index])
 			reel.set_tease(true)
+			cabinet.mark_expanded(Rect2(reel.position + _reel_area.position, reel.size))
 			Fx.burst(self, reel.position + _reel_area.position + reel.size * 0.5, Color("#f8d038"), 14, 60.0)
 	Audio.play(&"big_win", 1.3, -6.0)
 	await wait(0.4)
@@ -211,8 +227,12 @@ func explode(cells: Array[Vector2i]) -> void:
 	_overlay.clear()
 	for cell in cells:
 		var node := _cell_node(cell)
-		Fx.burst(self, _cell_rect(cell.x, cell.y).get_center() + _reel_area.position, Color.WHITE, 6, 50.0)
-		node.create_tween().tween_property(node, "modulate:a", 0.0, 0.15)
+		Fx.burst(self, _cell_rect(cell.x, cell.y).get_center() + _reel_area.position, skin.accent, 8, 50.0)
+		node.pivot_offset = node.size * 0.5
+		var tween := node.create_tween().set_parallel()
+		tween.tween_property(node, "modulate:a", 0.0, 0.18)
+		tween.tween_property(node, "scale", Vector2.ONE * 0.4, 0.18)
+	cabinet.flare()
 	Audio.play(&"coin", 0.7, -4.0)
 	await wait(0.2)
 
@@ -256,6 +276,8 @@ func spin_cells(targets: Dictionary) -> void:
 
 func lock_cell(cell: Vector2i, text: String) -> void:
 	_overlay.set_lock(cell, text)
+	if LineOverlay.JACKPOT_COLORS.has(text):
+		cabinet.flash_jackpot(text)
 	var node := _cell_node(cell)
 	node.pivot_offset = node.size * 0.5
 	Fx.pop(node, 1.3, 0.25)
@@ -287,6 +309,7 @@ func _show_ways() -> void:
 	for column: Array in grid:
 		ways *= column.size()
 	set_status("%d WAYS" % ways)
+	cabinet.set_ways(ways)
 	if style.eval_mode == MachineStyle.Eval.LINES_OR_WAYS:
 		announce("%d WAYS!" % ways, Color("#d090ff"))
 		Audio.play(&"tease")
@@ -300,6 +323,7 @@ func _present_win(win: SlotWin, index: int) -> void:
 		color = CURSE_COLOR
 	else:
 		Audio.play(&"win", 1.0 + index * 0.12)
+	cabinet.on_win(color)
 	for cell in win.cells:
 		var node := _cell_node(cell)
 		if node == null:
@@ -373,7 +397,7 @@ func _build_reels() -> void:
 		var reel := Reel.new()
 		_reel_area.add_child(reel)
 		var column: Array = grid[i]
-		reel.setup(i, _variable_cell(column.size()) if style.variable_rows else cell_size, column, _reel_color(i))
+		reel.setup(i, _variable_cell(column.size()) if style.variable_rows else cell_size, column, _reel_color(i), skin.reel)
 		_reels.append(reel)
 	_place_reels(grid)
 
@@ -392,14 +416,6 @@ func _build_cell_reels() -> void:
 		for row in grid[reel_index].size():
 			var reel := Reel.new()
 			_reel_area.add_child(reel)
-			reel.setup(reel_index, cell_size, [grid[reel_index][row]], _reel_color(reel_index + row))
+			reel.setup(reel_index, cell_size, [grid[reel_index][row]], _reel_color(reel_index + row), skin.reel)
 			reel.position = _cell_rect(reel_index, row).position
 			_cell_reels[Vector2i(reel_index, row)] = reel
-
-
-func _make_frame_style() -> StyleBoxFlat:
-	var frame := StyleBoxFlat.new()
-	frame.bg_color = style.bg_color
-	frame.border_color = style.frame_color
-	frame.set_border_width_all(3)
-	return frame

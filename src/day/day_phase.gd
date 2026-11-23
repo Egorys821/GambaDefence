@@ -56,6 +56,7 @@ func _ready() -> void:
 
 func begin_day() -> void:
 	_slot_machine.configure()
+	_slot_machine.skin.style_button(_spin_button)
 	_spins_today = GameState.spins_per_day()
 	_spins_left = _spins_today
 	_disarm_night_button()
@@ -149,6 +150,7 @@ func _on_start_night_pressed() -> void:
 
 func _on_machine_changed() -> void:
 	_slot_machine.configure()
+	_slot_machine.skin.style_button(_spin_button)
 	_refresh_buttons()
 
 

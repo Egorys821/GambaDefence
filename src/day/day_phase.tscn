@@ -79,6 +79,7 @@ unique_name_in_owner = true
 layout_mode = 2
 
 [node name="StartNightButton" type="Button" parent="ShopPanel/Column"]
+theme_type_variation = &"AccentButton"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 26)
 layout_mode = 2

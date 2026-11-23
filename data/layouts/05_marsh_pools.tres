@@ -1,0 +1,126 @@
+[gd_resource type="Resource" script_class="BattleLayout" format=3]
+
+[ext_resource type="Script" path="res://src/data/battle_layout.gd" id="layout_script"]
+[ext_resource type="Script" path="res://src/data/layout_feature.gd" id="feature_script"]
+[ext_resource type="Script" path="res://src/data/rally_point.gd" id="rally_script"]
+
+[sub_resource type="Resource" id="feature_0"]
+script = ExtResource("feature_script")
+kind = 1
+points = PackedVector2Array(87.8, 258.5, 74, 268.1, 51.1, 273.5, 25.2, 273, 3.3, 267, -8.8, 256.9, -7.8, 245.5, 6, 235.9, 28.9, 230.5, 54.8, 231, 76.7, 237, 88.8, 247.1)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_1"]
+script = ExtResource("feature_script")
+kind = 1
+points = PackedVector2Array(181.7, 260, 172.2, 269.7, 151.4, 276.2, 124.8, 277.9, 99.6, 274.2, 82.6, 266.2, 78.3, 256, 87.8, 246.3, 108.6, 239.8, 135.2, 238.1, 160.4, 241.8, 177.4, 249.8)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_2"]
+script = ExtResource("feature_script")
+kind = 1
+points = PackedVector2Array(264.4, 260.5, 247.9, 268.8, 225.1, 272, 201.9, 269.3, 184.7, 261.4, 178, 250.5, 183.6, 239.5, 200.1, 231.2, 222.9, 228, 246.1, 230.7, 263.3, 238.6, 270, 249.5)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_3"]
+script = ExtResource("feature_script")
+kind = 1
+points = PackedVector2Array(391.1, 262, 380.5, 271.2, 360.6, 277, 336.9, 277.6, 315.5, 273, 302.4, 264.4, 300.9, 254, 311.5, 244.8, 331.4, 239, 355.1, 238.4, 376.5, 243, 389.6, 251.6)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_4"]
+script = ExtResource("feature_script")
+kind = 1
+points = PackedVector2Array(492, 250, 485, 261, 466, 269.1, 440, 272, 414, 269.1, 395, 261, 388, 250, 395, 239, 414, 230.9, 440, 228, 466, 230.9, 485, 239)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_5"]
+script = ExtResource("feature_script")
+kind = 1
+points = PackedVector2Array(606.2, 264.6, 590.9, 273.6, 567.9, 277.8, 543.3, 276.3, 523.7, 269.3, 514.4, 258.7, 517.8, 247.4, 533.1, 238.4, 556.1, 234.2, 580.7, 235.7, 600.3, 242.7, 609.6, 253.3)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_6"]
+script = ExtResource("feature_script")
+kind = 1
+points = PackedVector2Array(672, 250, 664.4, 262.9, 644.4, 270.9, 619.6, 270.9, 599.6, 262.9, 592, 250, 599.6, 237.1, 619.6, 229.1, 644.4, 229.1, 664.4, 237.1)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_7"]
+script = ExtResource("feature_script")
+kind = 1
+points = PackedVector2Array(364, 196, 357.5, 203.6, 340.5, 208.4, 319.5, 208.4, 302.5, 203.6, 296, 196, 302.5, 188.4, 319.5, 183.6, 340.5, 183.6, 357.5, 188.4)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_8"]
+script = ExtResource("feature_script")
+kind = 1
+points = PackedVector2Array(150, 180, 144.3, 187.1, 129.3, 191.4, 110.7, 191.4, 95.7, 187.1, 90, 180, 95.7, 172.9, 110.7, 168.6, 129.3, 168.6, 144.3, 172.9)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_9"]
+script = ExtResource("feature_script")
+kind = 1
+points = PackedVector2Array(570, 176, 564.3, 183.1, 549.3, 187.4, 530.7, 187.4, 515.7, 183.1, 510, 176, 515.7, 168.9, 530.7, 164.6, 549.3, 164.6, 564.3, 168.9)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_10"]
+script = ExtResource("feature_script")
+kind = 1
+points = PackedVector2Array(198, 306, 192.7, 311.9, 178.7, 315.5, 161.3, 315.5, 147.3, 311.9, 142, 306, 147.3, 300.1, 161.3, 296.5, 178.7, 296.5, 192.7, 300.1)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_11"]
+script = ExtResource("feature_script")
+kind = 1
+points = PackedVector2Array(498, 306, 492.7, 311.9, 478.7, 315.5, 461.3, 315.5, 447.3, 311.9, 442, 306, 447.3, 300.1, 461.3, 296.5, 478.7, 296.5, 492.7, 300.1)
+roughness = 3.0
+
+[sub_resource type="Resource" id="rally_0"]
+script = ExtResource("rally_script")
+id = &"gate"
+display_name = "Castle Gate"
+kind = 0
+position = Vector2(320, 140)
+radius = 40.0
+
+[sub_resource type="Resource" id="rally_1"]
+script = ExtResource("rally_script")
+id = &"west_causeway"
+display_name = "West Causeway"
+kind = 1
+position = Vector2(285, 226)
+radius = 14.0
+
+[sub_resource type="Resource" id="rally_2"]
+script = ExtResource("rally_script")
+id = &"east_causeway"
+display_name = "East Causeway"
+kind = 1
+position = Vector2(499, 226)
+radius = 14.0
+
+[sub_resource type="Resource" id="rally_3"]
+script = ExtResource("rally_script")
+id = &"reed_bank"
+display_name = "Reed Bank"
+kind = 2
+position = Vector2(330, 168)
+radius = 24.0
+
+[sub_resource type="Resource" id="rally_4"]
+script = ExtResource("rally_script")
+id = &"mire"
+display_name = "The Mire"
+kind = 3
+position = Vector2(400, 300)
+radius = 20.0
+
+[resource]
+script = ExtResource("layout_script")
+id = &"marsh_pools"
+display_name = "Bog Pools"
+description = "A chain of black pools with two narrow causeways. Wisps fly over them."
+features = Array[ExtResource("feature_script")]([SubResource("feature_0"), SubResource("feature_1"), SubResource("feature_2"), SubResource("feature_3"), SubResource("feature_4"), SubResource("feature_5"), SubResource("feature_6"), SubResource("feature_7"), SubResource("feature_8"), SubResource("feature_9"), SubResource("feature_10"), SubResource("feature_11")])
+spawn_zones = Array[Rect2]([Rect2(16, 326, 608, 26)])
+rally_points = Array[ExtResource("rally_script")]([SubResource("rally_0"), SubResource("rally_1"), SubResource("rally_2"), SubResource("rally_3"), SubResource("rally_4")])

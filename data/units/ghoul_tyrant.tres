@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="UnitData" format=3]
+
+[ext_resource type="Script" path="res://src/data/unit_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/ghoul.png" id="2_tex"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"ghoul_tyrant"
+display_name = "Ghoul Tyrant"
+texture = ExtResource("2_tex")
+sprite_scale = 2.3
+max_hp = 520.0
+damage = 18.0
+attack_range = 18.0
+attack_cooldown = 1.6
+move_speed = 9.0
+aggro_range = 40.0
+death_sound = &"castle_hit"
+gold_reward = 50
+is_boss = true
+armor = 4.0

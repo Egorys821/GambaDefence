@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://src/data/upgrade_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/sigil.png" id="2_icon"]
+[ext_resource type="Resource" path="res://data/upgrades/meta/cart.tres" id="3_requires"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"merchant_favor"
+display_name = "Merchant's Favor"
+icon = ExtResource("2_icon")
+description = "The merchant's bag holds 2 more Rare and 1 more Mythic ware."
+scope = 0
+category = 4
+stat = &"merchant_luck"
+value_per_level = 1.0
+percent = false
+max_level = 3
+requires = ExtResource("3_requires")
+requires_level = 1
+tree_position = Vector2(1.5, 3)
+base_cost = 20
+cost_per_level = 20
+min_night = 1

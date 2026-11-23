@@ -1,0 +1,90 @@
+[gd_resource type="Resource" script_class="BattleLayout" format=3]
+
+[ext_resource type="Script" path="res://src/data/battle_layout.gd" id="layout_script"]
+[ext_resource type="Script" path="res://src/data/layout_feature.gd" id="feature_script"]
+[ext_resource type="Script" path="res://src/data/rally_point.gd" id="rally_script"]
+
+[sub_resource type="Resource" id="feature_0"]
+script = ExtResource("feature_script")
+kind = 1
+points = PackedVector2Array(-30, 200, 120, 206, 260, 196, 380, 206, 520, 196, 670, 204)
+closed = false
+width = 30.0
+roughness = 2.5
+
+[sub_resource type="Resource" id="feature_1"]
+script = ExtResource("feature_script")
+kind = 5
+points = PackedVector2Array(70, 176, 70, 230)
+closed = false
+width = 16.0
+roughness = 0.0
+
+[sub_resource type="Resource" id="feature_2"]
+script = ExtResource("feature_script")
+kind = 5
+points = PackedVector2Array(572, 172, 572, 228)
+closed = false
+width = 16.0
+roughness = 0.0
+
+[sub_resource type="Resource" id="feature_3"]
+script = ExtResource("feature_script")
+kind = 0
+points = PackedVector2Array(-20, 252, 80, 244, 180, 254, 290, 246, 298, 268, 284, 292, 180, 296, 80, 290, -20, 294)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_4"]
+script = ExtResource("feature_script")
+kind = 0
+points = PackedVector2Array(346, 246, 440, 252, 540, 244, 660, 250, 660, 294, 560, 292, 460, 298, 356, 290, 342, 268)
+roughness = 3.0
+
+[sub_resource type="Resource" id="rally_0"]
+script = ExtResource("rally_script")
+id = &"gate"
+display_name = "Castle Gate"
+kind = 0
+position = Vector2(320, 140)
+radius = 40.0
+
+[sub_resource type="Resource" id="rally_1"]
+script = ExtResource("rally_script")
+id = &"crag_pass"
+display_name = "Crag Pass"
+kind = 1
+position = Vector2(320, 232)
+radius = 16.0
+
+[sub_resource type="Resource" id="rally_2"]
+script = ExtResource("rally_script")
+id = &"west_bridge"
+display_name = "West Bridge"
+kind = 1
+position = Vector2(70, 168)
+radius = 16.0
+
+[sub_resource type="Resource" id="rally_3"]
+script = ExtResource("rally_script")
+id = &"east_bridge"
+display_name = "East Bridge"
+kind = 1
+position = Vector2(572, 164)
+radius = 16.0
+
+[sub_resource type="Resource" id="rally_4"]
+script = ExtResource("rally_script")
+id = &"high_ledge"
+display_name = "High Ledge"
+kind = 2
+position = Vector2(320, 176)
+radius = 30.0
+
+[resource]
+script = ExtResource("layout_script")
+id = &"pass_and_river"
+display_name = "Stormcrag Crossing"
+description = "One pass through the crags, then a river crossed only at its far ends."
+features = Array[ExtResource("feature_script")]([SubResource("feature_0"), SubResource("feature_1"), SubResource("feature_2"), SubResource("feature_3"), SubResource("feature_4")])
+spawn_zones = Array[Rect2]([Rect2(16, 326, 608, 26)])
+rally_points = Array[ExtResource("rally_script")]([SubResource("rally_0"), SubResource("rally_1"), SubResource("rally_2"), SubResource("rally_3"), SubResource("rally_4")])

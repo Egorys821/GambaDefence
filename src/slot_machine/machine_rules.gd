@@ -4,12 +4,14 @@ extends RefCounted
 ## passed in, so the rules can be tested and simulated without the scene.
 
 
-## Reel heights for one spin. Variable-height machines roll each reel.
-static func roll_heights(style: MachineStyle, rows: int, min_rows_bonus: int = 0) -> Array[int]:
+## Reel heights for one spin. Variable-height machines roll each reel;
+## `first_reel_bonus` raises the shortest height of the first reel only.
+static func roll_heights(style: MachineStyle, rows: int, first_reel_bonus: int = 0) -> Array[int]:
 	var heights: Array[int] = []
 	for reel in style.reel_count:
 		if style.variable_rows:
-			heights.append(randi_range(mini(style.min_rows + min_rows_bonus, style.max_rows), style.max_rows))
+			var low := style.min_rows + (first_reel_bonus if reel == 0 else 0)
+			heights.append(randi_range(mini(low, style.max_rows), style.max_rows))
 		else:
 			heights.append(rows)
 	return heights

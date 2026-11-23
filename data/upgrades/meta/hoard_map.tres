@@ -2,23 +2,23 @@
 
 [ext_resource type="Script" path="res://src/data/upgrade_data.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/sprites/symbols/chest.png" id="2_icon"]
-[ext_resource type="Resource" path="res://data/upgrades/meta/machine_hoard.tres" id="3_requires"]
+[ext_resource type="Resource" path="res://data/upgrades/meta/hoard_gold.tres" id="3_requires"]
 
 [resource]
 script = ExtResource("1_script")
 id = &"hoard_map"
 display_name = "Treasure Map"
 icon = ExtResource("2_icon")
-description = "Dragon's Hoard: +{value} Treasure Chest on the reels at run start."
+description = "Dragon's Hoard: the Hoard starts with {value} fewer Treasure Chest."
 scope = 0
 category = 3
-stat = &"chest_copies"
+stat = &"hoard_trigger_ease"
 value_per_level = 1.0
 percent = false
 max_level = 1
 requires = ExtResource("3_requires")
 requires_level = 1
-tree_position = Vector2(8, 6)
+tree_position = Vector2(7, 2)
 base_cost = 30
 cost_per_level = 0
 min_night = 1

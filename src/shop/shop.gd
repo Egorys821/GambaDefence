@@ -9,9 +9,15 @@ const DETAIL_COLOR := Color(0.85, 0.78, 0.66)
 
 var _offers: Array[ShopOffer] = []
 var _reroll_cost := ShopCatalog.REROLL_BASE_COST
+## Free rerolls left today (Time Forge: Reroll Tokens).
+var _free_rerolls := 0
 
 ## Trading Post buttons by TradeRules.Mode.
 var _trade_mode_buttons: Dictionary = {}
+## The trade whose "pick what you get" row is open, or null.
+var _choosing: TradeButton
+## The symbol that trade was taking when the row opened.
+var _choosing_give: SymbolData
 
 @onready var _cards: GridContainer = %Cards
 @onready var _detail: Label = %Detail
@@ -19,6 +25,9 @@ var _trade_mode_buttons: Dictionary = {}
 @onready var _reroll_button: Button = %RerollButton
 @onready var _unlock_trade_button: Button = %UnlockTradeButton
 @onready var _trade_buttons: HBoxContainer = %TradeButtons
+@onready var _trade_choice: VBoxContainer = %TradeChoice
+@onready var _choice_label: Label = %ChoiceLabel
+@onready var _choice_grid: GridContainer = %ChoiceGrid
 
 
 func _ready() -> void:
@@ -38,7 +47,9 @@ func _ready() -> void:
 ## New stock for a new day.
 func restock() -> void:
 	_reroll_cost = ShopCatalog.price(ShopCatalog.REROLL_BASE_COST)
+	_free_rerolls = GameState.stat_int(Stats.FREE_REROLLS)
 	_repick_trades(true)
+	_close_choice()
 	_roll_offers()
 
 
@@ -109,12 +120,56 @@ func _repick_trades(force: bool = false) -> void:
 			button.set_give(TradeRules.pick_give(mode))
 
 
+## Remove trades at once; the swaps open a row of symbols to pick from.
 func _on_trade_pressed(button: TradeButton) -> void:
+	if button.mode == TradeRules.Mode.REMOVE:
+		_do_trade(button, null)
+		return
+	Audio.play(&"click")
+	if _choosing == button:
+		_close_choice()
+		return
+	_open_choice(button)
+
+
+func _open_choice(button: TradeButton) -> void:
+	_choosing = button
+	_choosing_give = button.give
+	for child in _choice_grid.get_children():
+		_choice_grid.remove_child(child)
+		child.queue_free()
 	var give := button.give
-	var receive := TradeRules.random_receive(button.mode, give)
+	_choice_label.text = "Give %dx %s - pick what you get:" % [TradeRules.GIVE_COUNT[button.mode], give.display_name]
+	for symbol in TradeRules.get_options(button.mode, give):
+		var choice := Button.new()
+		choice.focus_mode = Control.FOCUS_NONE
+		choice.custom_minimum_size = Vector2(26, 24)
+		choice.icon = symbol.texture
+		choice.expand_icon = true
+		choice.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		choice.tooltip_text = "%s (%s)\n%s" % [symbol.display_name, MerchantRarity.tier_name(symbol.rarity), symbol.description]
+		_style_choice(choice, symbol.rarity)
+		choice.pressed.connect(_do_trade.bind(button, symbol))
+		choice.mouse_entered.connect(_show_symbol_detail.bind(symbol))
+		_choice_grid.add_child(choice)
+	_trade_choice.show()
+	for each: TradeButton in _trade_mode_buttons.values():
+		each.set_selected(each == button)
+
+
+func _close_choice() -> void:
+	_choosing = null
+	_trade_choice.hide()
+	for each: TradeButton in _trade_mode_buttons.values():
+		each.set_selected(false)
+
+
+func _do_trade(button: TradeButton, receive: SymbolData) -> void:
+	var give := button.give
 	if not TradeRules.trade(button.mode, give, receive):
 		Audio.play(&"denied")
 		return
+	_close_choice()
 	if receive:
 		_detail.text = "Traded %dx %s for 1x %s!" % [TradeRules.GIVE_COUNT[button.mode], give.display_name, receive.display_name]
 		_detail.add_theme_color_override("font_color", MerchantRarity.text_color(receive.rarity).lerp(Color.WHITE, 0.4))
@@ -129,19 +184,40 @@ func _on_trade_pressed(button: TradeButton) -> void:
 	_refresh()
 
 
+func _show_symbol_detail(symbol: SymbolData) -> void:
+	_detail.text = "%s: %s" % [symbol.display_name, symbol.description]
+	_detail.add_theme_color_override("font_color", MerchantRarity.text_color(symbol.rarity).lerp(Color.WHITE, 0.4))
+
+
+## Small rarity-bordered icon button.
+func _style_choice(button: Button, rarity: int) -> void:
+	var style := MerchantRarity.card_style(rarity)
+	style.set_content_margin_all(2)
+	style.shadow_size = 0
+	var hover := style.duplicate() as StyleBoxFlat
+	hover.bg_color = style.bg_color.lightened(0.25)
+	hover.border_color = Color.WHITE
+	button.add_theme_stylebox_override("normal", style)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", hover)
+
+
 func _on_repair_pressed() -> void:
 	if GameState.is_castle_full() or not GameState.spend_gold(ShopCatalog.price(ShopCatalog.REPAIR_COST)):
 		Audio.play(&"denied")
 		return
-	GameState.repair_castle(ShopCatalog.REPAIR_AMOUNT)
+	GameState.repair_castle(ShopCatalog.repair_amount())
 	Audio.play(&"buy", 0.8)
 
 
 func _on_reroll_pressed() -> void:
-	if not GameState.spend_gold(_reroll_cost):
+	if _free_rerolls > 0:
+		_free_rerolls -= 1
+	elif GameState.spend_gold(_reroll_cost):
+		_reroll_cost += ShopCatalog.REROLL_COST_STEP
+	else:
 		Audio.play(&"denied")
 		return
-	_reroll_cost += ShopCatalog.REROLL_COST_STEP
 	Audio.play(&"click")
 	_roll_offers()
 
@@ -157,10 +233,14 @@ func _on_castle_hp_changed(_hp: int, _max_hp: int) -> void:
 func _refresh() -> void:
 	for card in _cards.get_children():
 		(card as OfferCard).refresh()
-	_repair_button.text = "Repair +%d (%dg)" % [ShopCatalog.REPAIR_AMOUNT, ShopCatalog.price(ShopCatalog.REPAIR_COST)]
+	_repair_button.text = "Repair +%d (%dg)" % [ShopCatalog.repair_amount(), ShopCatalog.price(ShopCatalog.REPAIR_COST)]
 	_repair_button.disabled = GameState.is_castle_full() or GameState.gold < ShopCatalog.price(ShopCatalog.REPAIR_COST)
-	_reroll_button.text = "Reroll (%dg)" % _reroll_cost
-	_reroll_button.disabled = GameState.gold < _reroll_cost
+	if _free_rerolls > 0:
+		_reroll_button.text = "Reroll (free x%d)" % _free_rerolls
+		_reroll_button.disabled = false
+	else:
+		_reroll_button.text = "Reroll (%dg)" % _reroll_cost
+		_reroll_button.disabled = GameState.gold < _reroll_cost
 	_unlock_trade_button.visible = not GameState.trade_unlocked
 	_trade_buttons.visible = GameState.trade_unlocked
 	_unlock_trade_button.text = "Open Trading Post - %d gold" % TradeRules.unlock_cost()
@@ -168,3 +248,6 @@ func _refresh() -> void:
 	_repick_trades()
 	for button: TradeButton in _trade_mode_buttons.values():
 		button.refresh()
+	# The open choice row belongs to a pick that changed or can't be paid any more.
+	if _choosing and (_choosing.give != _choosing_give or not TradeRules.can_offer(_choosing.mode, _choosing.give)):
+		_close_choice()

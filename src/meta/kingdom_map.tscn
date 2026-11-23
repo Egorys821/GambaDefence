@@ -91,6 +91,7 @@ layout_mode = 2
 alignment = 1
 
 [node name="MarchButton" type="Button" parent="Center/Parchment/Box/Info/Buttons"]
+theme_type_variation = &"AccentButton"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 24)
 layout_mode = 2

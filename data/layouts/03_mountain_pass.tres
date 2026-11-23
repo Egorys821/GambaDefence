@@ -1,0 +1,78 @@
+[gd_resource type="Resource" script_class="BattleLayout" format=3]
+
+[ext_resource type="Script" path="res://src/data/battle_layout.gd" id="layout_script"]
+[ext_resource type="Script" path="res://src/data/layout_feature.gd" id="feature_script"]
+[ext_resource type="Script" path="res://src/data/rally_point.gd" id="rally_script"]
+
+[sub_resource type="Resource" id="feature_0"]
+script = ExtResource("feature_script")
+kind = 0
+points = PackedVector2Array(30, 202, 90, 186, 170, 196, 240, 186, 288, 204, 294, 240, 272, 268, 200, 276, 120, 262, 62, 272, 34, 246)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_1"]
+script = ExtResource("feature_script")
+kind = 0
+points = PackedVector2Array(352, 202, 400, 186, 470, 196, 540, 184, 608, 198, 612, 242, 586, 270, 510, 262, 440, 278, 370, 266, 346, 238)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_2"]
+script = ExtResource("feature_script")
+kind = 0
+points = PackedVector2Array(162, 304, 156.9, 310.4, 143.8, 313.8, 129, 312.7, 119.3, 307.4, 119.3, 300.6, 129, 295.3, 143.8, 294.2, 156.9, 297.6)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_3"]
+script = ExtResource("feature_script")
+kind = 0
+points = PackedVector2Array(518, 300, 513.8, 305.8, 503.1, 308.9, 491, 307.8, 483.1, 303.1, 483.1, 296.9, 491, 292.2, 503.1, 291.1, 513.8, 294.2)
+roughness = 3.0
+
+[sub_resource type="Resource" id="rally_0"]
+script = ExtResource("rally_script")
+id = &"gate"
+display_name = "Castle Gate"
+kind = 0
+position = Vector2(320, 140)
+radius = 40.0
+
+[sub_resource type="Resource" id="rally_1"]
+script = ExtResource("rally_script")
+id = &"pass"
+display_name = "Mountain Pass"
+kind = 1
+position = Vector2(320, 184)
+radius = 24.0
+
+[sub_resource type="Resource" id="rally_2"]
+script = ExtResource("rally_script")
+id = &"west_trail"
+display_name = "West Trail"
+kind = 4
+position = Vector2(20, 182)
+radius = 12.0
+
+[sub_resource type="Resource" id="rally_3"]
+script = ExtResource("rally_script")
+id = &"east_trail"
+display_name = "East Trail"
+kind = 4
+position = Vector2(622, 182)
+radius = 12.0
+
+[sub_resource type="Resource" id="rally_4"]
+script = ExtResource("rally_script")
+id = &"snowfield"
+display_name = "Snowfield"
+kind = 3
+position = Vector2(320, 296)
+radius = 30.0
+
+[resource]
+script = ExtResource("layout_script")
+id = &"mountain_pass"
+display_name = "Mountain Pass"
+description = "Two ridges leave one pass in the middle and goat trails at the edges."
+features = Array[ExtResource("feature_script")]([SubResource("feature_0"), SubResource("feature_1"), SubResource("feature_2"), SubResource("feature_3")])
+spawn_zones = Array[Rect2]([Rect2(16, 326, 608, 26)])
+rally_points = Array[ExtResource("rally_script")]([SubResource("rally_0"), SubResource("rally_1"), SubResource("rally_2"), SubResource("rally_3"), SubResource("rally_4")])

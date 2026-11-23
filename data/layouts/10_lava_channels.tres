@@ -1,0 +1,122 @@
+[gd_resource type="Resource" script_class="BattleLayout" format=3]
+
+[ext_resource type="Script" path="res://src/data/battle_layout.gd" id="layout_script"]
+[ext_resource type="Script" path="res://src/data/layout_feature.gd" id="feature_script"]
+[ext_resource type="Script" path="res://src/data/rally_point.gd" id="rally_script"]
+
+[sub_resource type="Resource" id="feature_0"]
+script = ExtResource("feature_script")
+kind = 4
+points = PackedVector2Array(-30, 262, 110, 254, 220, 266, 320, 256, 430, 266, 530, 254, 670, 262)
+closed = false
+width = 26.0
+roughness = 2.5
+
+[sub_resource type="Resource" id="feature_1"]
+script = ExtResource("feature_script")
+kind = 4
+points = PackedVector2Array(-30, 196, 100, 190, 220, 200, 320, 192, 420, 200, 540, 190, 670, 198)
+closed = false
+width = 22.0
+roughness = 2.5
+
+[sub_resource type="Resource" id="feature_2"]
+script = ExtResource("feature_script")
+kind = 5
+points = PackedVector2Array(110, 234, 110, 280)
+closed = false
+width = 14.0
+roughness = 0.0
+
+[sub_resource type="Resource" id="feature_3"]
+script = ExtResource("feature_script")
+kind = 5
+points = PackedVector2Array(320, 234, 320, 280)
+closed = false
+width = 14.0
+roughness = 0.0
+
+[sub_resource type="Resource" id="feature_4"]
+script = ExtResource("feature_script")
+kind = 5
+points = PackedVector2Array(530, 232, 530, 278)
+closed = false
+width = 14.0
+roughness = 0.0
+
+[sub_resource type="Resource" id="feature_5"]
+script = ExtResource("feature_script")
+kind = 5
+points = PackedVector2Array(220, 174, 220, 220)
+closed = false
+width = 14.0
+roughness = 0.0
+
+[sub_resource type="Resource" id="feature_6"]
+script = ExtResource("feature_script")
+kind = 5
+points = PackedVector2Array(420, 174, 420, 220)
+closed = false
+width = 14.0
+roughness = 0.0
+
+[sub_resource type="Resource" id="feature_7"]
+script = ExtResource("feature_script")
+kind = 4
+points = PackedVector2Array(66, 150, 61, 159.4, 48, 165.2, 32, 165.2, 19, 159.4, 14, 150, 19, 140.6, 32, 134.8, 48, 134.8, 61, 140.6)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_8"]
+script = ExtResource("feature_script")
+kind = 4
+points = PackedVector2Array(626, 148, 621, 157.4, 608, 163.2, 592, 163.2, 579, 157.4, 574, 148, 579, 138.6, 592, 132.8, 608, 132.8, 621, 138.6)
+roughness = 3.0
+
+[sub_resource type="Resource" id="rally_0"]
+script = ExtResource("rally_script")
+id = &"gate"
+display_name = "Castle Gate"
+kind = 0
+position = Vector2(320, 140)
+radius = 40.0
+
+[sub_resource type="Resource" id="rally_1"]
+script = ExtResource("rally_script")
+id = &"west_span"
+display_name = "West Span"
+kind = 1
+position = Vector2(220, 166)
+radius = 16.0
+
+[sub_resource type="Resource" id="rally_2"]
+script = ExtResource("rally_script")
+id = &"east_span"
+display_name = "East Span"
+kind = 1
+position = Vector2(420, 166)
+radius = 16.0
+
+[sub_resource type="Resource" id="rally_3"]
+script = ExtResource("rally_script")
+id = &"cinder_field"
+display_name = "Cinder Field"
+kind = 4
+position = Vector2(320, 228)
+radius = 24.0
+
+[sub_resource type="Resource" id="rally_4"]
+script = ExtResource("rally_script")
+id = &"ash_flats"
+display_name = "Ash Flats"
+kind = 3
+position = Vector2(320, 300)
+radius = 30.0
+
+[resource]
+script = ExtResource("layout_script")
+id = &"lava_channels"
+display_name = "Lava Channels"
+description = "Two rivers of fire. Narrow stone bridges are the only way over."
+features = Array[ExtResource("feature_script")]([SubResource("feature_0"), SubResource("feature_1"), SubResource("feature_2"), SubResource("feature_3"), SubResource("feature_4"), SubResource("feature_5"), SubResource("feature_6"), SubResource("feature_7"), SubResource("feature_8")])
+spawn_zones = Array[Rect2]([Rect2(16, 304, 150, 46), Rect2(250, 328, 140, 24), Rect2(474, 304, 150, 46)])
+rally_points = Array[ExtResource("rally_script")]([SubResource("rally_0"), SubResource("rally_1"), SubResource("rally_2"), SubResource("rally_3"), SubResource("rally_4")])

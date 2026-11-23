@@ -40,7 +40,7 @@ const STANDARD_ID := &"standard"
 @export var variable_rows: bool = false
 @export var min_rows: int = 2
 @export var max_rows: int = 6
-## Stat added to min_rows (Shifting Halls upgrade).
+## Stat added to min_rows of the first reel (Shifting Halls upgrade).
 @export var min_rows_stat: StringName
 
 @export_group("Wins")

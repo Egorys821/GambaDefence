@@ -14,6 +14,9 @@ extends Node
 ##                  2 symbols a day, the curse spreads, 1 junk symbol is banished
 ##   --upgrades     max out the Time Forge slot upgrades: the shared ones and
 ##                  each machine's own branch
+##   --upgrades=shared / --upgrades=branch
+##                  only the shared reel upgrades / only the machine's branch
+##   --without=a,b  leave these upgrade ids at level 0 (with --upgrades)
 ## Never touches the real save file.
 
 ## How much one troop / one HP is worth in gold, for the value column.
@@ -29,6 +32,9 @@ var _only := &""
 var _castles: Array[int] = [1]
 var _night := 1
 var _upgrades := false
+var _shared := true
+var _branch := true
+var _without: PackedStringArray = []
 var _standard_value := 0.0
 
 
@@ -40,6 +46,12 @@ func _ready() -> void:
 			_only = StringName(arg.get_slice("=", 1))
 		elif arg == "--upgrades":
 			_upgrades = true
+		elif arg.begins_with("--upgrades="):
+			_upgrades = true
+			_shared = arg.get_slice("=", 1) == "shared"
+			_branch = arg.get_slice("=", 1) == "branch"
+		elif arg.begins_with("--without="):
+			_without = arg.get_slice("=", 1).split(",")
 		elif arg.begins_with("--night="):
 			_night = int(arg.get_slice("=", 1))
 		elif arg == "--castle=all":
@@ -95,13 +107,28 @@ func _setup_progress(style: MachineStyle) -> void:
 	var castle := GameState.machine_castle(style)
 	if castle:
 		MetaProgress.conquered.append(castle.id)
+	var unlock := GameState.machine_unlock(style)
+	if unlock:
+		MetaProgress.levels[unlock.id] = 1
 	if _upgrades:
 		for upgrade in GameState.get_upgrades(UpgradeData.Scope.META):
-			var shared := upgrade.category == UpgradeData.Category.MACHINE
-			var own := upgrade.requires != null and upgrade.requires.stat == style.unlock_stat and style.unlock_stat != &""
-			if (shared or own) and not upgrade.is_castle_reward():
+			if String(upgrade.id) in _without:
+				continue
+			var shared := _shared and upgrade.category == UpgradeData.Category.MACHINE
+			var root := GameState.machine_node(style)  # the Gamba Machine has a node but no unlock
+			if shared or (_branch and root != null and _in_branch(upgrade, root)):
 				MetaProgress.levels[upgrade.id] = upgrade.max_level
 	MetaProgress.selected_machine = style.id
+
+
+## The upgrade sits below `root` in the tree (a machine's own branch).
+func _in_branch(upgrade: UpgradeData, root: UpgradeData) -> bool:
+	var parent := upgrade.requires
+	while parent:
+		if parent == root:
+			return true
+		parent = parent.requires
+	return false
 
 
 ## Plays the merchant and the curse up to `night`: 2 random symbols bought a

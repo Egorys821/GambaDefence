@@ -1,0 +1,78 @@
+[gd_resource type="Resource" script_class="BattleLayout" format=3]
+
+[ext_resource type="Script" path="res://src/data/battle_layout.gd" id="layout_script"]
+[ext_resource type="Script" path="res://src/data/layout_feature.gd" id="feature_script"]
+[ext_resource type="Script" path="res://src/data/rally_point.gd" id="rally_script"]
+
+[sub_resource type="Resource" id="feature_0"]
+script = ExtResource("feature_script")
+kind = 1
+points = PackedVector2Array(-30, 226, 90, 240, 200, 230, 320, 244, 440, 230, 550, 242, 670, 232)
+closed = false
+width = 32.0
+roughness = 2.5
+
+[sub_resource type="Resource" id="feature_1"]
+script = ExtResource("feature_script")
+kind = 5
+points = PackedVector2Array(150, 206, 150, 266)
+closed = false
+width = 18.0
+roughness = 0.0
+
+[sub_resource type="Resource" id="feature_2"]
+script = ExtResource("feature_script")
+kind = 5
+points = PackedVector2Array(490, 204, 490, 264)
+closed = false
+width = 18.0
+roughness = 0.0
+
+[sub_resource type="Resource" id="rally_0"]
+script = ExtResource("rally_script")
+id = &"gate"
+display_name = "Castle Gate"
+kind = 0
+position = Vector2(320, 140)
+radius = 40.0
+
+[sub_resource type="Resource" id="rally_1"]
+script = ExtResource("rally_script")
+id = &"west_bridge"
+display_name = "West Bridge"
+kind = 1
+position = Vector2(150, 196)
+radius = 24.0
+
+[sub_resource type="Resource" id="rally_2"]
+script = ExtResource("rally_script")
+id = &"east_bridge"
+display_name = "East Bridge"
+kind = 1
+position = Vector2(490, 194)
+radius = 24.0
+
+[sub_resource type="Resource" id="rally_3"]
+script = ExtResource("rally_script")
+id = &"north_bank"
+display_name = "North Bank"
+kind = 2
+position = Vector2(320, 200)
+radius = 30.0
+
+[sub_resource type="Resource" id="rally_4"]
+script = ExtResource("rally_script")
+id = &"far_bank"
+display_name = "Far Bank"
+kind = 3
+position = Vector2(320, 285)
+radius = 30.0
+
+[resource]
+script = ExtResource("layout_script")
+id = &"two_bridges"
+display_name = "Twin Bridges"
+description = "A river cuts the field. Spirits cross at two old bridges."
+features = Array[ExtResource("feature_script")]([SubResource("feature_0"), SubResource("feature_1"), SubResource("feature_2")])
+spawn_zones = Array[Rect2]([Rect2(16, 326, 608, 26)])
+rally_points = Array[ExtResource("rally_script")]([SubResource("rally_0"), SubResource("rally_1"), SubResource("rally_2"), SubResource("rally_3"), SubResource("rally_4")])

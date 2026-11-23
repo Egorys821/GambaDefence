@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://src/data/upgrade_data.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/bag.png" id="2_icon"]
-[ext_resource type="Resource" path="res://data/upgrades/meta/healer.tres" id="3_requires"]
+[ext_resource type="Resource" path="res://data/upgrades/meta/treasury.tres" id="3_requires"]
 
 [resource]
 script = ExtResource("1_script")
@@ -11,14 +11,14 @@ display_name = "Bounty Hunters"
 icon = ExtResource("2_icon")
 description = "+{value} gold for every spirit destroyed."
 scope = 0
-category = 1
+category = 4
 stat = &"kill_bounty"
 value_per_level = 1.0
 percent = false
 max_level = 3
 requires = ExtResource("3_requires")
 requires_level = 1
-tree_position = Vector2(9, 2)
+tree_position = Vector2(3.5, 1)
 base_cost = 15
 cost_per_level = 15
 min_night = 1

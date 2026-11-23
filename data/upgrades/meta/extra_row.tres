@@ -2,23 +2,25 @@
 
 [ext_resource type="Script" path="res://src/data/upgrade_data.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/rows.png" id="2_icon"]
-[ext_resource type="Resource" path="res://data/upgrades/meta/lever.tres" id="3_requires"]
+[ext_resource type="Resource" path="res://data/upgrades/meta/blueprints.tres" id="3_requires"]
 
 [resource]
 script = ExtResource("1_script")
 id = &"extra_row"
 display_name = "Extra Reel Row"
 icon = ExtResource("2_icon")
-description = "+{value} row on the reels, with its own payline. More symbols land every spin."
+description = "CROWN KEY, Gamba Machine: +{value} row on the reels (more lines fit, more symbols per spin)."
 scope = 0
-category = 0
+category = 3
 stat = &"machine_rows"
 value_per_level = 1.0
 percent = false
+machine = &"standard"
 max_level = 2
 requires = ExtResource("3_requires")
 requires_level = 1
-tree_position = Vector2(0, 3)
-base_cost = 40
-cost_per_level = 40
+tree_position = Vector2(4, 2)
+base_cost = 0
+cost_per_level = 0
+crown_cost = 2
 min_night = 1

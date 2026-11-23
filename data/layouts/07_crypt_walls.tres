@@ -1,0 +1,136 @@
+[gd_resource type="Resource" script_class="BattleLayout" format=3]
+
+[ext_resource type="Script" path="res://src/data/battle_layout.gd" id="layout_script"]
+[ext_resource type="Script" path="res://src/data/layout_feature.gd" id="feature_script"]
+[ext_resource type="Script" path="res://src/data/rally_point.gd" id="rally_script"]
+
+[sub_resource type="Resource" id="feature_0"]
+script = ExtResource("feature_script")
+kind = 3
+points = PackedVector2Array(-10, 286, 230, 286)
+closed = false
+width = 13.0
+roughness = 0.0
+
+[sub_resource type="Resource" id="feature_1"]
+script = ExtResource("feature_script")
+kind = 3
+points = PackedVector2Array(300, 286, 420, 286)
+closed = false
+width = 13.0
+roughness = 0.0
+
+[sub_resource type="Resource" id="feature_2"]
+script = ExtResource("feature_script")
+kind = 3
+points = PackedVector2Array(490, 286, 650, 286)
+closed = false
+width = 13.0
+roughness = 0.0
+
+[sub_resource type="Resource" id="feature_3"]
+script = ExtResource("feature_script")
+kind = 3
+points = PackedVector2Array(-10, 226, 120, 226)
+closed = false
+width = 13.0
+roughness = 0.0
+
+[sub_resource type="Resource" id="feature_4"]
+script = ExtResource("feature_script")
+kind = 3
+points = PackedVector2Array(190, 226, 450, 226)
+closed = false
+width = 13.0
+roughness = 0.0
+
+[sub_resource type="Resource" id="feature_5"]
+script = ExtResource("feature_script")
+kind = 3
+points = PackedVector2Array(520, 226, 650, 226)
+closed = false
+width = 13.0
+roughness = 0.0
+
+[sub_resource type="Resource" id="feature_6"]
+script = ExtResource("feature_script")
+kind = 3
+points = PackedVector2Array(70, 182, 180, 182)
+closed = false
+width = 13.0
+roughness = 0.0
+
+[sub_resource type="Resource" id="feature_7"]
+script = ExtResource("feature_script")
+kind = 3
+points = PackedVector2Array(460, 182, 570, 182)
+closed = false
+width = 13.0
+roughness = 0.0
+
+[sub_resource type="Resource" id="feature_8"]
+script = ExtResource("feature_script")
+kind = 3
+points = PackedVector2Array(296, 248, 344, 248, 344, 262, 296, 262)
+roughness = 0.0
+
+[sub_resource type="Resource" id="feature_9"]
+script = ExtResource("feature_script")
+kind = 3
+points = PackedVector2Array(36, 248, 76, 248, 76, 262, 36, 262)
+roughness = 0.0
+
+[sub_resource type="Resource" id="feature_10"]
+script = ExtResource("feature_script")
+kind = 3
+points = PackedVector2Array(564, 248, 604, 248, 604, 262, 564, 262)
+roughness = 0.0
+
+[sub_resource type="Resource" id="rally_0"]
+script = ExtResource("rally_script")
+id = &"gate"
+display_name = "Castle Gate"
+kind = 0
+position = Vector2(320, 140)
+radius = 40.0
+
+[sub_resource type="Resource" id="rally_1"]
+script = ExtResource("rally_script")
+id = &"west_crypt_gate"
+display_name = "West Crypt Gate"
+kind = 1
+position = Vector2(155, 204)
+radius = 16.0
+
+[sub_resource type="Resource" id="rally_2"]
+script = ExtResource("rally_script")
+id = &"east_crypt_gate"
+display_name = "East Crypt Gate"
+kind = 1
+position = Vector2(485, 204)
+radius = 16.0
+
+[sub_resource type="Resource" id="rally_3"]
+script = ExtResource("rally_script")
+id = &"ossuary"
+display_name = "Ossuary Hall"
+kind = 4
+position = Vector2(320, 240)
+radius = 16.0
+
+[sub_resource type="Resource" id="rally_4"]
+script = ExtResource("rally_script")
+id = &"bone_yard"
+display_name = "Bone Yard"
+kind = 3
+position = Vector2(320, 308)
+radius = 24.0
+
+[resource]
+script = ExtResource("layout_script")
+id = &"crypt_walls"
+display_name = "Crypt Walls"
+description = "Rows of broken crypt walls. Spirits zigzag through the gaps."
+features = Array[ExtResource("feature_script")]([SubResource("feature_0"), SubResource("feature_1"), SubResource("feature_2"), SubResource("feature_3"), SubResource("feature_4"), SubResource("feature_5"), SubResource("feature_6"), SubResource("feature_7"), SubResource("feature_8"), SubResource("feature_9"), SubResource("feature_10")])
+spawn_zones = Array[Rect2]([Rect2(16, 326, 608, 26)])
+rally_points = Array[ExtResource("rally_script")]([SubResource("rally_0"), SubResource("rally_1"), SubResource("rally_2"), SubResource("rally_3"), SubResource("rally_4")])

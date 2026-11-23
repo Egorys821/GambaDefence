@@ -12,7 +12,7 @@ func after_spin(machine: SlotMachine, wins: Array[SlotWin]) -> void:
 	for reel in machine.grid.size():
 		options.append("Reel %d" % (reel + 1))
 	options.append("Skip")
-	var choice := await machine.ask("Nudge a reel down one row?", options)
+	var choice := await machine.ask("Nudge a reel down one row?", options, true)
 	if choice >= machine.grid.size():
 		return
 	await machine.nudge_reel(choice, GameState.roll_symbol())

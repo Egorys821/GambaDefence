@@ -12,6 +12,9 @@ extends Resource
 @export var nights: int = 10
 ## Tint applied to the ground (snow, ash...).
 @export var ground_tint: Color = Color.WHITE
+## The battlefield in front of the castle (terrain, graveyards, rally points).
+## null = open field. Layouts live in res://data/layouts/.
+@export var layout: BattleLayout
 
 @export_group("Reels")
 ## Symbols on the reels at the start of a run (Cursed Skulls come from Stats).
@@ -43,6 +46,8 @@ extends Resource
 @export_group("Rewards")
 ## Multiplies the Chrono Shards earned here.
 @export var shard_multiplier: float = 1.0
+## Crowns won the first time this castle is conquered (spent in the Time Forge).
+@export var crown_reward: int = 1
 
 
 func budget_for(night: int) -> int:

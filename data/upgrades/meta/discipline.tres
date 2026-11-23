@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://src/data/upgrade_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/units/swordsman.png" id="2_icon"]
+[ext_resource type="Resource" path="res://data/upgrades/meta/barracks.tres" id="3_requires"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"discipline"
+display_name = "Discipline"
+icon = ExtResource("2_icon")
+description = "Unpaid troops keep {value} more of their strength."
+scope = 0
+category = 2
+stat = &"morale_floor"
+value_per_level = 0.1
+percent = true
+max_level = 3
+requires = ExtResource("3_requires")
+requires_level = 1
+tree_position = Vector2(1.5, 3)
+base_cost = 10
+cost_per_level = 10
+min_night = 1

@@ -2,23 +2,24 @@
 
 [ext_resource type="Script" path="res://src/data/upgrade_data.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/payline.png" id="2_icon"]
-[ext_resource type="Resource" path="res://data/upgrades/meta/treasury.tres" id="3_requires"]
+[ext_resource type="Resource" path="res://data/upgrades/meta/machine_gamba.tres" id="3_requires"]
 
 [resource]
 script = ExtResource("1_script")
 id = &"blueprints"
 display_name = "Ancient Blueprints"
 icon = ExtResource("2_icon")
-description = "Start every run with {value} extra payline shape."
+description = "Gamba Machine: start every run with {value} extra payline shape."
 scope = 0
-category = 0
+category = 3
 stat = &"start_paylines"
 value_per_level = 1.0
 percent = false
+machine = &"standard"
 max_level = 3
 requires = ExtResource("3_requires")
-requires_level = 1
-tree_position = Vector2(3, 1)
+requires_level = 0
+tree_position = Vector2(4, 1)
 base_cost = 12
 cost_per_level = 12
 min_night = 1

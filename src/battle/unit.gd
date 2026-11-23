@@ -5,6 +5,7 @@ extends Node2D
 ##
 ## Troops hold their formation spot and step out to fight spirits that come
 ## close. Spirits drift towards the castle and fight whatever blocks them.
+## Walkers path around the layout's terrain (Battlefield.nav); flyers don't.
 
 signal died(unit: Unit)
 
@@ -16,6 +17,12 @@ const GROUP_ENEMIES := &"enemies"
 const ENEMY_GLOW := Color(1.6, 1.6, 1.8)
 const HP_BAR_WIDTH := 12.0
 const RISE_DURATION := 0.6
+## A walker re-plans its path when its goal moves this far (pixels)...
+const REPLAN_DISTANCE := 10.0
+## ...or when it hasn't got anywhere for this long (seconds).
+const STUCK_TIME := 0.6
+## How long a "can I walk straight at this target?" answer is trusted.
+const REACH_CHECK_TIME := 0.4
 
 var data: UnitData
 var team: Team = Team.PLAYER
@@ -38,6 +45,13 @@ var _base_modulate := Color.WHITE
 var _rise_time := 0.0
 ## Where along the castle wall this spirit attacks (-1 = left end, 1 = right end).
 var _wall_offset := randf_range(-0.85, 0.85)
+## Path to the current goal (BattleNav waypoints; the last one is the goal).
+var _path := PackedVector2Array()
+var _path_goal := Vector2.INF
+var _stuck_time := 0.0
+var _reach_target: Unit
+var _reach_ok := true
+var _reach_timer := 0.0
 
 @onready var _sprite: Sprite2D = $Sprite2D
 
@@ -78,6 +92,7 @@ func _physics_process(delta: float) -> void:
 		_rise_time -= delta
 		return
 	_cooldown = maxf(0.0, _cooldown - delta)
+	_reach_timer -= delta
 	_is_moving = false
 	if team == Team.PLAYER:
 		_think_troop(delta)
@@ -119,6 +134,8 @@ func _think_troop(delta: float) -> void:
 	var search_from := position if data.is_ranged() else home_position
 	var aggro := data.aggro_range * battlefield.troop_aggro_multiplier()
 	var target := battlefield.nearest_unit(search_from, aggro, Team.ENEMY, data.is_ranged())
+	if target != null and not _can_engage(target):
+		target = null  # across a river or behind rocks: hold the line instead
 	var charging := false
 	if target == null:
 		# Nothing close: go after a boss, or a ranged spirit that can hit us.
@@ -167,6 +184,8 @@ func heal(amount: float) -> void:
 func _think_enemy(delta: float) -> void:
 	# Flying spirits ignore troops and go straight for the castle.
 	var target: Unit = null if data.flying else battlefield.nearest_unit(position, data.aggro_range, Team.PLAYER)
+	if target != null and not _can_engage(target):
+		target = null  # can't get at it from here: keep marching on the castle
 	if target != null:
 		if position.distance_to(target.position) <= data.attack_range:
 			_attack(target)
@@ -200,11 +219,63 @@ func _attack(target) -> void:
 func _move_to(point: Vector2, delta: float) -> void:
 	var offset := point - position
 	if offset.length() < 1.0:
+		_stuck_time = 0.0
 		return
+	var step_to := _steer(point)
 	_is_moving = true
-	_face(offset.x)
-	position = position.move_toward(point, move_speed * delta)
-	position = position.clamp(Battlefield.FIELD.position, Battlefield.FIELD.end)
+	_face(step_to.x - position.x)
+	var next := position.move_toward(step_to, move_speed * delta)
+	next = next.clamp(Battlefield.FIELD.position, Battlefield.FIELD.end)
+	if not data.flying:
+		next = _slide(next)
+	if next.distance_squared_to(position) < 0.0001:
+		_stuck_time += delta
+	else:
+		_stuck_time = 0.0
+	position = next
+
+
+## Next point to walk towards on the way to `goal`: the goal itself on open
+## ground or for flyers, otherwise the next waypoint around the terrain.
+func _steer(goal: Vector2) -> Vector2:
+	var nav := battlefield.nav
+	if data.flying or nav == null or not nav.has_obstacles:
+		return goal
+	if goal.distance_to(_path_goal) > REPLAN_DISTANCE or _stuck_time > STUCK_TIME:
+		_path = nav.find_path(position, goal)
+		_path_goal = goal
+		_stuck_time = 0.0
+	while _path.size() > 1 and position.distance_to(_path[0]) < 1.5:
+		_path.remove_at(0)
+	if _path.size() > 1:
+		return _path[0]
+	return goal
+
+
+## Keeps walkers out of terrain: slides along an edge instead of entering it.
+func _slide(next: Vector2) -> Vector2:
+	var nav := battlefield.nav
+	if nav == null or not nav.is_blocked(next) or nav.is_blocked(position):
+		return next
+	var along_x := Vector2(next.x, position.y)
+	if not nav.is_blocked(along_x):
+		return along_x
+	var along_y := Vector2(position.x, next.y)
+	if not nav.is_blocked(along_y):
+		return along_y
+	return position
+
+
+## Melee walkers only go for targets they can walk straight at; arrows, spells
+## and flyers cross terrain freely.
+func _can_engage(target: Unit) -> bool:
+	if data.is_ranged() or data.flying or battlefield.nav == null or not battlefield.nav.has_obstacles:
+		return true
+	if target != _reach_target or _reach_timer <= 0.0:
+		_reach_target = target
+		_reach_timer = REACH_CHECK_TIME
+		_reach_ok = battlefield.nav.is_clear_line(position, target.position)
+	return _reach_ok
 
 
 ## False while a spirit is still rising from its grave.

@@ -27,11 +27,13 @@ func after_spin(machine: SlotMachine, wins: Array[SlotWin]) -> void:
 		return
 	var cells := wins[-1].cells
 	for _step in MAX_STEPS:
-		var guess := await machine.ask("Gamble %d gold? Guess the card." % stake, ["Red", "Black", "Collect"])
+		machine.cabinet.gamble_offer(stake)
+		var guess := await machine.ask("Double %d gold? Guess the card." % stake, ["Red", "Black", "Collect"])
 		if guess == 2:
-			return
+			break
 		var right := randf() < win_chance()
 		var red := card_is_red(guess, right)
+		await machine.cabinet.gamble_reveal(red, right)
 		machine.announce("RED!" if red else "BLACK!", RED if red else BLACK)
 		await machine.wait(0.5)
 		if right:
@@ -39,4 +41,5 @@ func after_spin(machine: SlotMachine, wins: Array[SlotWin]) -> void:
 			stake *= 2
 		else:
 			await machine.present([SlotWin.prize(SymbolData.Effect.GOLD, -stake, wins[-1].symbol, cells, "Gamble lost")])
-			return
+			break
+	machine.cabinet.gamble_end()

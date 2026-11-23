@@ -29,11 +29,13 @@ func after_spin(machine: SlotMachine, _wins: Array[SlotWin]) -> void:
 	var spins_left := GameState.feature_length()
 	var played := 0
 	machine.announce("FREE SPINS! %s expands" % (symbol.display_name if symbol else "Nothing"))
+	machine.cabinet.set_free_spins(spins_left, played, symbol)
 	await machine.wait(1.0)
 	while spins_left > 0:
 		spins_left -= 1
 		played += 1
-		machine.set_status("Free spin %d (%d left)%s" % [played, spins_left, (" - %s expands" % symbol.display_name) if symbol else ""])
+		machine.set_status("Free spin %d" % played)
+		machine.cabinet.set_free_spins(spins_left, played, symbol)
 		await machine.spin_to(machine.roll_grid())
 		await machine.present(machine.evaluate(machine.grid))
 		if symbol:
@@ -45,7 +47,9 @@ func after_spin(machine: SlotMachine, _wins: Array[SlotWin]) -> void:
 			var before := spins_left
 			spins_left = retrigger(spins_left, played)
 			machine.announce("+%d FREE SPINS!" % (spins_left - before))
+			machine.cabinet.set_free_spins(spins_left, played, symbol)
 	machine.set_status("")
+	machine.cabinet.end_free_spins()
 
 
 func wants_tease(grid: Array, reels: int) -> bool:

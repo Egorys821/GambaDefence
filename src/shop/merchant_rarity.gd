@@ -57,11 +57,11 @@ static func text_color(tier: int) -> Color:
 	return TEXT_COLORS.get(tier, TEXT_COLORS[Tier.COMMON])
 
 
-## A full, shuffled bag of rarity tokens.
-static func new_bag() -> Array[int]:
+## A full, shuffled bag of rarity tokens, plus `extra` tokens (tier -> count).
+static func new_bag(extra: Dictionary = {}) -> Array[int]:
 	var bag: Array[int] = []
 	for tier: int in BAG_CONTENTS:
-		for i in BAG_CONTENTS[tier]:
+		for i in BAG_CONTENTS[tier] + int(extra.get(tier, 0)):
 			bag.append(tier)
 	bag.shuffle()
 	return bag

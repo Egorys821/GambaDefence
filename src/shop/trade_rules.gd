@@ -3,13 +3,14 @@ extends RefCounted
 ## The merchant's Trading Post: bought once per run, then three trades that can
 ## be used any number of times a day at a fixed price. The merchant picks the
 ## symbol you give at random (shown on the button, re-picked after each trade
-## and every day); what you get is a random surprise:
-##   SWAP_UP   - give 2 copies of a symbol, get 1 random symbol one rarity higher
-##               (e.g. 2 Bows -> 1 Crossbow).
-##   SWAP_SAME - give 1 copy, get 1 random other symbol of the same rarity.
+## and every day); the player chooses what to get:
+##   SWAP_UP   - give 2 copies of a symbol, get 1 symbol of your choice one
+##               rarity higher (e.g. 2 Bows -> 1 Crossbow).
+##   SWAP_SAME - give 1 copy, get 1 other symbol of the same rarity.
 ##   REMOVE    - take 1 copy of that symbol off the reels.
 ## "Tier" here is the symbol's merchant rarity (MerchantRarity.Tier).
-## Only symbols the merchant could sell in this run can be received.
+## You can only receive symbols already on your reels this run (of the right
+## rarity), and never another machine's signature symbol.
 
 enum Mode { SWAP_UP, SWAP_SAME, REMOVE }
 
@@ -36,14 +37,15 @@ const NAMES := {
 	Mode.REMOVE: "Remove",
 }
 const HINTS := {
-	Mode.SWAP_UP: "Give 2x %s, get 1 random %s symbol.",
-	Mode.SWAP_SAME: "Give 1x %s, get 1 random other %s symbol.",
+	Mode.SWAP_UP: "Give 2x %s, pick 1 %s symbol.",
+	Mode.SWAP_SAME: "Give 1x %s, pick 1 other %s symbol.",
 	Mode.REMOVE: "Take 1x %s off your reels.",
 }
 
 
+## Fixed price after the Haggling discount and Fair Trades (Time Forge).
 static func cost(mode: Mode) -> int:
-	return ShopCatalog.price(COSTS[mode])
+	return maxi(1, ShopCatalog.price(COSTS[mode]) - GameState.stat_int(Stats.TRADE_DISCOUNT))
 
 
 static func unlock_cost() -> int:
@@ -71,16 +73,22 @@ static func give_options(mode: Mode) -> Array[SymbolData]:
 	return result
 
 
-## What the player can receive for `give` in this mode.
+## What the player can receive for `give`: symbols already on the reels this
+## run with the wanted rarity (never another machine's symbol).
 static func get_options(mode: Mode, give: SymbolData) -> Array[SymbolData]:
 	var result: Array[SymbolData] = []
 	if mode == Mode.REMOVE or give == null:
 		return result
 	var wanted_rarity := receive_rarity(mode, give)
-	for symbol: SymbolData in GameState.symbols.values():
-		if symbol.id != give.id and symbol.rarity == wanted_rarity and is_tradeable(symbol) \
-				and GameState.is_symbol_available(symbol):
-			result.append(symbol)
+	for id: StringName in GameState.pool:
+		var symbol := GameState.get_symbol(id)
+		if symbol == null or symbol.id == give.id or symbol.rarity != wanted_rarity or not is_tradeable(symbol):
+			continue
+		if symbol.max_copies > 0 and GameState.copies_of(symbol.id) >= symbol.max_copies:
+			continue
+		if GameState.is_other_machine_symbol(symbol):
+			continue
+		result.append(symbol)
 	result.sort_custom(_by_rarity_then_cost)
 	return result
 
@@ -91,10 +99,10 @@ static func pick_give(mode: Mode) -> SymbolData:
 	return options.pick_random() if not options.is_empty() else null
 
 
-## Random symbol the player gets for `give`, or null (REMOVE, or nothing to get).
-static func random_receive(mode: Mode, give: SymbolData) -> SymbolData:
-	var options := get_options(mode, give)
-	return options.pick_random() if not options.is_empty() else null
+## The trade button can be used: open, affordable, and `give` is still allowed.
+static func can_offer(mode: Mode, give: SymbolData) -> bool:
+	return GameState.trade_unlocked and give != null and GameState.gold >= cost(mode) \
+		and give in give_options(mode)
 
 
 ## Rarity of what `give` turns into (REMOVE: its own rarity).

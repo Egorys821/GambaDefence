@@ -27,12 +27,14 @@ func after_spin(machine: SlotMachine, _wins: Array[SlotWin]) -> void:
 	var hoard := HoardRound.new(machine.grid.size(), machine.rows, GameState.feature_length())
 
 	machine.announce("DRAGON'S HOARD!", Color("#30c070"))
+	machine.cabinet.set_hoard_mode(true)
 	await machine.enter_cell_mode(chest, _empty)
 	for cell in start:
 		hoard.lock(cell, roll_prize.call())
 		machine.lock_cell(cell, hoard.prizes[cell].short_text())
 	while not hoard.is_over():
 		machine.set_status("Respins: %d" % hoard.respins_left)
+		machine.cabinet.set_respins(hoard.respins_left, hoard.max_respins)
 		var empty := hoard.empty_cells()
 		var landed := hoard.respin(hoard.chest_chance(), rng, roll_prize)
 		var targets := {}
@@ -42,6 +44,7 @@ func after_spin(machine: SlotMachine, _wins: Array[SlotWin]) -> void:
 		for cell in landed:
 			machine.lock_cell(cell, hoard.prizes[cell].short_text())
 			Audio.play(&"coin", 1.2)
+		machine.cabinet.set_respins(hoard.respins_left, hoard.max_respins)
 	machine.set_status("")
 	var grand: HoardPrize = null
 	if hoard.is_full():
@@ -50,6 +53,7 @@ func after_spin(machine: SlotMachine, _wins: Array[SlotWin]) -> void:
 	await machine.wait(0.4)
 	await machine.present(hoard.payout(chest, GameState.castle_max_hp, grand, GameState.stat(Stats.HOARD_GOLD_BONUS)))
 	await machine.wait(0.6)
+	machine.cabinet.set_hoard_mode(false)
 	machine.exit_cell_mode()
 
 

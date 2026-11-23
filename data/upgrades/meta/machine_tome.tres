@@ -1,23 +1,24 @@
 [gd_resource type="Resource" script_class="UpgradeData" format=3]
 
 [ext_resource type="Script" path="res://src/data/upgrade_data.gd" id="1_script"]
-[ext_resource type="Resource" path="res://data/castles/4_iron_crypt.tres" id="4_castle"]
 [ext_resource type="Texture2D" path="res://assets/sprites/symbols/tome.png" id="2_icon"]
+[ext_resource type="Resource" path="res://data/castles/07_iron_crypt.tres" id="4_castle"]
 
 [resource]
 script = ExtResource("1_script")
 id = &"machine_tome"
 display_name = "Tome of Ages Machine"
 icon = ExtResource("2_icon")
-description = "Unlocks TOME OF AGES: 3+ Tomes start free spins where one symbol expands across whole reels. Pick it with 'Use machine' once unlocked."
+description = "CROWN KEY: unlocks TOME OF AGES: 3 Tomes start free spins with an expanding symbol. Pick it with 'Use machine'."
 scope = 0
 category = 3
 stat = &"unlock_tome"
 value_per_level = 1.0
 percent = false
 max_level = 1
-tree_position = Vector2(10, 5)
+tree_position = Vector2(8, 0)
+requires_castle = ExtResource("4_castle")
 base_cost = 0
 cost_per_level = 0
+crown_cost = 3
 min_night = 1
-unlock_castle = ExtResource("4_castle")

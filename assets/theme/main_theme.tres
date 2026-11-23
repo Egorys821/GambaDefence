@@ -2,80 +2,84 @@
 
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/slider_grabber.png" id="tex_grabber"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/slider_grabber_highlight.png" id="tex_grabber_hl"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/kit/button_normal.png" id="kit_button_normal"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/kit/button_hover.png" id="kit_button_hover"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/kit/button_pressed.png" id="kit_button_pressed"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/kit/button_disabled.png" id="kit_button_disabled"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/kit/button_accent_normal.png" id="kit_button_accent_normal"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/kit/button_accent_hover.png" id="kit_button_accent_hover"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/kit/button_accent_pressed.png" id="kit_button_accent_pressed"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/kit/panel_card.png" id="kit_panel_card"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/kit/panel_panel.png" id="kit_panel_panel"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/kit/panel_side.png" id="kit_panel_side"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_disabled"]
-content_margin_left = 6.0
+[sub_resource type="StyleBoxTexture" id="StyleBoxFlat_btn_disabled"]
+content_margin_left = 7.0
 content_margin_top = 2.0
-content_margin_right = 6.0
-content_margin_bottom = 3.0
-bg_color = Color(0.24, 0.2, 0.18, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 2
-border_color = Color(0.14, 0.11, 0.09, 1)
+content_margin_right = 7.0
+content_margin_bottom = 4.0
+texture = ExtResource("kit_button_disabled")
+texture_margin_left = 3.0
+texture_margin_top = 4.0
+texture_margin_right = 3.0
+texture_margin_bottom = 4.0
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_focus"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_hover"]
-content_margin_left = 6.0
+[sub_resource type="StyleBoxTexture" id="StyleBoxFlat_btn_hover"]
+content_margin_left = 7.0
 content_margin_top = 2.0
-content_margin_right = 6.0
-content_margin_bottom = 3.0
-bg_color = Color(0.58, 0.38, 0.18, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 2
-border_color = Color(0.97, 0.82, 0.22, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
-content_margin_left = 6.0
-content_margin_top = 2.0
-content_margin_right = 6.0
-content_margin_bottom = 3.0
-bg_color = Color(0.45, 0.29, 0.14, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 2
-border_color = Color(0.18, 0.11, 0.05, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_pressed"]
-content_margin_left = 6.0
-content_margin_top = 3.0
-content_margin_right = 6.0
-content_margin_bottom = 2.0
-bg_color = Color(0.3, 0.19, 0.09, 1)
-border_width_left = 1
-border_width_top = 2
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.18, 0.11, 0.05, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-content_margin_left = 6.0
-content_margin_top = 4.0
-content_margin_right = 6.0
+content_margin_right = 7.0
 content_margin_bottom = 4.0
-bg_color = Color(0.165, 0.118, 0.094, 0.97)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.478, 0.329, 0.165, 1)
+texture = ExtResource("kit_button_hover")
+texture_margin_left = 3.0
+texture_margin_top = 4.0
+texture_margin_right = 3.0
+texture_margin_bottom = 4.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxFlat_btn_normal"]
+content_margin_left = 7.0
+content_margin_top = 2.0
+content_margin_right = 7.0
+content_margin_bottom = 4.0
+texture = ExtResource("kit_button_normal")
+texture_margin_left = 3.0
+texture_margin_top = 4.0
+texture_margin_right = 3.0
+texture_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxFlat_btn_pressed"]
+content_margin_left = 7.0
+content_margin_top = 4.0
+content_margin_right = 7.0
+content_margin_bottom = 2.0
+texture = ExtResource("kit_button_pressed")
+texture_margin_left = 3.0
+texture_margin_top = 4.0
+texture_margin_right = 3.0
+texture_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxFlat_panel"]
+content_margin_left = 7.0
+content_margin_top = 5.0
+content_margin_right = 7.0
+content_margin_bottom = 5.0
+texture = ExtResource("kit_panel_panel")
+texture_margin_left = 3.0
+texture_margin_top = 3.0
+texture_margin_right = 3.0
+texture_margin_bottom = 3.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxFlat_card"]
 content_margin_left = 5.0
 content_margin_top = 4.0
 content_margin_right = 5.0
 content_margin_bottom = 4.0
-bg_color = Color(0.25, 0.18, 0.125, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.62, 0.46, 0.22, 1)
+texture = ExtResource("kit_panel_card")
+texture_margin_left = 3.0
+texture_margin_top = 3.0
+texture_margin_right = 3.0
+texture_margin_bottom = 3.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bar_bg"]
 bg_color = Color(0.1, 0.06, 0.06, 1)
@@ -88,17 +92,16 @@ border_color = Color(0.05, 0.03, 0.03, 1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bar_fill"]
 bg_color = Color(0.82, 0.22, 0.22, 1)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_side"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxFlat_side"]
 content_margin_left = 6.0
 content_margin_top = 4.0
 content_margin_right = 6.0
 content_margin_bottom = 4.0
-bg_color = Color(0.08, 0.05, 0.04, 0.55)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.62, 0.46, 0.22, 0.6)
+texture = ExtResource("kit_panel_side")
+texture_margin_left = 3.0
+texture_margin_top = 3.0
+texture_margin_right = 3.0
+texture_margin_bottom = 3.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_scroll_track"]
 content_margin_left = 3.0
@@ -156,8 +159,59 @@ border_width_top = 1
 border_width_bottom = 1
 border_color = Color(0.45, 0.3, 0.15, 1)
 
+[sub_resource type="StyleBoxTexture" id="StyleBox_accent_normal"]
+content_margin_left = 7.0
+content_margin_top = 2.0
+content_margin_right = 7.0
+content_margin_bottom = 4.0
+texture = ExtResource("kit_button_accent_normal")
+texture_margin_left = 3.0
+texture_margin_top = 4.0
+texture_margin_right = 3.0
+texture_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBox_accent_hover"]
+content_margin_left = 7.0
+content_margin_top = 2.0
+content_margin_right = 7.0
+content_margin_bottom = 4.0
+texture = ExtResource("kit_button_accent_hover")
+texture_margin_left = 3.0
+texture_margin_top = 4.0
+texture_margin_right = 3.0
+texture_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBox_accent_pressed"]
+content_margin_left = 7.0
+content_margin_top = 4.0
+content_margin_right = 7.0
+content_margin_bottom = 2.0
+texture = ExtResource("kit_button_accent_pressed")
+texture_margin_left = 3.0
+texture_margin_top = 4.0
+texture_margin_right = 3.0
+texture_margin_bottom = 4.0
+
+[sub_resource type="FontVariation" id="FontVariation_main"]
+variation_embolden = 0.12
+spacing_glyph = 0
+
 [resource]
+default_font = SubResource("FontVariation_main")
 default_font_size = 9
+AccentButton/base_type = &"Button"
+AccentButton/colors/font_color = Color(0.2, 0.1, 0.02, 1)
+AccentButton/colors/font_hover_color = Color(0.16, 0.07, 0.01, 1)
+AccentButton/colors/font_pressed_color = Color(0.24, 0.13, 0.04, 1)
+AccentButton/colors/font_disabled_color = Color(0.55, 0.5, 0.45, 1)
+AccentButton/colors/font_outline_color = Color(1, 0.94, 0.7, 0.35)
+AccentButton/constants/outline_size = 2
+AccentButton/styles/normal = SubResource("StyleBox_accent_normal")
+AccentButton/styles/hover = SubResource("StyleBox_accent_hover")
+AccentButton/styles/pressed = SubResource("StyleBox_accent_pressed")
+AccentButton/styles/disabled = SubResource("StyleBoxFlat_btn_disabled")
+Button/colors/font_outline_color = Color(0.1, 0.05, 0.02, 0.9)
+Button/constants/outline_size = 3
 Button/colors/font_color = Color(1, 0.93, 0.78, 1)
 Button/colors/font_disabled_color = Color(0.55, 0.5, 0.45, 1)
 Button/colors/font_hover_color = Color(1, 1, 0.9, 1)
@@ -168,6 +222,9 @@ Button/styles/hover = SubResource("StyleBoxFlat_btn_hover")
 Button/styles/normal = SubResource("StyleBoxFlat_btn_normal")
 Button/styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
 Label/colors/font_color = Color(0.96, 0.91, 0.8, 1)
+Label/colors/font_shadow_color = Color(0.05, 0.03, 0.02, 0.55)
+Label/constants/shadow_offset_x = 1
+Label/constants/shadow_offset_y = 1
 Panel/styles/panel = SubResource("StyleBoxFlat_panel")
 PanelContainer/styles/panel = SubResource("StyleBoxFlat_card")
 ProgressBar/styles/background = SubResource("StyleBoxFlat_bar_bg")

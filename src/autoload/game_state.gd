@@ -22,8 +22,6 @@ const SKULL_ID := &"skull"
 const CURSE_ID := &"tombstone"
 ## Troop hp/damage bonus per symbol level above 1 (0.35 = +35%).
 const LEVEL_POWER_BONUS := 0.35
-## Reward bonus per row upgrade on machines with fixed rows (0.3 = +30%).
-const ROW_REWARD_BONUS := 0.3
 ## Extra feature symbols needed per row above 3, as a share (hoard chests).
 const TRIGGER_PER_ROW := 0.2
 
@@ -95,7 +93,7 @@ func reset() -> void:
 	curse_threat = 0
 	run_upgrades.clear()
 	merchant_bag.clear()
-	trade_unlocked = false
+	trade_unlocked = stat(Stats.TRADE_CHARTER) >= 1.0
 	levels.clear()
 	gold = stat_int(Stats.START_GOLD)
 	castle_max_hp = stat_int(Stats.CASTLE_MAX_HP)
@@ -103,6 +101,7 @@ func reset() -> void:
 	machine = selected_machine()
 	machine_rows = machine.rows_for(stat_int(Stats.MACHINE_ROWS))
 	_fill_starting_pool()
+	_level_starting_troops()
 	_own_starting_shapes()
 	gold_changed.emit(gold)
 	castle_hp_changed.emit(castle_hp, castle_max_hp)
@@ -111,9 +110,15 @@ func reset() -> void:
 
 
 ## Takes one rarity token out of the merchant's bag, refilling it when empty.
+## Merchant luck (Time Forge) adds better tokens to every new bag.
 func draw_merchant_rarity() -> int:
 	if merchant_bag.is_empty():
-		merchant_bag = MerchantRarity.new_bag()
+		var luck := stat_int(Stats.MERCHANT_LUCK)
+		merchant_bag = MerchantRarity.new_bag({
+			MerchantRarity.Tier.RARE: 2 * luck,
+			MerchantRarity.Tier.MYTHIC: luck,
+			MerchantRarity.Tier.LEGENDARY: stat_int(Stats.LEGENDARY_LUCK),
+		})
 	return merchant_bag.pop_back()
 
 
@@ -123,12 +128,20 @@ func draw_merchant_rarity() -> int:
 func stat(key: StringName) -> float:
 	var value: float = Stats.BASE.get(key, 0.0)
 	for upgrade: UpgradeData in upgrades.values():
-		if upgrade.stat == key:
+		if upgrade.stat == key and applies(upgrade):
 			value += upgrade.value_per_level * upgrade_level(upgrade)
 	if Stats.LIMITS.has(key):
 		var limit: Vector2 = Stats.LIMITS[key]
 		value = clampf(value, limit.x, limit.y)
 	return value
+
+
+## False for an upgrade that belongs to another machine than the one in use.
+func applies(upgrade: UpgradeData) -> bool:
+	if upgrade.machine == &"":
+		return true
+	var current := machine if machine else selected_machine()
+	return current.id == upgrade.machine
 
 
 func stat_int(key: StringName) -> int:
@@ -141,9 +154,12 @@ func upgrade_level(upgrade: UpgradeData) -> int:
 	return run_upgrades.get(upgrade.id, 0)
 
 
-## Parent upgrade owned (tree) and, for tower conversions, a plain tower to convert.
+## Parent upgrade owned (tree), its castle conquered and, for tower
+## conversions, a plain tower to convert.
 func prerequisites_met(upgrade: UpgradeData) -> bool:
 	if upgrade.requires and upgrade_level(upgrade.requires) < upgrade.requires_level:
+		return false
+	if upgrade.requires_castle and not MetaProgress.is_conquered(upgrade.requires_castle):
 		return false
 	if upgrade.scope == UpgradeData.Scope.RUN and upgrade.stat in [Stats.MAGE_TOWERS, Stats.BALLISTA_TOWERS]:
 		return plain_towers() > 0
@@ -217,23 +233,43 @@ func selected_machine() -> MachineStyle:
 	return machines[MachineStyle.STANDARD_ID]
 
 
-## The machine unlocked by this Time Forge upgrade, if any.
+## The machine unlocked by this Time Forge upgrade (or that the node stands
+## for, like the Gamba Machine's), if any.
 func machine_unlocked_by(upgrade: UpgradeData) -> MachineStyle:
+	if upgrade.is_machine_node():
+		return machines.get(upgrade.machine)
 	for style: MachineStyle in machines.values():
 		if style.unlock_stat != &"" and style.unlock_stat == upgrade.stat:
 			return style
 	return null
 
 
-## The castle whose conquest unlocks this machine (null = always available).
-func machine_castle(style: MachineStyle) -> CastleData:
+## The machine's node in the Time Forge: its unlock, or its own node.
+func machine_node(style: MachineStyle) -> UpgradeData:
+	var unlock := machine_unlock(style)
+	if unlock:
+		return unlock
 	for upgrade: UpgradeData in upgrades.values():
-		if style.unlock_stat != &"" and upgrade.stat == style.unlock_stat and upgrade.is_castle_reward():
-			return upgrade.unlock_castle
+		if upgrade.is_machine_node() and upgrade.machine == style.id:
+			return upgrade
 	return null
 
 
-## The machine unlocked by conquering this castle, if any.
+## The Time Forge node that unlocks this machine (null = always available).
+func machine_unlock(style: MachineStyle) -> UpgradeData:
+	for upgrade: UpgradeData in upgrades.values():
+		if style.unlock_stat != &"" and upgrade.stat == style.unlock_stat:
+			return upgrade
+	return null
+
+
+## The castle that must be conquered before this machine can be bought (null = none).
+func machine_castle(style: MachineStyle) -> CastleData:
+	var unlock := machine_unlock(style)
+	return unlock.requires_castle if unlock else null
+
+
+## The machine that conquering this castle lets you buy, if any.
 func machine_reward(of: CastleData) -> MachineStyle:
 	for style: MachineStyle in machines.values():
 		if machine_castle(style) == of:
@@ -242,20 +278,12 @@ func machine_reward(of: CastleData) -> MachineStyle:
 
 
 ## Reward multiplier for a match of `count` reels on the current machine.
-## Can be fractional: volatile machines pay less in their base game. Machines
-## that can't grow rows turn each row upgrade into ROW_REWARD_BONUS instead.
+## Can be fractional: volatile machines pay less in their base game.
 func match_multiplier(count: int) -> float:
 	var multiplier: float = machine.match_multiplier.get(count, 1.0)
 	if count == machine.reel_count and machine.top_match_stat != &"":
 		multiplier += stat(machine.top_match_stat)
-	return multiplier * (1.0 + ROW_REWARD_BONUS * unused_row_upgrades())
-
-
-## Row upgrades the current machine can't use (fixed or variable rows).
-func unused_row_upgrades() -> int:
-	if not machine.ignores_row_upgrades():
-		return 0
-	return stat_int(Stats.MACHINE_ROWS) - int(Stats.BASE[Stats.MACHINE_ROWS])
+	return multiplier
 
 
 ## Free spins or respins the machine's feature gives.
@@ -319,7 +347,9 @@ func spend_gold(amount: int) -> bool:
 
 # --- Castle -----------------------------------------------------------------
 
+## Castle armor (Time Forge) blocks part of every hit.
 func damage_castle(amount: float) -> void:
+	amount *= 1.0 - stat(Stats.CASTLE_ARMOR)
 	castle_hp = maxi(0, castle_hp - maxi(1, roundi(amount)))
 	castle_hp_changed.emit(castle_hp, castle_max_hp)
 
@@ -364,7 +394,11 @@ func chance_of(id: StringName) -> float:
 	return float(copies_of(id)) / maxi(1, pool_total())
 
 
+## Another machine's special symbol can never be added (see is_other_machine_symbol).
 func add_symbol(id: StringName, copies: int = 1) -> void:
+	var symbol := get_symbol(id)
+	if symbol and is_other_machine_symbol(symbol):
+		return
 	pool[id] = copies_of(id) + copies
 	machine_changed.emit()
 
@@ -406,9 +440,31 @@ func next_locked_shape() -> int:
 	return -1
 
 
+## Special symbol of another slot machine (Crown, Jester, Hoard chest, Tome):
+## listed in some machine's start or merchant symbols, but not this machine's.
+## These only ever appear while playing their own machine. Shared symbols
+## (e.g. the Magic Rune, a general Time Forge unlock) are not special.
+func is_other_machine_symbol(symbol: SymbolData) -> bool:
+	if _machine_uses(machine, symbol):
+		return false
+	for style: MachineStyle in machines.values():
+		if style != machine and _machine_uses(style, symbol):
+			return true
+	return false
+
+
+func _machine_uses(style: MachineStyle, symbol: SymbolData) -> bool:
+	if symbol in style.merchant_symbols:
+		return true
+	for entry in style.start_symbols:
+		if entry.symbol == symbol:
+			return true
+	return false
+
+
 ## Can the merchant sell this symbol here? (castle list or Time Forge unlock)
 func is_symbol_available(symbol: SymbolData) -> bool:
-	if not symbol.in_shop or night < symbol.min_night:
+	if not symbol.in_shop or night < symbol.min_night or is_other_machine_symbol(symbol):
 		return false
 	if symbol.max_copies > 0 and copies_of(symbol.id) >= symbol.max_copies:
 		return false
@@ -431,7 +487,8 @@ func _fill_starting_pool() -> void:
 	pool.clear()
 	var entries: Array[PoolEntry] = castle.starting_pool + machine.start_symbols
 	for entry in entries:
-		pool[entry.symbol.id] = copies_of(entry.symbol.id) + entry.copies
+		if not is_other_machine_symbol(entry.symbol):
+			pool[entry.symbol.id] = copies_of(entry.symbol.id) + entry.copies
 	if machine.signature_symbol and machine.signature_stat != &"":
 		var extra := stat_int(machine.signature_stat)
 		if extra > 0:
@@ -439,6 +496,17 @@ func _fill_starting_pool() -> void:
 	var skulls := stat_int(Stats.STARTING_SKULLS)
 	if skulls > 0:
 		pool[SKULL_ID] = skulls
+
+
+## Elite Training (Time Forge): troop symbols you start with begin above level 1.
+func _level_starting_troops() -> void:
+	var bonus := stat_int(Stats.TROOP_START_LEVEL)
+	if bonus <= 0:
+		return
+	for id: StringName in pool:
+		var symbol := get_symbol(id)
+		if symbol and symbol.effect == SymbolData.Effect.SPAWN_UNIT:
+			levels[id] = 1 + bonus
 
 
 func _own_starting_shapes() -> void:

@@ -6,7 +6,7 @@ extends Control
 signal closed(castle: CastleData)
 
 const CASTLE_TEXTURE := preload("res://assets/sprites/environment/castle.png")
-const NODE_SIZE := Vector2(72, 58)
+const NODE_SIZE := Vector2(60, 50)
 const INK := Color("#5a3a20")
 
 var _selected: CastleData
@@ -23,6 +23,10 @@ func _ready() -> void:
 	_map_area.draw.connect(_draw_map)
 	_march_button.pressed.connect(_on_march_pressed)
 	_back_button.pressed.connect(_on_back_pressed)
+	# Dark ink on parchment: a light shadow below reads as engraved text.
+	var ink := Theme.new()
+	ink.set_color("font_shadow_color", "Label", Color(1, 0.96, 0.82, 0.55))
+	(get_node("Center/Parchment") as Control).theme = ink
 	hide()
 
 
@@ -56,7 +60,7 @@ func _build_nodes() -> void:
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.position = Vector2(6, 0)
-		icon.size = Vector2(NODE_SIZE.x - 12, 40)
+		icon.size = Vector2(NODE_SIZE.x - 12, 32)
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		icon.modulate = castle.ground_tint if unlocked else Color(0.35, 0.3, 0.3)
 		node.add_child(icon)
@@ -65,8 +69,8 @@ func _build_nodes() -> void:
 		label.add_theme_font_size_override("font_size", 7)
 		label.add_theme_color_override("font_color", INK)
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label.position = Vector2(-14, 40)
-		label.size = Vector2(NODE_SIZE.x + 28, 10)
+		label.position = Vector2(-20, 32)
+		label.size = Vector2(NODE_SIZE.x + 40, 10)
 		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		node.add_child(label)
 		if MetaProgress.is_conquered(castle):
@@ -75,7 +79,7 @@ func _build_nodes() -> void:
 			flag.add_theme_font_size_override("font_size", 6)
 			flag.add_theme_color_override("font_color", Color("#2c7a30"))
 			flag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			flag.position = Vector2(0, 49)
+			flag.position = Vector2(0, 41)
 			flag.size = Vector2(NODE_SIZE.x, 8)
 			flag.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			node.add_child(flag)
@@ -98,15 +102,26 @@ func _select(castle: CastleData) -> void:
 		var spirits: Array[String] = []
 		for entry in castle.enemies:
 			spirits.append(entry.unit.display_name)
-		_info_body.text = "%s\nSpirits: %s. Boss: %s.\nChrono Shards x%.1f" % [
-			castle.description, ", ".join(spirits), castle.boss.display_name, castle.shard_multiplier]
+		_info_body.text = "%s\nSpirits: %s. Boss: %s.\n%sChrono Shards x%.1f" % [
+			castle.description, ", ".join(spirits), castle.boss.display_name, _battlefield_line(castle), castle.shard_multiplier]
+		var crowns := "%d Crown%s" % [castle.crown_reward, "" if castle.crown_reward == 1 else "s"]
+		if MetaProgress.is_conquered(castle):
+			_info_body.text += "\nFirst victory reward: %s (won)." % crowns
+		else:
+			_info_body.text += "\nFirst victory reward: %s for the Time Forge!" % crowns
 		var reward := GameState.machine_reward(castle)
 		if reward:
-			_info_body.text += "\nVictory reward: the %s slot machine%s" % [
-				reward.display_name, " (unlocked)" if MetaProgress.is_conquered(castle) else "!"]
+			_info_body.text += " Opens the %s slot machine." % reward.display_name
 	_march_button.disabled = not unlocked
 	_march_button.text = "March to %s" % castle.display_name if unlocked else "Locked"
 	_map_area.queue_redraw()
+
+
+## "Battlefield: Twin Bridges. " (empty for castles without a layout).
+func _battlefield_line(castle: CastleData) -> String:
+	if castle.layout == null or castle.layout.display_name.is_empty():
+		return ""
+	return "Battlefield: %s. " % castle.layout.display_name
 
 
 func _draw_map() -> void:

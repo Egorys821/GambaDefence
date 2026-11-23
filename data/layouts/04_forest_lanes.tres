@@ -1,0 +1,84 @@
+[gd_resource type="Resource" script_class="BattleLayout" format=3]
+
+[ext_resource type="Script" path="res://src/data/battle_layout.gd" id="layout_script"]
+[ext_resource type="Script" path="res://src/data/layout_feature.gd" id="feature_script"]
+[ext_resource type="Script" path="res://src/data/rally_point.gd" id="rally_script"]
+
+[sub_resource type="Resource" id="feature_0"]
+script = ExtResource("feature_script")
+kind = 2
+points = PackedVector2Array(-20, 262, 80, 258, 190, 266, 300, 256, 420, 266, 520, 260, 528, 290, 430, 296, 300, 288, 170, 298, 60, 290, -20, 296)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_1"]
+script = ExtResource("feature_script")
+kind = 2
+points = PackedVector2Array(604, 258, 660, 256, 660, 300, 600, 296)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_2"]
+script = ExtResource("feature_script")
+kind = 2
+points = PackedVector2Array(112, 188, 220, 180, 340, 190, 460, 182, 560, 192, 660, 184, 660, 218, 560, 222, 440, 214, 320, 222, 200, 214, 110, 218)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_3"]
+script = ExtResource("feature_script")
+kind = 2
+points = PackedVector2Array(-20, 186, 34, 184, 40, 218, -20, 220)
+roughness = 3.0
+
+[sub_resource type="Resource" id="feature_4"]
+script = ExtResource("feature_script")
+kind = 2
+points = PackedVector2Array(356, 314, 349.9, 319.1, 334.5, 321.9, 317, 320.9, 305.6, 316.7, 305.6, 311.3, 317, 307.1, 334.5, 306.1, 349.9, 308.9)
+roughness = 3.0
+
+[sub_resource type="Resource" id="rally_0"]
+script = ExtResource("rally_script")
+id = &"gate"
+display_name = "Castle Gate"
+kind = 0
+position = Vector2(320, 140)
+radius = 40.0
+
+[sub_resource type="Resource" id="rally_1"]
+script = ExtResource("rally_script")
+id = &"thorn_gap"
+display_name = "Thorn Gap"
+kind = 1
+position = Vector2(75, 176)
+radius = 18.0
+
+[sub_resource type="Resource" id="rally_2"]
+script = ExtResource("rally_script")
+id = &"hollow_path"
+display_name = "Hollow Path"
+kind = 4
+position = Vector2(320, 238)
+radius = 24.0
+
+[sub_resource type="Resource" id="rally_3"]
+script = ExtResource("rally_script")
+id = &"grove_edge"
+display_name = "Grove Edge"
+kind = 2
+position = Vector2(200, 172)
+radius = 24.0
+
+[sub_resource type="Resource" id="rally_4"]
+script = ExtResource("rally_script")
+id = &"south_gap"
+display_name = "South Gap"
+kind = 3
+position = Vector2(565, 310)
+radius = 18.0
+
+[resource]
+script = ExtResource("layout_script")
+id = &"forest_lanes"
+display_name = "Thorn Lanes"
+description = "Thick groves force spirits along a winding lane."
+features = Array[ExtResource("feature_script")]([SubResource("feature_0"), SubResource("feature_1"), SubResource("feature_2"), SubResource("feature_3"), SubResource("feature_4")])
+spawn_zones = Array[Rect2]([Rect2(16, 326, 608, 26)])
+rally_points = Array[ExtResource("rally_script")]([SubResource("rally_0"), SubResource("rally_1"), SubResource("rally_2"), SubResource("rally_3"), SubResource("rally_4")])

@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://src/meta/time_forge.gd" id="1_forge"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/shard.png" id="2_shard"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/crown.png" id="3_crown"]
 
 [node name="TimeForge" type="Control"]
 layout_mode = 3
@@ -36,14 +37,13 @@ theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 16
 text = "The Time Forge"
 
-[node name="Hint" type="Label" parent="Header"]
+[node name="Tabs" type="HBoxContainer" parent="Header"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 8
-theme_override_colors/font_color = Color(0.7, 0.65, 0.58, 1)
-theme_override_font_sizes/font_size = 7
-text = "  Forge an upgrade to open the ones below it.  Wheel: zoom, drag: move."
+size_flags_vertical = 4
+theme_override_constants/separation = 2
+alignment = 1
 
 [node name="ShardIcon" type="TextureRect" parent="Header"]
 custom_minimum_size = Vector2(14, 14)
@@ -56,9 +56,28 @@ stretch_mode = 5
 [node name="ShardLabel" type="Label" parent="Header"]
 unique_name_in_owner = true
 layout_mode = 2
+tooltip_text = "Chrono Shards: earned every run, they buy most upgrades."
+mouse_filter = 1
 theme_override_colors/font_color = Color(0.38, 0.85, 0.97, 1)
 theme_override_font_sizes/font_size = 11
-text = "0 Chrono Shards"
+text = "0"
+
+[node name="CrownIcon" type="TextureRect" parent="Header"]
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("3_crown")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CrownLabel" type="Label" parent="Header"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Crowns: won the first time you conquer each castle. They buy the big crown nodes: new slot machines and the keys to whole subtrees."
+mouse_filter = 1
+theme_override_colors/font_color = Color(0.97, 0.82, 0.22, 1)
+theme_override_font_sizes/font_size = 11
+text = "0"
 
 [node name="TreeView" type="Control" parent="."]
 unique_name_in_owner = true
@@ -72,6 +91,18 @@ offset_bottom = 290.0
 unique_name_in_owner = true
 layout_mode = 0
 mouse_filter = 2
+
+[node name="Hint" type="Label" parent="TreeView"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 8.0
+offset_top = 244.0
+offset_right = 540.0
+offset_bottom = 256.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.7, 0.65, 0.58, 1)
+theme_override_font_sizes/font_size = 7
+text = "Forge an upgrade to open the ones below it."
 
 [node name="Zoom" type="HBoxContainer" parent="TreeView"]
 layout_mode = 0

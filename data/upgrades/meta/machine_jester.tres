@@ -1,23 +1,24 @@
 [gd_resource type="Resource" script_class="UpgradeData" format=3]
 
 [ext_resource type="Script" path="res://src/data/upgrade_data.gd" id="1_script"]
-[ext_resource type="Resource" path="res://data/castles/2_frostpeak.tres" id="4_castle"]
 [ext_resource type="Texture2D" path="res://assets/sprites/symbols/jester.png" id="2_icon"]
+[ext_resource type="Resource" path="res://data/castles/03_frostpeak.tres" id="4_castle"]
 
 [resource]
 script = ExtResource("1_script")
 id = &"machine_jester"
 display_name = "Jester's 81 Machine"
 icon = ExtResource("2_icon")
-description = "Unlocks JESTER'S 81: 4 reels, 3 rows. A Jester on the reels turns the spin into 81 ways. Gamble gold wins on a card. Pick it with 'Use machine' once unlocked."
+description = "CROWN KEY: unlocks JESTER'S 81: 4x4 reels, 81 ways and a double-or-nothing gamble. Pick it with 'Use machine'."
 scope = 0
 category = 3
 stat = &"unlock_jester"
 value_per_level = 1.0
 percent = false
 max_level = 1
-tree_position = Vector2(4, 5)
+tree_position = Vector2(6, 0)
+requires_castle = ExtResource("4_castle")
 base_cost = 0
 cost_per_level = 0
+crown_cost = 2
 min_night = 1
-unlock_castle = ExtResource("4_castle")

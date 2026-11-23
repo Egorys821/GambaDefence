@@ -23,6 +23,11 @@ const PAYLINE_ICON := preload("res://assets/sprites/ui/payline.png")
 
 
 ## Price after the Haggling discount (Stats.SHOP_DISCOUNT).
+## HP from one repair (Time Forge: Stonemasons add to it).
+static func repair_amount() -> int:
+	return REPAIR_AMOUNT + GameState.stat_int(Stats.REPAIR_BONUS)
+
+
 static func price(base: int) -> int:
 	return maxi(1, roundi(base * (1.0 - GameState.stat(Stats.SHOP_DISCOUNT))))
 

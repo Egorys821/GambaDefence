@@ -1,13 +1,16 @@
 class_name TimeForge
 extends Control
-## Upgrade tree: spend Chrono Shards on permanent upgrades. Opened from the menu.
+## Upgrade tree: spend Chrono Shards and Crowns on permanent upgrades. Opened
+## from the menu.
 ##
-## Every META upgrade (res://data/upgrades/meta/) is a node placed at its
-## `tree_position`, linked to its `requires` parent. Only roots and children
-## of owned nodes can be bought; the rest stays dimmed until reached.
-## The "Slot Machines" branch unlocks other machine styles: an owned machine
+## Four windows (tabs): Slot Machines, Castle, Troops and Merchant. Every META
+## upgrade (res://data/upgrades/meta/) is a node in its category's window,
+## placed at its `tree_position` and linked to its `requires` parent. Only
+## roots and children of owned nodes can be bought; the rest stays dimmed.
+## Crown nodes (UpgradeData.crown_cost) cost Crowns, won by conquering castles:
+## new slot machines and the keys that open whole subtrees. An owned machine
 ## node gets a "Use machine" button that picks it for the next runs.
-## The tree can be zoomed (mouse wheel / buttons) and dragged around.
+## Each tree can be zoomed (mouse wheel / buttons) and dragged around.
 
 signal closed
 signal settings_pressed
@@ -17,25 +20,41 @@ const ORIGIN := Vector2(14, 24)
 const MIN_ZOOM := 0.4
 const MAX_ZOOM := 2.0
 const ZOOM_STEP := 1.15
+## The four windows: tab name and the categories shown in it.
+const WINDOWS := [
+	{"name": "Slot Machines", "categories": [UpgradeData.Category.MACHINE, UpgradeData.Category.MACHINES]},
+	{"name": "Castle", "categories": [UpgradeData.Category.CASTLE]},
+	{"name": "Troops", "categories": [UpgradeData.Category.ARMY]},
+	{"name": "Merchant", "categories": [UpgradeData.Category.MERCHANT]},
+]
+## Branch titles inside a window that holds more than one category.
 const BRANCHES := {
-	UpgradeData.Category.MACHINE: "Slot Machine",
-	UpgradeData.Category.CASTLE: "Castle",
-	UpgradeData.Category.ARMY: "Army",
-	UpgradeData.Category.MACHINES: "Slot Machines",
+	UpgradeData.Category.MACHINE: "All Machines",
+	UpgradeData.Category.MACHINES: "Machines and their upgrades",
 }
-const HINT := "  Machine: %s.  Forge an upgrade to open the ones below it.  Wheel: zoom, drag: move."
+const HINT := "Machine: %s.  Forge an upgrade to open the ones below it.  Crown nodes cost Crowns from conquered castles.  Wheel: zoom, drag: move."
+const TAB_ON := Color("#f8d038")
+const TAB_OFF := Color(0.75, 0.7, 0.62)
 const LINE_OWNED := Color("#c08820")
 const LINE_LOCKED := Color(0.4, 0.35, 0.3, 0.6)
+## Minimum width of the detail text (keeps the bottom bar on screen).
+const DETAIL_TEXT_WIDTH := 238.0
 
 var _nodes: Array[UpgradeNode] = []
+var _window := 0
+var _tab_buttons: Array[Button] = []
 var _selected: UpgradeData
 var _reset_armed := false
 var _zoom := 1.0
 var _dragging := false
+## Live picture of the selected machine (shown instead of the icon).
+var _preview: MachinePreview
 
 @onready var _tree: Control = %Tree
 @onready var _tree_view: Control = %TreeView
 @onready var _shard_label: Label = %ShardLabel
+@onready var _crown_label: Label = %CrownLabel
+@onready var _tabs: HBoxContainer = %Tabs
 @onready var _detail_icon: TextureRect = %DetailIcon
 @onready var _detail_title: Label = %DetailTitle
 @onready var _detail_body: Label = %DetailBody
@@ -54,37 +73,70 @@ func _ready() -> void:
 	%ZoomOutButton.pressed.connect(func() -> void: _zoom_at(_tree_view.size * 0.5, 1.0 / ZOOM_STEP))
 	%FitButton.pressed.connect(_fit_tree)
 	_buy_button.pressed.connect(_on_buy_pressed)
+	_buy_button.theme_type_variation = &"AccentButton"
+	# Room for four lines of detail text in the bottom bar.
+	_buy_button.custom_minimum_size.x = 104
+	_detail_body.add_theme_constant_override("line_spacing", -1)
 	_use_button.pressed.connect(_on_use_pressed)
 	_begin_button.pressed.connect(_on_back_pressed)
 	_reset_button.pressed.connect(_on_reset_pressed)
 	_settings_button.pressed.connect(settings_pressed.emit)
+	for i in WINDOWS.size():
+		var tab := Button.new()
+		tab.focus_mode = Control.FOCUS_NONE
+		tab.custom_minimum_size = Vector2(0, 18)
+		tab.add_theme_font_size_override("font_size", 8)
+		tab.pressed.connect(show_window.bind(i))
+		_tabs.add_child(tab)
+		_tab_buttons.append(tab)
 	MetaProgress.changed.connect(_refresh)
+	_preview = MachinePreview.new()
+	_preview.tooltip_text = ""
+	_detail_icon.add_sibling(_preview)
+	_preview.hide()
 	hide()
 
 
 func open() -> void:
 	_reset_armed = false
-	_build_tree()
-	if _selected == null:
-		_selected = _nodes[0].upgrade
-	_refresh()
 	show()
-	_fit_tree()
+	show_window(_window, false)
 	modulate.a = 0.0
 	create_tween().tween_property(self, "modulate:a", 1.0, 0.3)
 
 
+## Switches to one of the four windows (index into WINDOWS).
+func show_window(index: int, click := true) -> void:
+	if click:
+		Audio.play(&"click", 1.1, -4.0)
+	_window = index
+	_build_tree()
+	if _selected == null or not _in_window(_selected):
+		_selected = _nodes[0].upgrade
+	_refresh()
+	_fit_tree()
+
+
+func _in_window(upgrade: UpgradeData) -> bool:
+	return upgrade.category in WINDOWS[_window]["categories"]
+
+
 func _build_tree() -> void:
 	for child in _tree.get_children():
+		_tree.remove_child(child)
 		child.queue_free()
 	_nodes.clear()
 	for upgrade in GameState.get_upgrades(UpgradeData.Scope.META):
+		if not _in_window(upgrade):
+			continue
 		var node := UpgradeNode.new(upgrade)
 		node.position = _cell_center(upgrade) - UpgradeNode.NODE_SIZE * 0.5
 		node.pressed.connect(_select.bind(upgrade))
 		_tree.add_child(node)
 		_nodes.append(node)
-	# Branch titles above each group of roots.
+	# Branch titles above each group of roots (windows with several categories).
+	if WINDOWS[_window]["categories"].size() < 2:
+		return
 	for category: UpgradeData.Category in BRANCHES:
 		var columns: Array[float] = []
 		var top_row := INF
@@ -180,16 +232,33 @@ func _select(upgrade: UpgradeData) -> void:
 
 
 func _refresh() -> void:
-	_shard_label.text = "%d Chrono Shards" % MetaProgress.shards
+	_shard_label.text = "%d" % MetaProgress.shards
+	_crown_label.text = "%d" % MetaProgress.crowns()
 	_hint.text = HINT % GameState.selected_machine().display_name
+	_refresh_tabs()
 	for node in _nodes:
 		node.refresh()
 		node.selected = node.upgrade == _selected
 	_tree.queue_redraw()
 	_refresh_detail()
+	var spent_anything := MetaProgress.shards_spent() > 0 or MetaProgress.crowns_spent() > 0
 	if not _reset_armed:
-		_reset_button.text = "Refund all (%d)" % MetaProgress.shards_spent()
-	_reset_button.disabled = MetaProgress.shards_spent() == 0
+		_reset_button.text = "Refund all"
+	_reset_button.tooltip_text = "Give back all %d shards and %d crowns spent." % [MetaProgress.shards_spent(), MetaProgress.crowns_spent()]
+	_reset_button.disabled = not spent_anything
+
+
+## Tab names; a "!" marks windows with something you can forge right now.
+func _refresh_tabs() -> void:
+	for i in WINDOWS.size():
+		var tab := _tab_buttons[i]
+		var affordable := 0
+		for upgrade in GameState.get_upgrades(UpgradeData.Scope.META):
+			if upgrade.category in WINDOWS[i]["categories"] and MetaProgress.can_buy(upgrade):
+				affordable += 1
+		tab.text = " %s%s " % [WINDOWS[i]["name"], " (%d)" % affordable if affordable > 0 else ""]
+		tab.add_theme_color_override("font_color", TAB_ON if i == _window else TAB_OFF)
+		tab.self_modulate = Color(1.3, 1.2, 0.85) if i == _window else Color.WHITE
 
 
 func _refresh_detail() -> void:
@@ -197,32 +266,48 @@ func _refresh_detail() -> void:
 		return
 	var level := MetaProgress.level_of(_selected.id)
 	_detail_icon.texture = _selected.icon
-	_detail_title.text = "%s   %d/%d" % [_selected.display_name, level, _selected.max_level]
+	var machine := GameState.machine_unlocked_by(_selected)
+	_detail_icon.visible = machine == null
+	_preview.visible = machine != null
+	# The preview is wider than the icon: the text gives up the difference.
+	_detail_body.custom_minimum_size.x = DETAIL_TEXT_WIDTH - (_preview.custom_minimum_size.x - _detail_icon.custom_minimum_size.x if machine else 0.0)
+	if machine:
+		_preview.show_style(machine)
+	_detail_title.text = _selected.display_name if _selected.max_level == 0 \
+		else "%s   %d/%d" % [_selected.display_name, level, _selected.max_level]
 	var body := _selected.describe()
-	if not GameState.prerequisites_met(_selected) and level == 0:
-		body += "\nRequires: %s level %d." % [_selected.requires.display_name, _selected.requires_level]
+	var requires := _selected.requires
+	if requires and level == 0 and MetaProgress.level_of(requires.id) < _selected.requires_level:
+		body += "\nRequires: %s level %d." % [requires.display_name, _selected.requires_level]
+	var castle := _selected.requires_castle
+	if castle and level == 0 and not MetaProgress.is_conquered(castle):
+		body += "\nConquer %s first." % castle.display_name
 	_detail_body.text = body
-	if _selected.is_castle_reward():
-		var castle_name := _selected.unlock_castle.display_name
-		_buy_button.text = "Unlocked" if level > 0 else "Conquer\n%s" % castle_name
-		_buy_button.disabled = true
-		_detail_body.text = body + ("" if level > 0 else "\nReward for conquering %s." % castle_name)
-	elif _selected.is_maxed(level):
-		_buy_button.text = "Maxed"
+	if _selected.is_maxed(level):
+		_buy_button.text = "Owned" if _selected.max_level <= 1 else "Maxed"
 		_buy_button.disabled = true
 	else:
-		_buy_button.text = "Forge - %d shards" % _selected.cost_at(level)
+		var price := _selected.cost_at(level)
+		if _selected.is_crown_node():
+			_buy_button.text = "Forge - %d Crown%s" % [price, "" if price == 1 else "s"]
+		else:
+			_buy_button.text = "Forge - %d shards" % price
 		_buy_button.disabled = not MetaProgress.can_buy(_selected)
 	_refresh_use_button()
 
 
-## Owned machine unlocks can be picked (or put back to the standard machine).
+## Owned machines can be picked (or put back to the Gamba Machine).
 func _refresh_use_button() -> void:
 	var machine := GameState.machine_unlocked_by(_selected)
 	_use_button.visible = machine != null and GameState.is_machine_unlocked(machine)
 	if _use_button.visible:
 		var in_use := GameState.selected_machine() == machine
-		_use_button.text = "In use: back to\nstandard machine" if in_use else "Use machine"
+		var standard := machine.id == MachineStyle.STANDARD_ID
+		_use_button.disabled = in_use and standard
+		if in_use:
+			_use_button.text = "In use" if standard else "In use: back to\nGamba Machine"
+		else:
+			_use_button.text = "Use machine"
 
 
 func _on_use_pressed() -> void:
@@ -230,6 +315,8 @@ func _on_use_pressed() -> void:
 	if machine == null:
 		return
 	var in_use := GameState.selected_machine() == machine
+	if in_use and machine.id == MachineStyle.STANDARD_ID:
+		return
 	MetaProgress.select_machine(MachineStyle.STANDARD_ID if in_use else machine.id)
 	Audio.play(&"buy", 1.2)
 
@@ -255,9 +342,9 @@ func _on_back_pressed() -> void:
 	closed.emit()
 
 
-## Refunds every shard spent so the player can try a different build.
+## Refunds every shard and crown spent so the player can try a different build.
 func _on_reset_pressed() -> void:
-	if MetaProgress.shards_spent() == 0:
+	if MetaProgress.shards_spent() == 0 and MetaProgress.crowns_spent() == 0:
 		Audio.play(&"denied")
 		return
 	if not _reset_armed:

@@ -33,18 +33,30 @@ const DAWN_GOLD := &"dawn_gold"              ## Gold every dawn (plus the night 
 const KILL_BOUNTY := &"kill_bounty"          ## Extra gold per spirit destroyed.
 const TOWER_RANGE := &"tower_range"          ## Range bonus for all towers (0.15 = +15%).
 const ENEMY_SLOW := &"enemy_slow"            ## Spirits move this much slower (0.1 = 10%).
+const CASTLE_ARMOR := &"castle_armor"        ## Share of damage to the castle blocked (0.1 = 10%).
+const REPAIR_BONUS := &"repair_bonus"        ## Extra HP from each merchant repair.
 
 # --- Army ---
 const TROOP_POWER := &"troop_power"          ## HP/damage multiplier for summoned troops.
 const GARRISON := &"garrison"                ## Swordsmen standing guard at run start.
 const TROOP_SPEED := &"troop_speed"          ## Troop move-speed bonus (0.15 = +15%).
 const FREE_TROOPS := &"free_troops"          ## Troops that cost no upkeep at dawn.
+const UPKEEP_DISCOUNT := &"upkeep_discount"  ## Share off the dawn upkeep bill (0.1 = 10%).
+const MORALE_FLOOR := &"morale_floor"        ## Raises the lowest morale unpaid troops fall to.
+const TROOP_START_LEVEL := &"troop_start_level"  ## Troop symbols on the starting reels begin this many levels higher.
 ## Troop unlocks (1 = the merchant sells that symbol in every castle).
 ## Symbols point at these through SymbolData.unlock_stat.
 const UNLOCK_PIKEMEN := &"unlock_pikemen"
 const UNLOCK_CROSSBOWS := &"unlock_crossbows"
 const UNLOCK_CLERICS := &"unlock_clerics"
 const UNLOCK_RUNE := &"unlock_rune"
+
+# --- Merchant ---
+const FREE_REROLLS := &"free_rerolls"        ## Free merchant rerolls every day.
+const MERCHANT_LUCK := &"merchant_luck"      ## Each level adds 2 Rare and 1 Mythic token to the merchant's bag.
+const LEGENDARY_LUCK := &"legendary_luck"    ## Extra Legendary tokens in the merchant's bag.
+const TRADE_CHARTER := &"trade_charter"      ## 1 = the Trading Post is open from the first day.
+const TRADE_DISCOUNT := &"trade_discount"    ## Gold off every Trading Post trade.
 
 # --- Machine styles (Time Forge "Machines" branch, see MachineStyle) ---
 ## Machine unlocks (1 = the machine can be picked in the Time Forge).
@@ -67,12 +79,13 @@ const GAMBLE_EDGE := &"gamble_edge"              ## Added to the 50% gamble win 
 ## Dragon's Hoard.
 const HOARD_RESPINS_BONUS := &"hoard_respins_bonus"
 const HOARD_GOLD_BONUS := &"hoard_gold_bonus"      ## Extra hoard gold (0.25 = +25%).
+const HOARD_TRIGGER_EASE := &"hoard_trigger_ease"  ## The Hoard needs this many fewer chests.
 ## Tome of Ages.
 const FREE_SPINS_BONUS := &"free_spins_bonus"
 const EXPAND_EASE := &"expand_ease"  ## The expanding symbol needs this many fewer reels.
 const TOME_SCATTER_BONUS := &"tome_scatter_bonus"  ## Extra gold per Tome when free spins start.
 ## Shifting Halls.
-const HALLS_MIN_ROWS := &"halls_min_rows"  ## Added to the shortest possible reel.
+const HALLS_MIN_ROWS := &"halls_min_rows"  ## Added to the first reel's shortest height.
 const CASCADE_STEP := &"cascade_step"      ## Multiplier gained per cascade in a chain.
 
 const BASE := {
@@ -107,6 +120,11 @@ const LIMITS := {
 	SHOP_DISCOUNT: Vector2(0, 0.6),
 	GOLD_MULTIPLIER: Vector2(0, 3),
 	ENEMY_SLOW: Vector2(0, 0.6),
+	CASTLE_ARMOR: Vector2(0, 0.5),
+	UPKEEP_DISCOUNT: Vector2(0, 0.6),
+	MORALE_FLOOR: Vector2(0, 0.4),
+	TROOP_START_LEVEL: Vector2(0, 2),
+	FREE_REROLLS: Vector2(0, 3),
 	NUDGE_CHANCE: Vector2(0, 0.8),
 	GAMBLE_EDGE: Vector2(0, 0.2),
 	EXPAND_EASE: Vector2(0, 2),

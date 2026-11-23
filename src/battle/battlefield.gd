@@ -1,9 +1,10 @@
 class_name Battlefield
 extends Node2D
 ## Top-down field with the castle at the top centre. Troops summoned during the
-## day line up in front of the gate; at night spirits rise from the graveyard at
-## the bottom and march up. Also owns the camera: zoomed on the castle by day,
-## showing the whole battle by night.
+## day line up in front of the gate; at night spirits rise from the graveyards
+## and march up. Each castle has its own BattleLayout (terrain, graveyards,
+## tower slots, rally points); `nav` paths walkers around its terrain.
+## Also owns the camera: zoomed on the castle by day, the whole battle by night.
 
 signal night_cleared
 ## Emitted whenever the number of spirits or defenders changes.
@@ -17,8 +18,6 @@ const WATCHTOWER_SCENE := preload("res://src/battle/watchtower.tscn")
 
 ## Area units can move in (spirits start a little below the graveyard).
 const FIELD := Rect2(6, 40, 628, 350)
-## Spirits rise anywhere in this band of the graveyard.
-const SPAWN_AREA := Rect2(16, 326, 608, 26)
 const GATE_POSITION := Vector2(320, 108)
 
 ## Formation in front of the castle: ranged rows first, melee rows in front of them.
@@ -29,8 +28,6 @@ const FORMATION_MAX_PER_ROW := 34
 const FORMATION_MAX_ROWS := 6
 const FORMATION_SPACING := Vector2(13, 11)
 const FORMATION_GAP := 2.0
-## Where watchtowers are built, in order (first two are visible in the day view).
-const WATCHTOWER_SLOTS: Array[Vector2] = [Vector2(234, 106), Vector2(406, 106), Vector2(190, 150), Vector2(450, 150)]
 
 ## Camera framing. By day the camera frames the castle and the whole army in
 ## the screen area between the side panels, above the slot machine, zooming
@@ -56,6 +53,9 @@ const MIN_MORALE := 0.5
 const BOSS_AGGRO_MULTIPLIER := 2.5
 
 var is_night := false
+## The terrain this castle is fought on, and its walking grid.
+var layout: BattleLayout
+var nav: BattleNav
 ## Troop damage multiplier from paying upkeep (see pay_upkeep).
 var morale := 1.0
 var _spawn_queue: Array[UnitData] = []
@@ -73,6 +73,7 @@ var _camera_tween: Tween
 @onready var camera: Camera2D = $Camera2D
 @onready var _units: Node2D = $Units
 @onready var _projectiles: Node2D = $Projectiles
+@onready var _terrain: LayoutView = $Terrain
 @onready var _effects: Node2D = $Effects
 @onready var _tint: CanvasModulate = $NightTint
 @onready var _castle_light: PointLight2D = $CastleLight
@@ -85,6 +86,7 @@ func _ready() -> void:
 	_castle_light.energy = 0.0
 	_vignette.modulate.a = 0.0
 	_set_view(false, true)
+	_dress(GameState.castle)  # the menu shows the last castle played
 	GameState.upgrades_changed.connect(sync_watchtowers)
 	sync_watchtowers()
 
@@ -95,22 +97,57 @@ func show_overview() -> void:
 	camera.position = NIGHT_CAMERA_POSITION
 
 
-## Dresses the field for a castle (ground tint).
+## Dresses the field for a castle: its layout and ground tint.
 func apply_castle(castle: CastleData) -> void:
-	$Background.modulate = castle.ground_tint
-	$Surround.modulate = castle.ground_tint
+	_dress(castle)
 	_frame_day_camera()
+
+
+func _dress(castle: CastleData) -> void:
+	var tint := castle.ground_tint if castle else Color.WHITE
+	$Background.modulate = tint
+	$Surround.modulate = tint
+	_terrain.modulate = tint
+	apply_layout(castle.layout if castle else null)
+
+
+## Swaps the terrain (null = open field). Rebuilds the walking grid, redraws
+## the field and moves watchtowers and the formation onto open ground.
+func apply_layout(new_layout: BattleLayout) -> void:
+	if new_layout == null:
+		new_layout = BattleLayout.new()
+	layout = new_layout
+	nav = BattleNav.new(layout)
+	_terrain.show_layout(layout, nav, GATE_POSITION)
+	for i in _watchtowers.size():
+		_watchtowers[i].position = _tower_slot(i)
+	if not get_troops().is_empty():
+		_reform()
+
+
+## Named spots troops could be sent to (see RallyPoint). Not used yet.
+func rally_points() -> Array[RallyPoint]:
+	return layout.rally_points
+
+
+func _tower_slots() -> Array[Vector2]:
+	return layout.get_tower_slots() if layout else BattleLayout.DEFAULT_TOWER_SLOTS
+
+
+func _tower_slot(index: int) -> Vector2:
+	var slot := _tower_slots()[index]
+	return nav.nearest_free(slot) if nav else slot
 
 
 ## Builds or removes watchtowers to match Stats.EXTRA_TOWERS.
 func sync_watchtowers() -> void:
-	var wanted := mini(GameState.stat_int(Stats.EXTRA_TOWERS), WATCHTOWER_SLOTS.size())
+	var wanted := mini(GameState.stat_int(Stats.EXTRA_TOWERS), _tower_slots().size())
 	while _watchtowers.size() > wanted:
 		_watchtowers.pop_back().queue_free()
 	while _watchtowers.size() < wanted:
 		var tower: Watchtower = WATCHTOWER_SCENE.instantiate()
 		tower.battlefield = self
-		tower.position = WATCHTOWER_SLOTS[_watchtowers.size()]
+		tower.position = _tower_slot(_watchtowers.size())
 		_units.add_child(tower)
 		_watchtowers.append(tower)
 		if is_inside_tree() and get_tree().get_frame() > 1:
@@ -194,7 +231,8 @@ func _assign_formation(troops: Array[Unit], top_y: float) -> float:
 		var in_row := mini(per_row, troops.size() - row * per_row)
 		var x := GATE_POSITION.x + (column - (in_row - 1) * 0.5) * FORMATION_SPACING.x
 		x += (row % 2) * FORMATION_SPACING.x * 0.5
-		troops[i].home_position = Vector2(x, top_y + row * FORMATION_SPACING.y)
+		var spot := Vector2(x, top_y + row * FORMATION_SPACING.y)
+		troops[i].home_position = nav.nearest_free(spot) if nav else spot
 	return top_y + rows * FORMATION_SPACING.y
 
 
@@ -204,7 +242,7 @@ func upkeep_cost() -> int:
 	var total := 0.0
 	for troop in _paying_troops():
 		total += troop.data.upkeep
-	return ceili(total)
+	return ceili(total * (1.0 - GameState.stat(Stats.UPKEEP_DISCOUNT)))
 
 
 ## Charges the dawn upkeep with whatever gold there is. If it can't all be
@@ -215,12 +253,17 @@ func pay_upkeep() -> Dictionary:
 	var paid := mini(GameState.gold, cost)
 	GameState.spend_gold(paid)
 	var share := 1.0 if cost == 0 else float(paid) / cost
-	set_morale(lerpf(MIN_MORALE, 1.0, share))
+	set_morale(lerpf(min_morale(), 1.0, share))
 	return {"paid": paid, "cost": cost}
 
 
+## Lowest morale unpaid troops can fall to (Time Forge: Discipline raises it).
+func min_morale() -> float:
+	return minf(1.0, MIN_MORALE + GameState.stat(Stats.MORALE_FLOOR))
+
+
 func set_morale(value: float) -> void:
-	morale = clampf(value, MIN_MORALE, 1.0)
+	morale = clampf(value, min_morale(), 1.0)
 	for troop in get_troops():
 		troop.refresh_morale()
 	morale_changed.emit(morale)
@@ -277,8 +320,7 @@ func _end_night() -> void:
 func _spawn_enemy(data: UnitData) -> void:
 	var enemy: Unit = UNIT_SCENE.instantiate()
 	enemy.setup(data, Unit.Team.ENEMY, _enemy_power, self)
-	enemy.position = Vector2(randf_range(SPAWN_AREA.position.x, SPAWN_AREA.end.x),
-			randf_range(SPAWN_AREA.position.y, SPAWN_AREA.end.y))
+	enemy.position = _spawn_point()
 	enemy.died.connect(_on_enemy_died)
 	if data.is_boss:
 		_bosses_alive += 1
@@ -286,6 +328,23 @@ func _spawn_enemy(data: UnitData) -> void:
 	enemy.play_rise()
 	_enemies_alive += 1
 	_emit_status()
+
+
+## A random open spot in one of the layout's graveyards (bigger ones more often).
+func _spawn_point() -> Vector2:
+	var zones := layout.get_spawn_zones()
+	var total := 0.0
+	for zone in zones:
+		total += zone.get_area()
+	var roll := randf() * total
+	var zone := zones[0]
+	for each in zones:
+		zone = each
+		roll -= each.get_area()
+		if roll <= 0.0:
+			break
+	var point := Vector2(randf_range(zone.position.x, zone.end.x), randf_range(zone.position.y, zone.end.y))
+	return nav.nearest_free(point)
 
 
 func _on_enemy_died(enemy: Unit) -> void:
