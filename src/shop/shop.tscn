@@ -13,10 +13,45 @@ theme_override_colors/font_color = Color(0.97, 0.82, 0.22, 1)
 theme_override_font_sizes/font_size = 10
 text = "Merchant"
 
-[node name="Cards" type="VBoxContainer" parent="."]
+[node name="Cards" type="GridContainer" parent="."]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_constants/h_separation = 3
+theme_override_constants/v_separation = 3
+columns = 2
+
+[node name="Detail" type="Label" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(138, 26)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.78, 0.66, 1)
+theme_override_constants/line_spacing = -2
+theme_override_font_sizes/font_size = 6
+text = "Point at a ware to read about it."
+autowrap_mode = 3
+max_lines_visible = 3
+
+[node name="Spacer" type="Control" parent="."]
+layout_mode = 2
 size_flags_vertical = 3
+
+[node name="TradeTitle" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.97, 0.82, 0.22, 1)
+theme_override_font_sizes/font_size = 8
+text = "Trading Post"
+
+[node name="UnlockTradeButton" type="Button" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 8
+text = "Open Trading Post"
+
+[node name="TradeButtons" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
 theme_override_constants/separation = 3
 
 [node name="Buttons" type="HBoxContainer" parent="."]

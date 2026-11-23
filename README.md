@@ -52,6 +52,7 @@ Code reads it with `GameState.stat(Stats.TOWER_DAMAGE)`, which returns base + pe
 
 - New upgrade for an existing stat: duplicate a `.tres` in `data/upgrades/meta/` (Time Forge) or `data/upgrades/merchant/` (merchant, set its `rarity`) and edit it. It appears automatically.
 - Merchant rarity: every offer is Common (gray), Rare (blue), Mythic (red) or Legendary (gold). Each offer slot draws a token from a hidden bag (`MerchantRarity.BAG_CONTENTS`, 20/10/3/1, refilled when empty), then a random ware of that rarity; if none is for sale it falls back to a lower rarity. The main menu's **Merchant Wares** screen lists everything by rarity.
+- Trading Post (`TradeRules`): bought once per run at the bottom of the merchant column. Then three trade buttons, usable any number of times a day at a fixed price. The merchant picks the symbol each one takes at random (shown on the button, re-picked after every trade and every day); the result is a random surprise: **Swap Up** (2 copies -> 1 random symbol of the next rarity, e.g. 2 Bows -> 1 Crossbow), **Swap** (1 -> 1 random other symbol of the same rarity) and **Remove** (1 copy off the reels, never below `MIN_REEL_SYMBOLS`). Only symbols the merchant could sell in this run can be received.
 - Time Forge tree: set `requires` (parent upgrade), `requires_level` and `tree_position` (column, row) on a meta upgrade.
 - New kind of effect: add a key to `Stats`, read it where it matters, then make a `.tres` for it.
 

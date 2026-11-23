@@ -179,11 +179,27 @@ func _buy_forge_upgrades(_forge: TimeForge) -> void:
 
 
 func _buy_everything_affordable(day: DayPhase) -> void:
-	var cards: VBoxContainer = day.get_node("%Shop").get_node("%Cards")
+	var shop: Shop = day.get_node("%Shop")
+	var cards: GridContainer = shop.get_node("%Cards")
 	for card: OfferCard in cards.get_children():
 		if not card.offer.sold and GameState.gold >= card.offer.cost:
 			print("  bought: %s (%d)" % [card.offer.title, card.offer.cost])
 			card.get_child(0).get_child(-1).pressed.emit()  # the card's real Buy button
+	# Trading Post: open it when affordable, then remove Skulls and swap up spare symbols.
+	var unlock: Button = shop.get_node("%UnlockTradeButton")
+	if unlock.visible and not unlock.disabled:
+		unlock.pressed.emit()
+		print("  opened the Trading Post")
+	if not GameState.trade_unlocked:
+		return
+	var skull := GameState.get_symbol(GameState.SKULL_ID)
+	while TradeRules.trade(TradeRules.Mode.REMOVE, skull):
+		print("  trade: removed a Skull")
+	for give in TradeRules.give_options(TradeRules.Mode.SWAP_UP):
+		if GameState.copies_of(give.id) >= 3:
+			var receive: SymbolData = TradeRules.get_options(TradeRules.Mode.SWAP_UP, give)[0]
+			if TradeRules.trade(TradeRules.Mode.SWAP_UP, give, receive):
+				print("  trade: 2x %s -> %s" % [give.display_name, receive.display_name])
 
 
 func _wait(seconds: float) -> void:

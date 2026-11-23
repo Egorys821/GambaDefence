@@ -59,6 +59,8 @@ var kills := 0
 var curse_threat := 0
 ## Rarity tokens left in the merchant's hidden bag (see MerchantRarity).
 var merchant_bag: Array[int] = []
+## The merchant's Trading Post was bought this run (see TradeRules).
+var trade_unlocked := false
 
 
 func _ready() -> void:
@@ -93,6 +95,7 @@ func reset() -> void:
 	curse_threat = 0
 	run_upgrades.clear()
 	merchant_bag.clear()
+	trade_unlocked = false
 	levels.clear()
 	gold = stat_int(Stats.START_GOLD)
 	castle_max_hp = stat_int(Stats.CASTLE_MAX_HP)

@@ -352,6 +352,62 @@ func test_every_merchant_upgrade_is_valid() -> void:
 	_check(tiers.size() == MerchantRarity.Tier.size(), "every rarity has merchant upgrades")
 
 
+func test_trading_post_must_be_bought() -> void:
+	GameState.gold = 100
+	var bow := _sym("bow")
+	GameState.add_symbol(bow.id, 2)
+	_check(not TradeRules.can_trade(TradeRules.Mode.REMOVE, bow, null), "no trades before the Trading Post is open")
+	_check(TradeRules.unlock() and GameState.gold == 100 - TradeRules.unlock_cost(), "opening it costs gold once")
+	_check(not TradeRules.unlock(), "can't buy it twice")
+	GameState.reset()
+	_check(not GameState.trade_unlocked, "closed again in a new run")
+
+
+func test_swap_up_gives_two_for_one_rarer() -> void:
+	_use_machine(MachineStyle.STANDARD_ID, {&"recruit_crossbows": 1})
+	GameState.trade_unlocked = true
+	GameState.gold = 100
+	var bow := _sym("bow")
+	var crossbow := _sym("crossbow")
+	GameState.add_symbol(bow.id, 2)
+	var bows := GameState.copies_of(bow.id)
+	var crossbows := GameState.copies_of(crossbow.id)
+	_check(crossbow in TradeRules.get_options(TradeRules.Mode.SWAP_UP, bow), "bow can become a crossbow")
+	_check(TradeRules.get_options(TradeRules.Mode.SWAP_UP, bow).all(
+		func(s: SymbolData) -> bool: return s.rarity == bow.rarity + 1), "swap up only offers the next rarity")
+	_check(TradeRules.trade(TradeRules.Mode.SWAP_UP, bow, crossbow), "trade works")
+	_check(GameState.copies_of(bow.id) == bows - 2 and GameState.copies_of(crossbow.id) == crossbows + 1, "2 bows -> 1 crossbow")
+	_check(GameState.gold == 100 - TradeRules.cost(TradeRules.Mode.SWAP_UP), "fixed price paid")
+	_check(TradeRules.trade(TradeRules.Mode.SWAP_UP, bow, crossbow) or GameState.copies_of(bow.id) < 2, "usable again, same price")
+
+
+func test_random_trade_picks_are_valid() -> void:
+	GameState.trade_unlocked = true
+	for i in 20:
+		for mode: TradeRules.Mode in TradeRules.Mode.values():
+			var give := TradeRules.pick_give(mode)
+			_check(give == null or give in TradeRules.give_options(mode), "picked give is allowed")
+			var receive := TradeRules.random_receive(mode, give)
+			_check(receive == null or receive in TradeRules.get_options(mode, give), "random result is allowed")
+
+
+func test_swap_same_and_remove_rules() -> void:
+	GameState.trade_unlocked = true
+	GameState.gold = 100
+	var coin := _sym("coin")
+	var skull := _sym("skull")
+	_check(TradeRules.get_options(TradeRules.Mode.SWAP_SAME, coin).all(
+		func(s: SymbolData) -> bool: return s.rarity == coin.rarity and s.id != coin.id), "same tier swap stays in tier")
+	_check(skull not in TradeRules.give_options(TradeRules.Mode.SWAP_UP), "skulls can't be swapped up")
+	if GameState.copies_of(skull.id) > 0:
+		var before := GameState.copies_of(skull.id)
+		_check(TradeRules.trade(TradeRules.Mode.REMOVE, skull), "remove a skull")
+		_check(GameState.copies_of(skull.id) == before - 1, "one skull fewer")
+	while TradeRules.trade(TradeRules.Mode.REMOVE, TradeRules.give_options(TradeRules.Mode.REMOVE)[0] 			if not TradeRules.give_options(TradeRules.Mode.REMOVE).is_empty() else null):
+		GameState.gold = 100
+	_check(GameState.pool_total() == TradeRules.MIN_REEL_SYMBOLS, "removing stops at the minimum reel size")
+
+
 func test_gold_multiplier_boosts_gold_lines() -> void:
 	var coin := _sym("coin")
 	var before := coin.reward_amount(3, 1)
