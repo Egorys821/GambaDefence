@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://src/data/upgrade_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/banner.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"eagle_banners"
+display_name = "Eagle Banners"
+icon = ExtResource("2_icon")
+description = "Castle and towers shoot {value} farther."
+scope = 1
+category = 1
+stat = &"tower_range"
+value_per_level = 0.25
+percent = true
+max_level = 2
+base_cost = 28
+cost_per_level = 18
+min_night = 2
+rarity = 2

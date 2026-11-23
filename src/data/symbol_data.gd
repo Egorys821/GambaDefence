@@ -48,6 +48,8 @@ enum Effect {
 ## Keeps feature symbols (Tomes, chests...) from triggering every spin.
 @export var max_copies: int = 0
 @export var shop_cost: int = 5
+## Rarity of the merchant's "Add" offer for this symbol (see MerchantRarity).
+@export var rarity: MerchantRarity.Tier = MerchantRarity.Tier.COMMON
 ## First night on which the merchant may offer this symbol.
 @export var min_night: int = 1
 ## If set, the merchant sells this symbol in every castle once this stat is
@@ -66,6 +68,8 @@ func reward_amount(count: int, level: int) -> int:
 		return maxi(1, roundi(power * multiplier))
 	var base := power + power_per_level * (level - 1)
 	var amount := maxi(1, roundi(base * multiplier)) if base > 0 else 0
+	if effect == Effect.GOLD or (effect == Effect.WILD and wild_for.is_empty()):
+		amount = roundi(amount * (1.0 + GameState.stat(Stats.GOLD_MULTIPLIER)))
 	if effect == Effect.GOLD:
 		return amount + GameState.stat_int(Stats.COIN_LINE_BONUS)
 	return amount

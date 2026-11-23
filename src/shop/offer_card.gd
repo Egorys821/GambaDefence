@@ -16,7 +16,9 @@ var _button: Button
 func _init(p_offer: ShopOffer) -> void:
 	offer = p_offer
 	custom_minimum_size = Vector2(CARD_WIDTH, 0)
-	tooltip_text = offer.description
+	add_theme_stylebox_override("panel", MerchantRarity.card_style(offer.rarity))
+	tooltip_text = "%s
+%s" % [MerchantRarity.tier_name(offer.rarity), offer.description]
 	mouse_entered.connect(_on_hover.bind(true))
 	mouse_exited.connect(_on_hover.bind(false))
 
@@ -42,6 +44,8 @@ func _init(p_offer: ShopOffer) -> void:
 	title.max_lines_visible = 2
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 8)
+	if offer.rarity != MerchantRarity.Tier.COMMON:
+		title.add_theme_color_override("font_color", MerchantRarity.text_color(offer.rarity))
 	header.add_child(title)
 
 	var description := Label.new()

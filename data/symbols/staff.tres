@@ -17,4 +17,5 @@ unit = ExtResource("3_unit")
 passive_gold = 0
 in_shop = true
 shop_cost = 10
+rarity = 1
 min_night = 3

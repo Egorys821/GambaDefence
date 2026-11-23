@@ -18,6 +18,7 @@ const STARTING_SKULLS := &"starting_skulls"  ## Cursed Skulls on the reels at ru
 const SHOP_SLOTS := &"shop_slots"            ## Offers the merchant shows each day.
 const SHOP_DISCOUNT := &"shop_discount"      ## Fraction off every merchant price (0.1 = 10%).
 const COIN_LINE_BONUS := &"coin_line_bonus"  ## Extra gold for every winning gold line.
+const GOLD_MULTIPLIER := &"gold_multiplier"  ## Extra share of gold from gold lines (0.25 = +25%).
 const CURSE_DELAY := &"curse_delay"          ## Nights the curse starts spreading later.
 
 # --- Castle ---
@@ -104,6 +105,7 @@ const LIMITS := {
 	STARTING_SKULLS: Vector2(0, 10),
 	EXTRA_TOWERS: Vector2(0, 4),
 	SHOP_DISCOUNT: Vector2(0, 0.6),
+	GOLD_MULTIPLIER: Vector2(0, 3),
 	ENEMY_SLOW: Vector2(0, 0.6),
 	NUDGE_CHANCE: Vector2(0, 0.8),
 	GAMBLE_EDGE: Vector2(0, 0.2),

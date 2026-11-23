@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://src/data/upgrade_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/staff.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"frost_ward"
+display_name = "Frost Ward"
+icon = ExtResource("2_icon")
+description = "Spirits move {value} slower."
+scope = 1
+category = 1
+stat = &"enemy_slow"
+value_per_level = 0.15
+percent = true
+max_level = 2
+base_cost = 30
+cost_per_level = 20
+min_night = 3
+rarity = 2

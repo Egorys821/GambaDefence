@@ -1,20 +1,21 @@
 [gd_resource type="Resource" script_class="UpgradeData" format=3]
 
 [ext_resource type="Script" path="res://src/data/upgrade_data.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/sprites/ui/extra_spin.png" id="2_icon"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/coin.png" id="2_icon"]
 
 [resource]
 script = ExtResource("1_script")
-id = &"extra_spin"
-display_name = "Extra Spin"
+id = &"lucky_purse"
+display_name = "Lucky Purse"
 icon = ExtResource("2_icon")
-description = "+{value} spin every day (this run)."
+description = "Every winning gold line pays +{value} gold."
 scope = 1
 category = 0
-stat = &"spins_per_day"
+stat = &"coin_line_bonus"
 value_per_level = 1.0
 percent = false
-max_level = 4
-base_cost = 12
-cost_per_level = 6
+max_level = 3
+base_cost = 8
+cost_per_level = 5
 min_night = 1
+rarity = 0

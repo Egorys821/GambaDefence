@@ -24,7 +24,7 @@ data/              Game content as editable resources (open in the Inspector)
   castles/*.tres   CastleData: map order, starting reels, merchant symbols, spirits, boss, difficulty
   machines/*.tres  MachineStyle: the slot machine styles (layout, how they pay, bonus feature)
   upgrades/meta/   UpgradeData: permanent Time Forge upgrades (cost in Chrono Shards)
-  upgrades/run/    UpgradeData: upgrades the merchant sells for one run (cost in gold)
+  upgrades/merchant/ UpgradeData: the merchant's upgrade tree, sold for one run (gold, with a `rarity`)
 src/
   autoload/        GameState (run state + stat()), MetaProgress (shards, saved upgrades), Audio
   meta/            Main menu, Kingdom Map, Time Forge, Preview (codex)
@@ -50,7 +50,8 @@ tools/
 Every number an upgrade can change is a **stat** listed in `src/data/stats.gd` with its base value.
 Code reads it with `GameState.stat(Stats.TOWER_DAMAGE)`, which returns base + permanent upgrades + this run's upgrades.
 
-- New upgrade for an existing stat: duplicate a `.tres` in `data/upgrades/meta/` (Time Forge) or `data/upgrades/run/` (merchant) and edit it. It appears automatically.
+- New upgrade for an existing stat: duplicate a `.tres` in `data/upgrades/meta/` (Time Forge) or `data/upgrades/merchant/` (merchant, set its `rarity`) and edit it. It appears automatically.
+- Merchant rarity: every offer is Common (gray), Rare (blue), Mythic (red) or Legendary (gold). Each offer slot draws a token from a hidden bag (`MerchantRarity.BAG_CONTENTS`, 20/10/3/1, refilled when empty), then a random ware of that rarity; if none is for sale it falls back to a lower rarity. The main menu's **Merchant Wares** screen lists everything by rarity.
 - Time Forge tree: set `requires` (parent upgrade), `requires_level` and `tree_position` (column, row) on a meta upgrade.
 - New kind of effect: add a key to `Stats`, read it where it matters, then make a `.tres` for it.
 

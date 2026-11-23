@@ -9,6 +9,7 @@ const CHOICE_TUTORIAL := &"tutorial"
 const CHOICE_UPGRADES := &"upgrades"
 const CHOICE_SETTINGS := &"settings"
 const CHOICE_PREVIEW := &"preview"
+const CHOICE_MERCHANT := &"merchant"
 const CHOICE_ABOUT := &"about"
 const CHOICE_QUIT := &"quit"
 const COIN_TEXTURE := preload("res://assets/sprites/symbols/coin.png")
@@ -24,6 +25,7 @@ var _time := 0.0
 	CHOICE_UPGRADES: %UpgradesButton,
 	CHOICE_SETTINGS: %SettingsButton,
 	CHOICE_PREVIEW: %PreviewButton,
+	CHOICE_MERCHANT: %MerchantButton,
 	CHOICE_ABOUT: %AboutButton,
 	CHOICE_QUIT: %QuitButton,
 }

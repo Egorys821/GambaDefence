@@ -18,3 +18,4 @@ max_level = 1
 base_cost = 45
 cost_per_level = 0
 min_night = 4
+rarity = 2

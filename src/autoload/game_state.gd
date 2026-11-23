@@ -14,7 +14,7 @@ signal upgrades_changed
 signal curse_changed(threat: int)
 
 const SYMBOLS_DIR := "res://data/symbols/"
-const UPGRADE_DIRS := ["res://data/upgrades/meta/", "res://data/upgrades/run/"]
+const UPGRADE_DIRS := ["res://data/upgrades/meta/", "res://data/upgrades/merchant/"]
 const CASTLES_DIR := "res://data/castles/"
 const MACHINES_DIR := "res://data/machines/"
 const SKULL_ID := &"skull"
@@ -57,6 +57,8 @@ var run_upgrades: Dictionary = {}
 var kills := 0
 ## Threat points added to tonight's wave by cursed symbols.
 var curse_threat := 0
+## Rarity tokens left in the merchant's hidden bag (see MerchantRarity).
+var merchant_bag: Array[int] = []
 
 
 func _ready() -> void:
@@ -90,6 +92,7 @@ func reset() -> void:
 	kills = 0
 	curse_threat = 0
 	run_upgrades.clear()
+	merchant_bag.clear()
 	levels.clear()
 	gold = stat_int(Stats.START_GOLD)
 	castle_max_hp = stat_int(Stats.CASTLE_MAX_HP)
@@ -102,6 +105,13 @@ func reset() -> void:
 	castle_hp_changed.emit(castle_hp, castle_max_hp)
 	machine_changed.emit()
 	upgrades_changed.emit()
+
+
+## Takes one rarity token out of the merchant's bag, refilling it when empty.
+func draw_merchant_rarity() -> int:
+	if merchant_bag.is_empty():
+		merchant_bag = MerchantRarity.new_bag()
+	return merchant_bag.pop_back()
 
 
 # --- Stats ------------------------------------------------------------------

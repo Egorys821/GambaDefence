@@ -15,3 +15,4 @@ wild_multiplier = 2
 in_shop = true
 max_copies = 1
 shop_cost = 12
+rarity = 1

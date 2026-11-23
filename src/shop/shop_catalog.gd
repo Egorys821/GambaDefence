@@ -1,8 +1,10 @@
 class_name ShopCatalog
 extends RefCounted
 ## Decides what the merchant sells and for how much. Balance prices here.
-## Offers come from: symbols (add / upgrade / banish), paylines, and RUN
-## upgrades in res://data/upgrades/run/ (castle, machine and army upgrades).
+## Offers come from: symbols (add / upgrade / banish), paylines, and the
+## merchant upgrade tree in res://data/upgrades/merchant/. Every offer has a
+## rarity (MerchantRarity): symbol upgrades and banishes are Common, patterns
+## Rare, symbols and merchant upgrades use their own `rarity` field.
 
 const REPAIR_AMOUNT := 20
 const REPAIR_COST := 6
@@ -15,6 +17,7 @@ const BANISH_CURSE_COST := 8
 const MAX_SYMBOL_LEVEL := 5
 const PAYLINE_BASE_COST := 10
 const PAYLINE_COST_STEP := 6
+const PATTERN_RARITY := MerchantRarity.Tier.RARE
 
 const PAYLINE_ICON := preload("res://assets/sprites/ui/payline.png")
 
@@ -24,8 +27,40 @@ static func price(base: int) -> int:
 	return maxi(1, roundi(base * (1.0 - GameState.stat(Stats.SHOP_DISCOUNT))))
 
 
-## Random selection of offers for today (count from Stats.SHOP_SLOTS).
+## Today's offers (count from Stats.SHOP_SLOTS). Each slot draws a rarity token
+## from the merchant's hidden bag (MerchantRarity), then a random ware of that
+## rarity. If nothing of that rarity can be sold right now, the next lower
+## rarity is used (then higher, if nothing lower exists).
 static func roll_offers() -> Array[ShopOffer]:
+	var by_tier := {}
+	for tier: int in MerchantRarity.Tier.values():
+		by_tier[tier] = [] as Array[ShopOffer]
+	for offer in candidate_offers():
+		by_tier[offer.rarity].append(offer)
+	for tier: int in by_tier:
+		(by_tier[tier] as Array).shuffle()
+	var offers: Array[ShopOffer] = []
+	for i in GameState.stat_int(Stats.SHOP_SLOTS):
+		var tier := _available_tier(by_tier, GameState.draw_merchant_rarity())
+		if tier < 0:
+			break
+		offers.append((by_tier[tier] as Array).pop_back())
+	return offers
+
+
+## `wanted` if it has wares left, else the closest lower tier, else the closest higher one.
+static func _available_tier(by_tier: Dictionary, wanted: int) -> int:
+	for tier in range(wanted, -1, -1):
+		if not (by_tier[tier] as Array).is_empty():
+			return tier
+	for tier in range(wanted + 1, MerchantRarity.Tier.size()):
+		if not (by_tier[tier] as Array).is_empty():
+			return tier
+	return -1
+
+
+## Everything the merchant could sell right now (before rarity draws).
+static func candidate_offers() -> Array[ShopOffer]:
 	var candidates: Array[ShopOffer] = []
 	for symbol: SymbolData in GameState.symbols.values():
 		if GameState.is_symbol_available(symbol):
@@ -43,10 +78,7 @@ static func roll_offers() -> Array[ShopOffer]:
 	for upgrade in GameState.get_upgrades(UpgradeData.Scope.RUN):
 		if GameState.night >= upgrade.min_night and not upgrade.is_maxed(GameState.upgrade_level(upgrade)) 				and GameState.prerequisites_met(upgrade):
 			candidates.append(run_upgrade_offer(upgrade))
-	candidates.shuffle()
-	var offers: Array[ShopOffer] = []
-	offers.assign(candidates.slice(0, GameState.stat_int(Stats.SHOP_SLOTS)))
-	return offers
+	return candidates
 
 
 static func add_symbol_offer(symbol: SymbolData) -> ShopOffer:
@@ -55,7 +87,8 @@ static func add_symbol_offer(symbol: SymbolData) -> ShopOffer:
 		"+1 on the reels. %s" % symbol.description,
 		symbol.texture,
 		symbol.shop_cost,
-		func() -> void: GameState.add_symbol(symbol.id))
+		func() -> void: GameState.add_symbol(symbol.id),
+		symbol.rarity)
 
 
 static func upgrade_symbol_offer(symbol: SymbolData) -> ShopOffer:
@@ -90,7 +123,8 @@ static func pattern_offer(shape: int) -> ShopOffer:
 		"New winning shape. Works at every height it fits: +%d lines now, more with extra rows." % lines,
 		PAYLINE_ICON,
 		PAYLINE_BASE_COST + PAYLINE_COST_STEP * (GameState.shapes.size() - 1),
-		func() -> void: GameState.unlock_shape(shape))
+		func() -> void: GameState.unlock_shape(shape),
+		PATTERN_RARITY)
 
 
 static func run_upgrade_offer(upgrade: UpgradeData) -> ShopOffer:
@@ -103,4 +137,5 @@ static func run_upgrade_offer(upgrade: UpgradeData) -> ShopOffer:
 		upgrade.describe(),
 		upgrade.icon,
 		upgrade.cost_at(level),
-		func() -> void: GameState.add_run_upgrade(upgrade.id))
+		func() -> void: GameState.add_run_upgrade(upgrade.id),
+		upgrade.rarity)

@@ -1,6 +1,7 @@
 class_name Shop
 extends VBoxContainer
 ## The wandering merchant: random offers each day (Stats.SHOP_SLOTS) plus repair and reroll.
+## Offers are drawn by rarity from a hidden bag, see ShopCatalog.roll_offers().
 
 var _offers: Array[ShopOffer] = []
 var _reroll_cost := ShopCatalog.REROLL_BASE_COST
@@ -37,7 +38,16 @@ func _roll_offers() -> void:
 		var tween := card.create_tween()
 		tween.tween_interval(0.08 * card.get_index())
 		tween.tween_property(card, "modulate:a", 1.0, 0.15)
+		if offer.rarity == MerchantRarity.Tier.LEGENDARY:
+			tween.tween_callback(_announce_legendary.bind(card))
 	_refresh()
+
+
+## A Legendary ware gets a little fanfare.
+func _announce_legendary(card: OfferCard) -> void:
+	Audio.play(&"tease")
+	card.pivot_offset = card.size * 0.5
+	Fx.pop(card, 1.1, 0.3)
 
 
 func _on_buy_pressed(card: OfferCard) -> void:

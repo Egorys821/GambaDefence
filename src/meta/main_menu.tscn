@@ -38,11 +38,11 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = 104.0
-offset_bottom = -24.0
+offset_top = 94.0
+offset_bottom = -28.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 4
 alignment = 1
 
 [node name="Title" type="Label" parent="Menu"]
@@ -63,14 +63,10 @@ theme_override_font_sizes/font_size = 9
 text = "Spin the magic machine by day. Defend the castle by night."
 horizontal_alignment = 1
 
-[node name="Gap" type="Control" parent="Menu"]
-custom_minimum_size = Vector2(0, 8)
-layout_mode = 2
-
 [node name="Buttons" type="VBoxContainer" parent="Menu"]
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_constants/separation = 5
+theme_override_constants/separation = 3
 
 [node name="PlayButton" type="Button" parent="Menu/Buttons"]
 unique_name_in_owner = true
@@ -80,25 +76,25 @@ focus_mode = 0
 theme_override_font_sizes/font_size = 14
 text = "Play"
 
-[node name="TutorialButton" type="Button" parent="Menu/Buttons"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 20)
-layout_mode = 2
-focus_mode = 0
-theme_override_font_sizes/font_size = 10
-text = "How to Play - Tutorial"
-
 [node name="UpgradesButton" type="Button" parent="Menu/Buttons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 20)
+custom_minimum_size = Vector2(200, 18)
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 10
 text = "Upgrades - Time Forge"
 
+[node name="MerchantButton" type="Button" parent="Menu/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 18)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 10
+text = "Merchant Wares"
+
 [node name="SettingsButton" type="Button" parent="Menu/Buttons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 20)
+custom_minimum_size = Vector2(200, 18)
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 10
@@ -106,7 +102,7 @@ text = "Settings"
 
 [node name="PreviewButton" type="Button" parent="Menu/Buttons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 20)
+custom_minimum_size = Vector2(200, 18)
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 10
@@ -114,7 +110,7 @@ text = "Preview - Troops & Spirits"
 
 [node name="AboutButton" type="Button" parent="Menu/Buttons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 20)
+custom_minimum_size = Vector2(200, 18)
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 10
@@ -122,7 +118,7 @@ text = "About"
 
 [node name="QuitButton" type="Button" parent="Menu/Buttons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 20)
+custom_minimum_size = Vector2(200, 18)
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 10
@@ -135,7 +131,7 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 8.0
-offset_top = -20.0
+offset_top = -26.0
 offset_right = -8.0
 offset_bottom = -4.0
 grow_horizontal = 2
@@ -145,12 +141,28 @@ grow_vertical = 0
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 8
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 8
 text = "Castles conquered"
 
-[node name="ShardIcon" type="TextureRect" parent="Footer"]
+[node name="TutorialButton" type="Button" parent="Footer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 20)
+layout_mode = 2
+size_flags_vertical = 8
+focus_mode = 0
+theme_override_font_sizes/font_size = 9
+text = "How to Play - Tutorial"
+
+[node name="Shards" type="HBoxContainer" parent="Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 8
+alignment = 2
+
+[node name="ShardIcon" type="TextureRect" parent="Footer/Shards"]
 custom_minimum_size = Vector2(12, 12)
 layout_mode = 2
 size_flags_vertical = 4
@@ -158,7 +170,7 @@ texture = ExtResource("2_shard")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ShardLabel" type="Label" parent="Footer"]
+[node name="ShardLabel" type="Label" parent="Footer/Shards"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.38, 0.85, 0.97, 1)

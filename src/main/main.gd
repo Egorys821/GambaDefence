@@ -32,6 +32,7 @@ var _tutorial: Tutorial
 @onready var _settings: SettingsScreen = %SettingsScreen
 @onready var _menu: MainMenu = %MainMenu
 @onready var _codex: Codex = %Codex
+@onready var _merchant_wares: MerchantWares = %MerchantWares
 @onready var _message: MessageScreen = %MessageScreen
 
 
@@ -89,6 +90,9 @@ func _main_menu_loop() -> void:
 			MainMenu.CHOICE_PREVIEW:
 				_codex.open()
 				await _codex.closed
+			MainMenu.CHOICE_MERCHANT:
+				_merchant_wares.open()
+				await _merchant_wares.closed
 			MainMenu.CHOICE_ABOUT:
 				_message.show_message("About", ABOUT_TEXT, "Back")
 				await _message.confirmed

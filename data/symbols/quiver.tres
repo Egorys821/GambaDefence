@@ -16,4 +16,5 @@ power = 0
 wild_for = Array[ExtResource("1_script")]([ExtResource("t_bow"), ExtResource("t_crossbow")])
 in_shop = true
 shop_cost = 12
+rarity = 1
 min_night = 1

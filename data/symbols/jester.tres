@@ -14,3 +14,4 @@ power = 6
 in_shop = true
 max_copies = 2
 shop_cost = 9
+rarity = 1

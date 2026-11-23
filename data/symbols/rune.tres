@@ -14,5 +14,6 @@ power = 8
 passive_gold = 0
 in_shop = true
 shop_cost = 30
+rarity = 3
 min_night = 3
 unlock_stat = &"unlock_rune"

@@ -3,8 +3,9 @@ extends Resource
 ## An upgrade that adds `value_per_level` to a stat (see Stats) for each level owned.
 ##
 ## META upgrades are bought in the Time Forge with Chrono Shards and are kept
-## forever. RUN upgrades are sold by the merchant for gold and last one run.
-## Instances live in res://data/upgrades/meta/ and res://data/upgrades/run/.
+## forever. RUN upgrades are the merchant's own upgrade tree: sold for gold,
+## they last one run and each has a rarity (see MerchantRarity).
+## Instances live in res://data/upgrades/meta/ and res://data/upgrades/merchant/.
 
 enum Scope { META, RUN }
 ## MACHINES: unlocks for other slot machines (see MachineStyle) and their upgrades.
@@ -45,6 +46,10 @@ enum Category { MACHINE, CASTLE, ARMY, MACHINES }
 @export var cost_per_level: int = 5
 ## RUN only: first night the merchant may offer it.
 @export var min_night: int = 1
+
+@export_group("Merchant")
+## RUN only: which rarity token from the merchant's bag can bring this offer.
+@export var rarity: MerchantRarity.Tier = MerchantRarity.Tier.COMMON
 
 
 func is_castle_reward() -> bool:

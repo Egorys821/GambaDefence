@@ -314,6 +314,52 @@ func test_signature_upgrade_adds_copies() -> void:
 	_check(GameState.feature_length() == 4, "long chapter adds a free spin")
 
 
+# --- Merchant -----------------------------------------------------------------
+
+func test_merchant_bag_holds_exact_rarities() -> void:
+	var full := 0
+	for tier: int in MerchantRarity.BAG_CONTENTS:
+		full += MerchantRarity.BAG_CONTENTS[tier]
+	var counts := {}
+	for i in full * 2:  # two full bags
+		var tier := GameState.draw_merchant_rarity()
+		counts[tier] = counts.get(tier, 0) + 1
+	for tier: int in MerchantRarity.BAG_CONTENTS:
+		_check(counts.get(tier, 0) == MerchantRarity.BAG_CONTENTS[tier] * 2, "%s drawn exactly per bag" % MerchantRarity.tier_name(tier))
+	GameState.reset()
+	_check(GameState.merchant_bag.is_empty(), "new run starts with a fresh bag")
+
+
+func test_merchant_offers_fall_back_to_lower_rarity() -> void:
+	GameState.night = 10
+	# A bag of only Legendary tokens: every slot asks for Legendary.
+	GameState.merchant_bag.assign([3, 3, 3, 3, 3, 3])
+	var offers := ShopCatalog.roll_offers()
+	_check(offers.size() == GameState.stat_int(Stats.SHOP_SLOTS), "every slot filled")
+	_check(offers.all(func(o: ShopOffer) -> bool: return o.rarity >= MerchantRarity.Tier.MYTHIC), "rare tokens stay high when stock allows")
+	var titles := offers.map(func(o: ShopOffer) -> String: return o.title)
+	for title in titles:
+		_check(titles.count(title) == 1, "no duplicate offer: %s" % title)
+
+
+func test_every_merchant_upgrade_is_valid() -> void:
+	for upgrade in GameState.get_upgrades(UpgradeData.Scope.RUN):
+		_check(_is_declared_stat(upgrade.stat), "%s uses a declared stat" % upgrade.id)
+		_check(upgrade.icon != null, "%s has an icon" % upgrade.id)
+	var tiers := {}
+	for upgrade in GameState.get_upgrades(UpgradeData.Scope.RUN):
+		tiers[upgrade.rarity] = true
+	_check(tiers.size() == MerchantRarity.Tier.size(), "every rarity has merchant upgrades")
+
+
+func test_gold_multiplier_boosts_gold_lines() -> void:
+	var coin := _sym("coin")
+	var before := coin.reward_amount(3, 1)
+	GameState.run_upgrades[&"midas_touch"] = 1
+	_check(coin.reward_amount(3, 1) == roundi(before * 2.0), "Midas Touch doubles a coin line")
+	GameState.run_upgrades.clear()
+
+
 # --- Helpers ------------------------------------------------------------------
 
 ## Unlocks and starts a run on a machine, with optional extra upgrade levels.

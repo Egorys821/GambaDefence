@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" path="res://src/ui/settings_screen.tscn" id="9_settings"]
 [ext_resource type="PackedScene" path="res://src/meta/main_menu.tscn" id="10_menu"]
 [ext_resource type="PackedScene" path="res://src/meta/codex.tscn" id="11_codex"]
+[ext_resource type="PackedScene" path="res://src/meta/merchant_wares.tscn" id="12_wares"]
 
 [node name="Main" type="Node" unique_id=405593275]
 script = ExtResource("1_main")
@@ -33,6 +34,9 @@ unique_name_in_owner = true
 unique_name_in_owner = true
 
 [node name="Codex" parent="UI" instance=ExtResource("11_codex")]
+unique_name_in_owner = true
+
+[node name="MerchantWares" parent="UI" instance=ExtResource("12_wares")]
 unique_name_in_owner = true
 
 [node name="TimeForge" parent="UI" instance=ExtResource("7_forge")]

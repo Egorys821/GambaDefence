@@ -70,7 +70,7 @@ func _fill_symbols() -> void:
 			_:
 				pays = "x3 / x4 / x5: %d / %d / %d %s" % [symbol.reward_amount(3, 1), symbol.reward_amount(4, 1),
 					symbol.reward_amount(5, 1), symbol.reward_label()]
-		grid.add_child(_entry(symbol.texture, symbol.display_name, [symbol.description, pays]))
+		grid.add_child(make_entry(symbol.texture, symbol.display_name, [symbol.description, pays]))
 
 
 func _fill_troops() -> void:
@@ -83,7 +83,7 @@ func _fill_troops() -> void:
 			symbol.display_name, symbol.power, str(unit.upkeep)]]
 		if symbol.unlock_stat != &"" and GameState.stat(symbol.unlock_stat) < 1.0:
 			lines.append("Unlock in the Time Forge, or find it in later castles.")
-		grid.add_child(_entry(unit.texture, unit.display_name, lines))
+		grid.add_child(make_entry(unit.texture, unit.display_name, lines))
 
 
 func _fill_spirits() -> void:
@@ -103,9 +103,9 @@ func _fill_spirits() -> void:
 			if unlocked:
 				var lines: Array[String] = [_stat_line(unit)]
 				lines.append("BOSS - appears on the last night." if unit.is_boss else "Gold when destroyed: %d" % unit.gold_reward)
-				grid.add_child(_entry(unit.texture, unit.display_name, lines))
+				grid.add_child(make_entry(unit.texture, unit.display_name, lines))
 			else:
-				var hidden := _entry(unit.texture, "???", ["Conquer the castle before to learn more."])
+				var hidden := make_entry(unit.texture, "???", ["Conquer the castle before to learn more."])
 				(hidden.get_child(0).get_child(0) as TextureRect).modulate = Color(0, 0, 0, 0.8)
 				grid.add_child(hidden)
 
@@ -134,9 +134,13 @@ func _grid() -> GridContainer:
 	return grid
 
 
-func _entry(texture: Texture2D, title: String, lines: Array) -> PanelContainer:
+## Card with an icon, a title and small description lines. Also used by MerchantWares.
+static func make_entry(texture: Texture2D, title: String, lines: Array, style: StyleBox = null,
+		title_color := Color.TRANSPARENT) -> PanelContainer:
 	var card := PanelContainer.new()
 	card.custom_minimum_size = Vector2(296, 0)
+	if style:
+		card.add_theme_stylebox_override("panel", style)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
 	card.add_child(row)
@@ -152,6 +156,8 @@ func _entry(texture: Texture2D, title: String, lines: Array) -> PanelContainer:
 	var name_label := Label.new()
 	name_label.text = title
 	name_label.add_theme_font_size_override("font_size", 9)
+	if title_color.a > 0.0:
+		name_label.add_theme_color_override("font_color", title_color)
 	text.add_child(name_label)
 	for line: String in lines:
 		var label := Label.new()
