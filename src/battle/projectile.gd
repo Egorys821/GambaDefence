@@ -10,6 +10,8 @@ var target
 var damage := 1.0
 var splash_radius := 0.0
 var team: Unit.Team = Unit.Team.PLAYER
+## Magic damage (reduced by the target's magic resist).
+var magic := false
 var _texture: Texture2D
 var _target_point := Vector2.ZERO
 
@@ -50,8 +52,10 @@ func _target_alive() -> bool:
 
 func _impact() -> void:
 	var hit = target if _target_alive() else null
-	if hit != null:
+	if hit is Unit:
+		hit.take_damage(damage, magic)
+	elif hit != null:
 		hit.take_damage(damage)
 	if splash_radius > 0.0:
-		battlefield.damage_area(_target_point, splash_radius, damage, team, hit)
+		battlefield.damage_area(_target_point, splash_radius, damage, team, hit, magic)
 	queue_free()

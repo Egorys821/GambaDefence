@@ -12,6 +12,7 @@ description = "Old Cellar wild: counts as any symbol and DOUBLES the line it hel
 effect = 4
 power = 6
 wild_multiplier = 2
+static_chance = 0.03
 in_shop = true
 max_copies = 1
 shop_cost = 12

@@ -104,6 +104,9 @@ func _select(castle: CastleData) -> void:
 			spirits.append(entry.unit.display_name)
 		_info_body.text = "%s\nSpirits: %s. Boss: %s.\n%sChrono Shards x%.1f" % [
 			castle.description, ", ".join(spirits), castle.boss.display_name, _battlefield_line(castle), castle.shard_multiplier]
+		if castle.wave_growth > 1.0:
+			_info_body.text += "\nThe horde grows %d%% every night" % roundi((castle.wave_growth - 1.0) * 100.0)
+			_info_body.text += ", and armies over %d troops draw more spirits." % WaveGenerator.ARMY_FREE_TROOPS if castle.army_threat > 0.0 else "."
 		var crowns := "%d Crown%s" % [castle.crown_reward, "" if castle.crown_reward == 1 else "s"]
 		if MetaProgress.is_conquered(castle):
 			_info_body.text += "\nFirst victory reward: %s (won)." % crowns

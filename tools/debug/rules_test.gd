@@ -39,10 +39,14 @@ func test_line_win_from_left() -> void:
 	_check(wins[0].cells == expected, "win cells")
 
 
-func test_wild_never_helps_curse() -> void:
+func test_rune_helps_curses_other_wilds_dont() -> void:
 	var grid := _grid(["tombstone rune tombstone coin bow", "coin bow coin bow coin", "bow coin bow coin bow"])
 	var wins := LineEvaluator.evaluate(grid, _lines(), GameState.machine)
-	_check(wins.is_empty(), "rune does not complete a tombstone line")
+	_check(wins.size() == 1 and wins[0].symbol.id == &"tombstone" and wins[0].count == 3, "the rune completes a tombstone line")
+	var purple := LineEvaluator.evaluate(_grid(["purple_tombstone purple_tombstone rune coin bow", "coin bow coin bow coin", "bow coin bow coin bow"]), _lines(), GameState.machine)
+	_check(purple.size() == 1 and purple[0].symbol.id == &"purple_tombstone", "the rune completes a purple tombstone line")
+	var banner := LineEvaluator.evaluate(_grid(["tombstone banner tombstone coin bow", "coin bow coin bow coin", "bow coin bow coin bow"]), _lines(), GameState.machine)
+	_check(banner.is_empty(), "other wilds never complete a curse")
 
 
 func test_group_pays_mixed_weapons() -> void:
@@ -167,7 +171,7 @@ func test_hoard_respins_reset_and_end() -> void:
 		gold += win.gold()
 		if win.effect() == SymbolData.Effect.SPAWN_UNIT:
 			_check(win.amount() <= HoardRound.MAX_TROOPS, "hoard troops capped")
-	_check(gold >= HoardPrize.JACKPOTS[HoardPrize.Kind.GRAND][0], "grand gold paid")
+	_check(gold >= HoardPrize.JACKPOTS[HoardPrize.Kind.GRAND][0] * HoardRound.PAYOUT_SCALE, "grand gold paid (at half pay)")
 
 
 func test_free_spin_retriggers_are_capped() -> void:
@@ -431,7 +435,7 @@ func test_new_forge_skills() -> void:
 	_check(GameState.castle_hp == GameState.castle_max_hp - 20, "no armor: full damage")
 	_check(not GameState.trade_unlocked, "Trading Post closed without the charter")
 	_check(GameState.level_of(&"sword") == 1, "swords start at level 1")
-	_check(TradeRules.cost(TradeRules.Mode.SWAP_SAME) == 3, "trade price")
+	_check(TradeRules.cost(TradeRules.Mode.SWAP_SAME) == 30, "trade price")
 	MetaProgress.levels[&"bastion"] = 1
 	MetaProgress.levels[&"reinforced_gates"] = 3
 	MetaProgress.levels[&"trade_charter"] = 1
@@ -444,7 +448,7 @@ func test_new_forge_skills() -> void:
 	GameState.damage_castle(20)
 	_check(GameState.castle_hp == GameState.castle_max_hp - 14, "30% armor: 20 damage -> 14")
 	_check(GameState.trade_unlocked, "the charter opens the Trading Post on day 1")
-	_check(TradeRules.cost(TradeRules.Mode.SWAP_SAME) == 1, "Fair Trades: 3 - 2 = 1 gold")
+	_check(TradeRules.cost(TradeRules.Mode.SWAP_SAME) == 10, "Fair Trades: 30 - 2x10 = 10 gold")
 	_check(GameState.level_of(&"sword") == 2 and GameState.level_of(&"coin") == 1, "Elite Training levels troop symbols only")
 	_check(ShopCatalog.repair_amount() == ShopCatalog.REPAIR_AMOUNT + 10, "Stonemasons: +10 repair")
 	GameState.merchant_bag.clear()
@@ -482,16 +486,50 @@ func test_run_setup_per_machine() -> void:
 	_check(GameState.active_paylines().is_empty(), "ways machine has no lines")
 	_check(GameState.next_locked_shape() < 0, "no patterns for sale")
 	_use_machine(&"dragons_hoard")
-	_check(GameState.copies_of(&"chest") == 2, "hoard starts with chests")
-	_check(GameState.is_symbol_available(_sym("chest")), "merchant sells chests here")
+	_check(GameState.copies_of(&"chest") >= 2, "hoard starts with chests")
+	_check(GameState.is_symbol_available(_sym("chest")), "Dragon's Hoard sells its chests (below the cap)")
 
 
-func test_merchant_stops_at_max_copies() -> void:
+func test_merchant_sells_only_this_machines_special_symbol() -> void:
 	_use_machine(&"jester_81")
 	var jester := _sym("jester")
-	_check(GameState.is_symbol_available(jester), "jester sold below the cap")
-	GameState.add_symbol(jester.id, jester.max_copies - GameState.copies_of(jester.id))
+	_check(GameState.is_symbol_available(jester), "Jester's 81 sells Jesters below the cap")
+	_check(not GameState.is_symbol_available(_sym("chest")), "Jester's 81 never sells chests")
+	_check(not GameState.is_symbol_available(_sym("crown")), "Jester's 81 never sells crowns")
+	GameState.add_symbol(jester.id, 5)
+	_check(GameState.copies_of(&"jester") == jester.max_copies, "jesters stop at their cap")
 	_check(not GameState.is_symbol_available(jester), "no more jesters at the cap")
+	_use_machine(MachineStyle.STANDARD_ID)
+	for id in ["jester", "chest", "crown", "tome"]:
+		_check(not GameState.is_symbol_available(_sym(id)), "the Gamba Machine sells no %s" % id)
+
+
+func test_special_symbols_are_never_upgraded_traded_or_removed() -> void:
+	var specials: Array[SymbolData] = [_sym("crown"), _sym("jester"), _sym("chest"), _sym("tome")]
+	for symbol in GameState.symbols.values():
+		if GameState.is_special_symbol(symbol):
+			_check(symbol in specials, "%s is a machine's special symbol" % symbol.id)
+	_check(not GameState.is_special_symbol(_sym("rune")), "the Magic Rune is not a machine's special symbol")
+	for style: MachineStyle in GameState.machines.values():
+		_use_machine(style.id)
+		GameState.trade_unlocked = true
+		GameState.night = 20
+		for symbol in specials:
+			GameState.add_symbol(symbol.id, 2)
+		var titles: Array[String] = []
+		for offer in ShopCatalog.candidate_offers():
+			titles.append(offer.title)
+		for symbol in specials:
+			if not GameState._machine_uses(style, symbol):
+				_check(not GameState.is_symbol_available(symbol), "%s: %s (another machine's) is never sold" % [style.id, symbol.id])
+			_check(not TradeRules.is_tradeable(symbol), "%s: %s can't be traded" % [style.id, symbol.id])
+			for mode in [TradeRules.Mode.SWAP_UP, TradeRules.Mode.SWAP_SAME]:
+				_check(symbol not in TradeRules.give_options(mode), "%s: %s is never given in a trade" % [style.id, symbol.id])
+				for give in TradeRules.give_options(mode):
+					_check(symbol not in TradeRules.get_options(mode, give), "%s: %s is never received in a trade" % [style.id, symbol.id])
+			_check(symbol not in TradeRules.give_options(TradeRules.Mode.REMOVE), "%s: %s can't be removed" % [style.id, symbol.id])
+			for title in titles:
+				_check(not (symbol.display_name in title and "Upgrade" in title), "%s: no '%s' offer for %s" % [style.id, title, symbol.id])
 
 
 func test_gamba_upgrades_only_work_on_the_gamba_machine() -> void:
@@ -579,7 +617,7 @@ func test_trading_post_must_be_bought() -> void:
 func test_swap_up_gives_two_for_one_rarer() -> void:
 	_use_machine(MachineStyle.STANDARD_ID, {&"recruit_crossbows": 1})
 	GameState.trade_unlocked = true
-	GameState.gold = 100
+	GameState.gold = 200
 	var bow := _sym("bow")
 	var crossbow := _sym("crossbow")
 	GameState.add_symbol(bow.id, 2)
@@ -591,7 +629,7 @@ func test_swap_up_gives_two_for_one_rarer() -> void:
 		func(s: SymbolData) -> bool: return s.rarity == bow.rarity + 1), "swap up only offers the next rarity")
 	_check(TradeRules.trade(TradeRules.Mode.SWAP_UP, bow, crossbow), "trade works")
 	_check(GameState.copies_of(bow.id) == bows - 2 and GameState.copies_of(crossbow.id) == crossbows + 1, "2 bows -> 1 crossbow")
-	_check(GameState.gold == 100 - TradeRules.cost(TradeRules.Mode.SWAP_UP), "fixed price paid")
+	_check(GameState.gold == 200 - TradeRules.cost(TradeRules.Mode.SWAP_UP), "fixed price paid")
 	_check(TradeRules.trade(TradeRules.Mode.SWAP_UP, bow, crossbow) or GameState.copies_of(bow.id) < 2, "usable again, same price")
 
 
@@ -666,7 +704,7 @@ func test_swap_same_and_remove_rules() -> void:
 		_check(GameState.copies_of(skull.id) == before - 1, "one skull fewer")
 	while TradeRules.trade(TradeRules.Mode.REMOVE, TradeRules.give_options(TradeRules.Mode.REMOVE)[0] 			if not TradeRules.give_options(TradeRules.Mode.REMOVE).is_empty() else null):
 		GameState.gold = 100
-	_check(GameState.pool_total() == TradeRules.MIN_REEL_SYMBOLS, "removing stops at the minimum reel size")
+	_check(GameState.pool_total() == GameState.min_kept_symbols(), "removing good symbols stops at the floor")
 
 
 func test_gold_multiplier_boosts_gold_lines() -> void:
@@ -772,3 +810,302 @@ func test_old_save_is_refunded() -> void:
 	_check(MetaProgress.levels.is_empty(), "the new tree starts empty")
 	MetaProgress.shards = shards_before
 	MetaProgress.migrated_shards = 0
+
+
+func test_refund_subtree() -> void:
+	MetaProgress.levels.clear()
+	MetaProgress.conquered.clear()
+	MetaProgress.conquered.append(GameState.castles[0].id)
+	MetaProgress.shards = 1000
+	for id: StringName in [&"walls", &"engineers", &"engineers", &"watchtowers", &"fortified_towers", &"arcane_towers", &"healer"]:
+		MetaProgress.buy(GameState.upgrades[id])
+	var spent := 1000 - MetaProgress.shards
+	var refund := MetaProgress.refund_subtree(GameState.upgrades[&"engineers"])
+	_check(refund["crowns"] == 1, "the Fortified Towers crown comes back")
+	_check(MetaProgress.level_of(&"engineers") == 0 and MetaProgress.level_of(&"arcane_towers") == 0
+		and MetaProgress.level_of(&"fortified_towers") == 0, "engineers and everything below it are gone")
+	_check(MetaProgress.level_of(&"walls") == 1 and MetaProgress.level_of(&"healer") == 1, "the rest of the tree stays")
+	_check(MetaProgress.shards == 1000 - spent + refund["shards"] and refund["shards"] > 0, "shards given back")
+	_check(MetaProgress.crowns() == 1, "crown free to spend again")
+	var nothing := MetaProgress.refund_subtree(GameState.upgrades[&"engineers"])
+	_check(nothing["shards"] == 0 and nothing["crowns"] == 0, "refunding an empty branch does nothing")
+	MetaProgress.shards = 0
+	MetaProgress.levels.clear()
+	MetaProgress.conquered.clear()
+
+
+func test_curse_adds_exactly_one_ghost_per_point() -> void:
+	GameState.start_run(GameState.castles[0])
+	var ghost: UnitData = WaveGenerator.CURSE_SPIRIT
+	GameState.curse_threat = 0
+	var plain := WaveGenerator.build(1)
+	GameState.curse_threat = 30
+	var cursed := WaveGenerator.build(1)
+	_check(cursed.count(ghost) >= 30, "Curse +30 brings at least 30 ghosts")
+	# Willowdale night 1 only sends ghosts, so the wave is exactly 30 bigger.
+	_check(cursed.size() == plain.size() + 30, "Curse +30 = 30 more spirits (%d vs %d)" % [cursed.size(), plain.size()])
+	GameState.curse_threat = 0
+
+
+func test_purple_tombstone_from_castle_six() -> void:
+	var tomb := _sym("tombstone")
+	var purple := _sym("purple_tombstone")
+	_check(purple.effect == SymbolData.Effect.CURSE and not purple.in_shop, "purple tombstone is a curse, never sold")
+	_check(purple.passive_threat == tomb.passive_threat * 2 and purple.power == tomb.power * 2, "purple tombstone doubles the curse")
+	for i in GameState.castles.size():
+		GameState.start_run(GameState.castles[i])
+		var expected := purple if i >= 5 else tomb
+		_check(GameState.curse_symbol() == expected, "castle %d spreads %s" % [i + 1, expected.display_name])
+	GameState.start_run(GameState.castles[5])
+	GameState.night = 10
+	for i in 20:
+		GameState.spread_curse()
+	_check(GameState.copies_of(&"purple_tombstone") >= 1, "the curse adds purple tombstones at castle 6")
+	_check(not TradeRules.is_tradeable(purple), "purple tombstones can't be traded up")
+
+
+func test_cursed_coin_and_greed_monster() -> void:
+	var coin := _sym("coin")
+	var cursed := _sym("cursed_coin")
+	_check(cursed.is_cursed() and not cursed.in_shop, "cursed coin is cursed and never sold")
+	_check(cursed.is_wild_for(coin) and not cursed.is_wild_for(_sym("sword")), "cursed coin is wild for coins only")
+	_check(not TradeRules.is_tradeable(cursed), "cursed coins can't be traded")
+	_check(cursed.win_spirit == WaveGenerator.GREED_SPIRIT, "a winning line through it brings the Greed Monster")
+	# Stronger than a ghost, weaker than two ghouls ("zombies").
+	var greed: UnitData = WaveGenerator.GREED_SPIRIT
+	var ghost: UnitData = load("res://data/units/ghost.tres")
+	var ghoul: UnitData = load("res://data/units/ghoul.tres")
+	_check(greed.max_hp > ghost.max_hp and greed.max_hp < ghoul.max_hp * 2, "Greed Monster HP between a ghost and 2 ghouls")
+	_check(greed.damage > ghost.damage and greed.damage < ghoul.damage * 2, "Greed Monster damage between a ghost and 2 ghouls")
+	# A coin line through a cursed coin wins as coins and includes its cell.
+	var grid := _grid(["coin cursed_coin coin bow sword", "bow sword bow sword bow", "sword bow sword bow sword"])
+	var wins := LineEvaluator.evaluate(grid, _lines(), GameState.machine)
+	_check(wins.size() == 1 and wins[0].symbol.id == &"coin" and wins[0].count == 3, "coin + cursed coin + coin pays as 3 coins")
+	_check(Vector2i(1, 0) in wins[0].cells, "the cursed coin is part of the winning line")
+	# Greed joins tonight's wave, then clears at nightfall.
+	GameState.start_run(GameState.castles[0])
+	GameState.add_greed(2)
+	var wave := WaveGenerator.build(1)
+	_check(wave.count(greed) == 2, "2 winning lines = 2 Greed Monsters tonight")
+	GameState.clear_curse_threat()
+	_check(GameState.greed_spirits == 0, "greed clears when the night starts")
+	# The merchant offers to banish it.
+	GameState.add_symbol(&"cursed_coin")
+	var banish := false
+	for offer in ShopCatalog.candidate_offers():
+		if offer.title == "Banish Cursed Coin":
+			banish = true
+	_check(banish, "the merchant offers to banish cursed coins")
+
+
+func test_curse_sometimes_spreads_cursed_coins() -> void:
+	GameState.start_run(GameState.castles[0])
+	GameState.night = 10
+	var seen := {}
+	for i in 60:
+		for symbol in GameState.spread_curse():
+			seen[symbol.id] = true
+	_check(seen.has(&"tombstone") and seen.has(&"cursed_coin"), "the curse spreads tombstones and sometimes cursed coins")
+	_check(not seen.has(&"purple_tombstone"), "no purple tombstones before castle 6")
+
+
+func test_zombie_miner_burrows() -> void:
+	var miner: UnitData = load("res://data/units/zombie_miner.tres")
+	_check(miner.burrower and not miner.flying and not miner.assassin, "the Zombie Miner digs (and only digs)")
+	var ghost: UnitData = load("res://data/units/ghost.tres")
+	_check(miner.max_hp > ghost.max_hp, "a miner is tougher than a ghost")
+	for i in GameState.castles.size():
+		var has_miner := false
+		for entry in GameState.castles[i].enemies:
+			if entry.unit == miner:
+				has_miner = true
+		_check(has_miner == ((i + 1) in [4, 6, 7, 8, 9, 10]), "castle %d %s Zombie Miners" % [i + 1, "has" if has_miner else "has no"])
+
+
+func test_magic_rune_limit_two_per_run() -> void:
+	MetaProgress.levels[&"rune_mastery"] = 1
+	GameState.start_run(GameState.castles[0])
+	GameState.night = 10
+	var rune := _sym("rune")
+	_check(rune.max_copies == 1, "Magic Rune: at most 1 a run")
+	_check(GameState.is_symbol_available(rune), "the merchant sells runes below the limit")
+	GameState.add_symbol(&"rune", 5)
+	_check(GameState.copies_of(&"rune") == 1, "adding 5 runes stops at 1")
+	_check(not GameState.is_symbol_available(rune), "no more runes from the merchant at the limit")
+	GameState.trade_unlocked = true
+	for mode in [TradeRules.Mode.SWAP_UP, TradeRules.Mode.SWAP_SAME]:
+		for give in TradeRules.give_options(mode):
+			_check(rune not in TradeRules.get_options(mode, give), "no runes from trades at the limit")
+	MetaProgress.levels.erase(&"rune_mastery")
+
+
+func test_one_hoard_in_three_hides_the_dragons_treasure() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	var units := [_sym("sword")]
+	var big := 0
+	var rounds := 3000
+	for i in rounds:
+		var hoard := HoardRound.new(5, 3, 3)
+		for x in 6:
+			hoard.lock(Vector2i(x % 5, x / 5), HoardPrize.roll(rng, 10, units))
+		var cell := hoard.roll_big_prize(rng, units)
+		if cell != Vector2i(-1, -1):
+			big += 1
+			var prize: HoardPrize = hoard.prizes[cell]
+			_check(prize.kind == HoardPrize.Kind.MAJOR and prize.troops >= 10 and prize.gold >= 80, "the Treasure is a big army and lots of gold")
+	var share := float(big) / rounds
+	_check(share > 0.30 and share < 0.36, "about 1 round in 3 has the Treasure (%.2f)" % share)
+	_check(HoardPrize.WEIGHTS[HoardPrize.Kind.MAJOR] == 0.0, "MAJOR only comes from the Treasure roll")
+	_use_machine(&"dragons_hoard")
+	_check(GameState.copies_of(&"chest") == 2, "Dragon's Hoard starts with 2 chests")
+
+
+func test_upgrades_need_the_symbol_or_living_troops() -> void:
+	GameState.start_run(GameState.castles[0])
+	var bow := _sym("bow")
+	var coin := _sym("coin")
+	var pike := _sym("pike")
+	_check(ShopCatalog.can_upgrade(bow) and ShopCatalog.can_upgrade(coin), "symbols on the reels can be upgraded")
+	_check(GameState.copies_of(&"pike") == 0 and not ShopCatalog.can_upgrade(pike), "no pikes, no pikemen: no Upgrade Pike")
+	while GameState.copies_of(&"bow") > 0:
+		GameState.remove_symbol(&"bow")
+	_check(not ShopCatalog.can_upgrade(bow), "bows gone and no archers: no Upgrade Bow")
+	# A living archer brings the offer back, and upgrading makes it stronger.
+	var archer: Unit = preload("res://src/battle/unit.tscn").instantiate()
+	archer.setup(bow.unit, Unit.Team.PLAYER, GameState.power_for(&"bow"), null)
+	archer.process_mode = Node.PROCESS_MODE_DISABLED  # no battlefield here: just counts as alive
+	add_child(archer)
+	_check(ShopCatalog.can_upgrade(bow), "a living archer allows Upgrade Bow")
+	var hp_before := archer.max_hp
+	ShopCatalog.upgrade_symbol_offer(bow).apply.call()
+	_check(archer.max_hp > hp_before * 1.3, "upgrading Bow makes the archer on the field stronger")
+	archer.remove_from_group(Unit.GROUP_TROOPS)
+	archer.queue_free()
+	_check(not ShopCatalog.can_upgrade(_sym("skull")), "junk is never upgraded")
+
+
+func test_hoard_has_two_respins() -> void:
+	_use_machine(&"dragons_hoard")
+	_check(GameState.feature_length() == 2, "the Hoard gives 2 respins")
+	_use_machine(&"dragons_hoard", {&"hoard_respins": 1})
+	_check(GameState.feature_length() == 3, "Greedy Dragon adds a third")
+
+
+func test_special_symbols_have_static_chances() -> void:
+	_use_machine(&"dragons_hoard")
+	var chest := _sym("chest")
+	_check(chest.static_chance > 0.0, "chests have a static chance")
+	var expected := chest.static_chance * GameState.copies_of(&"chest")
+	_check(is_equal_approx(GameState.chance_of(&"chest"), expected), "chest chance = static chance x copies")
+	GameState.add_symbol(&"coin", 20)
+	GameState.add_symbol(&"sword", 20)
+	_check(is_equal_approx(GameState.chance_of(&"chest"), expected), "more symbols on the reels don't dilute chests")
+	var hits := 0
+	var rolls := 20000
+	for i in rolls:
+		if GameState.roll_symbol() == chest:
+			hits += 1
+	_check(absf(float(hits) / rolls - expected) < 0.015, "rolls land chests at the static chance (%.3f vs %.3f)" % [float(hits) / rolls, expected])
+	var total := 0.0
+	for id: StringName in GameState.pool:
+		total += GameState.chance_of(id)
+	_check(absf(total - 1.0) < 0.001, "all chances add up to 100%")
+	for id in ["crown", "jester", "tome"]:
+		_check(_sym(id).static_chance > 0.0, "%s has a static chance" % id)
+	_check(_sym("coin").static_chance == 0.0 and _sym("rune").static_chance == 0.0, "normal symbols keep pool chances")
+
+
+func test_thin_reels_fill_with_empty_slots() -> void:
+	var cells := {&"standard": 15, &"old_cellar": 9, &"dragons_hoard": 15}
+	for id: StringName in cells:
+		_use_machine(id)
+		_check(GameState.reel_slots() == cells[id], "%s has %d cells" % [id, cells[id]])
+	_use_machine(MachineStyle.STANDARD_ID)
+	_check(GameState.empty_slots() == 0, "a fresh run has no Empty Slots")
+	_check(GameState.slot_target() == mini(15, GameState.start_symbols), "the reels keep the run's starting size (up to the cells)")
+	GameState.start_symbols = 15
+	GameState.pool.clear()
+	GameState.pool[&"coin"] = 4
+	GameState.pool[&"sword"] = 3
+	_check(GameState.empty_slots() == 8, "7 symbols on 15 cells = 8 Empty Slots")
+	_check(is_equal_approx(GameState.chance_of(GameState.EMPTY_SLOT_ID), 8.0 / 15.0), "Empty Slots land 8 times in 15")
+	var total := GameState.chance_of(GameState.EMPTY_SLOT_ID)
+	for id: StringName in GameState.pool:
+		total += GameState.chance_of(id)
+	_check(absf(total - 1.0) < 0.001, "chances with Empty Slots add up to 100%")
+	var empties := 0
+	for i in 15000:
+		if GameState.roll_symbol().id == GameState.EMPTY_SLOT_ID:
+			empties += 1
+	_check(absf(empties / 15000.0 - 8.0 / 15.0) < 0.02, "rolls land Empty Slots at their chance")
+	var grid := _grid(["empty_slot empty_slot empty_slot empty_slot empty_slot", "coin sword coin sword coin", "sword coin sword coin sword"])
+	_check(LineEvaluator.evaluate(grid, _lines(), GameState.machine).is_empty(), "a line of Empty Slots never wins")
+	GameState.pool[&"coin"] = 20
+	_check(GameState.empty_slots() == 0 and GameState.chance_of(GameState.EMPTY_SLOT_ID) == 0.0, "full reels have no Empty Slots")
+	_check(not ShopCatalog.can_upgrade(_sym("empty_slot")) and not _sym("empty_slot").in_shop, "Empty Slots are never sold or upgraded")
+
+
+func test_hungry_machine_and_floor() -> void:
+	_use_machine(MachineStyle.STANDARD_ID)
+	GameState.pool.clear()
+	GameState.pool[&"coin"] = 6
+	GameState.pool[&"sword"] = 4
+	_check(GameState.hunger() == 0, "10 symbols: the machine is fed")
+	GameState.pool[&"sword"] = 1
+	_check(GameState.hunger() == 3 * GameState.HUNGER_PER_MISSING, "7 symbols: +2 spirits per missing symbol each spin")
+	GameState.pool[&"sword"] = 4
+	GameState.pool[&"skull"] = 2
+	GameState.trade_unlocked = true
+	GameState.gold = 999
+	var removable := TradeRules.give_options(TradeRules.Mode.REMOVE)
+	_check(_sym("skull") in removable, "skulls can always be removed")
+	GameState.pool.erase(&"skull")
+	_check(TradeRules.give_options(TradeRules.Mode.REMOVE).is_empty(), "good symbols stop at 10")
+	_check(Battlefield.GHOST_SPAWN_FACTOR < 1.0, "ghosts spawn faster than other spirits")
+
+
+func test_curse_spreads_two_from_night_five() -> void:
+	GameState.start_run(GameState.castles[0])
+	GameState.night = 4
+	_check(GameState.spread_curse().size() == GameState.castle.curses_per_dawn, "before night 5: the castle's usual curse")
+	GameState.night = 5
+	var added := GameState.spread_curse()
+	_check(added.size() == 2, "from night 5: 2 cursed symbols every dawn")
+	for symbol in added:
+		_check(symbol.id in [&"tombstone", &"cursed_coin"], "each is a Tombstone or a Cursed Coin")
+
+
+func test_orc_catapult_and_exploding_miners() -> void:
+	var catapult: UnitData = load("res://data/units/orc_catapult.tres")
+	_check(catapult.siege and catapult.is_ranged() and catapult.splash_radius > 0.0, "the catapult lobs splash shots")
+	_check(catapult.attack_range >= 100.0, "the catapult shoots from far away")
+	var miner: UnitData = load("res://data/units/zombie_miner.tres")
+	_check(miner.death_damage > 0.0 and miner.death_radius > 0.0, "Zombie Miners explode on death")
+	for i in GameState.castles.size():
+		var has := false
+		for entry in GameState.castles[i].enemies:
+			if entry.unit == catapult:
+				has = true
+		_check(has == (i >= 7), "castle %d %s Orc Catapults" % [i + 1, "has" if has else "has no"])
+
+
+func test_horde_grows_exponentially_and_with_the_army() -> void:
+	var first := GameState.castles[0]
+	var last := GameState.castles[9]
+	_check(first.wave_growth == 1.0 and first.army_threat == 0.0, "Willowdale stays as it was")
+	for i in range(1, GameState.castles.size()):
+		var castle := GameState.castles[i]
+		var before := GameState.castles[i - 1]
+		_check(castle.wave_growth >= before.wave_growth and castle.army_threat >= before.army_threat,
+			"%s grows at least as fast as %s" % [castle.id, before.id])
+	GameState.start_run(last)
+	var night5 := WaveGenerator.threat_for(5)
+	var night10 := WaveGenerator.threat_for(10)
+	_check(night10 > night5 * 2, "the Ashen Throne horde more than doubles from night 5 to 10 (%d -> %d)" % [night5, night10])
+	_check(night10 <= roundi(last.budget_for(10) * WaveGenerator.THREAT_MULTIPLIER * WaveGenerator.MAX_GROWTH) + 1, "growth is capped")
+	_check(WaveGenerator.threat_for(5, 100) == night5 + WaveGenerator.army_extra(100), "a 100-troop army adds its threat")
+	_check(WaveGenerator.army_extra(100) == roundi(80 * last.army_threat), "80 troops over the line x army threat")
+	_check(WaveGenerator.army_extra(15) == 0, "small armies add nothing")
+	var wave := WaveGenerator.build(10, 100)
+	_check(wave.size() < 200, "huge budgets buy heavier spirits, not endless swarms (%d spirits)" % wave.size())

@@ -263,20 +263,20 @@ UNITS = {
         ".....kkk.kkk....",
     ],
     "knight": [
-        ".....rr.........",
-        "....rRrkkk......",
-        "....kkggggk.....",
-        "....kgwgggGk....",
-        "....kgkkkkGk....",
-        "....kggggGGk....",
-        "...kkkggggkk.kk.",
-        "..kGgggggggGkgk.",
-        ".knnkggggggGkgk.",
-        ".knYnkgggggGkgk.",
-        ".knnnkgggggkYYYk",
-        "..knk.kgGgGk.k..",
-        "...k..kgGgGk....",
-        "......kgkkgk....",
+        "......rr........",
+        ".....rRrr.......",
+        "....kkkkkk......",
+        "...kgwgggGk.....",
+        "...kgggggGk..k..",
+        "...kkkkkkGk.kwk.",
+        "...kgGgGgGk.kwk.",
+        "...kkggggkk.kwk.",
+        ".kkkkgwgggGkkwk.",
+        "knyynkgggggGYYYk",
+        "kyyyykgggggGksk.",
+        "knyynkYYYYYk....",
+        ".knnk.kgGgGk....",
+        "..kk..kgk.kgk...",
         ".....kGGk.kGGk..",
         ".....kkkk.kkkk..",
     ],
@@ -304,6 +304,60 @@ UNITS = {
 # Evil spirits (16x16, facing left)
 # --------------------------------------------------------------------------
 ENEMIES = {
+    "orc_catapult": [
+        "................",
+        "..kkk...........",
+        ".kGGGk..........",
+        ".kbbbk..........",
+        "..kbbbk.........",
+        "....kbbk...kkk..",
+        ".....kbbk.kLlLk.",
+        "......kbbkkleLk.",
+        "...kkkkkbbkkLLk.",
+        "..kbbbbbbbbkRRk.",
+        "..kBkkkkkkBkRRk.",
+        "..kbk....kbklLk.",
+        ".kkkkkkkkkkkkkk.",
+        ".kBBBBBBBBBBBBk.",
+        "..kGk.....kGk...",
+        "...k.......k....",
+    ],
+    "zombie_miner": [
+        "................",
+        ".......kkkkk....",
+        "......kyYyyyk...",
+        "....kwkYyyyyyk..",
+        "......kkkkkkkk..",
+        "kGGGk.kleLllk...",
+        ".kbk..klllkLk...",
+        "..kbk..kLLLk....",
+        "...kbkkBBBBBk...",
+        "....klkBbBBBBk..",
+        ".....kkBBBBBBk..",
+        "......kNNkNNk...",
+        "......kNNkNNk...",
+        "......kLk.kLk...",
+        ".....kBBk.kBBk..",
+        ".....kkkk.kkkk..",
+    ],
+    "greed_monster": [
+        "................",
+        ".....kkkkkk.....",
+        "....kpppppPk....",
+        "...kppeppepPk...",
+        "...kppppppppk...",
+        "..kpkkkkkkkpPk..",
+        "..kpkyYyYykpPk..",
+        "..kpkwkwkwkpPk..",
+        ".kkppppppppppPk.",
+        "kyykpppppppppkyk",
+        "kyYkpppppppppkYk",
+        ".kk.kppppppPPk..",
+        "....kpPpppPpPk..",
+        "....kpk..kpk....",
+        "...kYYk..kYYk...",
+        "...kkkk..kkkk...",
+    ],
     "ghost": [
         "................",
         ".....kkkkkk.....",
@@ -953,6 +1007,9 @@ ENEMY_VARIANTS = {
     "imp": lambda: recolor(ENEMIES["wraith"], {"P": "R", "p": "r", "g": "y", "e": "y"}),
     "demon": lambda: recolor(ENEMIES["ghoul"], {"l": "r", "L": "R", "B": "k", "b": "B", "e": "y", "w": "y"}),
     "demon_lord": lambda: recolor(ENEMIES["lich"], {"P": "R", "p": "r", "w": "o", "c": "y", "y": "o", "e": "y"}),
+    "rune_warden": lambda: recolor(ENEMIES["ghoul"], {"l": "c", "L": "n", "B": "G", "b": "c", "e": "w", "w": "c"}),
+    "dread_howler": lambda: recolor(ENEMIES["ghost"], {"m": "r", "M": "R", "e": "y"}),
+    "shade_assassin": lambda: recolor(ENEMIES["wraith"], {"P": "G", "p": "k", "g": "r", "e": "r"}),
 }
 
 HOLY_SYMBOL = [
@@ -1027,6 +1084,53 @@ TOMBSTONE_SYMBOL = [
     ".kkkkkkkkkkkkkk.",
     "................",
 ]
+
+
+def cursed_coin() -> Image.Image:
+    """A Gold Coin gone bad: tarnished purple-gold with a glowing red eye."""
+    rows = recolor(SYMBOLS["coin"], {"y": "p", "Y": "P", "w": "c"})
+    img = from_map("cursed_coin", rows)
+    for x, y in [(7, 7), (8, 7), (7, 8), (8, 8)]:
+        img.putpixel((x, y), PALETTE["e"])
+    for x, y in [(6, 6), (9, 6), (6, 9), (9, 9)]:
+        img.putpixel((x, y), PALETTE["y"])
+    return img
+
+
+BOULDER = [
+    ".kkk.",
+    "kGgGk",
+    "kgGGk",
+    "kGGGk",
+    ".kkk.",
+]
+
+
+def empty_slot() -> Image.Image:
+    """A blank reel slot: dark recess with a dashed outline (pays nothing)."""
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    dark = (40, 32, 44, 255)
+    dash = (110, 96, 110, 255)
+    for y in range(2, 14):
+        for x in range(2, 14):
+            img.putpixel((x, y), dark)
+    for i in range(2, 14):
+        if i % 3 != 1:
+            for x, y in [(i, 2), (i, 13), (2, i), (13, i)]:
+                img.putpixel((x, y), dash)
+    return img
+
+
+def purple_tombstone() -> Image.Image:
+    """The Tombstone recoloured in cursed purple (worth double the curse)."""
+    img = from_map("tombstone", TOMBSTONE_SYMBOL)
+    stone = {"g": (150, 70, 190, 255), "G": (95, 40, 130, 255), "w": (230, 180, 255, 255),
+             "e": (255, 90, 220, 255), "L": (70, 45, 85, 255), "l": (110, 70, 130, 255)}
+    for y, row in enumerate(TOMBSTONE_SYMBOL):
+        for x, ch in enumerate(row):
+            if ch in stone:
+                img.putpixel((x, y), stone[ch])
+    return img
 
 
 def mage_tower() -> Image.Image:
@@ -1764,6 +1868,10 @@ def main() -> None:
     save(crossbow_symbol(), "symbols/crossbow.png")
     save(fire_orb(), "projectiles/fire_orb.png")
     save(from_map("tombstone", TOMBSTONE_SYMBOL), "symbols/tombstone.png")
+    save(purple_tombstone(), "symbols/purple_tombstone.png")
+    save(empty_slot(), "symbols/empty_slot.png")
+    save(from_map("boulder", BOULDER, 5), "projectiles/boulder.png")
+    save(cursed_coin(), "symbols/cursed_coin.png")
     save(quiver_symbol(), "symbols/quiver.png")
     save(banner_symbol(), "symbols/banner.png")
     save(sigil_symbol(), "symbols/sigil.png")
@@ -1784,6 +1892,19 @@ if __name__ == "__main__":
     import sys
     if sys.argv[1:] == ["machines"]:
         machine_art()  # only the machine symbols, icons and cabinet skins
+    elif sys.argv[1:] == ["orc_catapult"]:
+        save(from_map("orc_catapult", ENEMIES["orc_catapult"]), "enemies/orc_catapult.png")
+        save(from_map("boulder", BOULDER, 5), "projectiles/boulder.png")
+    elif sys.argv[1:] == ["empty_slot"]:
+        save(empty_slot(), "symbols/empty_slot.png")
+    elif sys.argv[1:] == ["purple_tombstone"]:
+        save(purple_tombstone(), "symbols/purple_tombstone.png")
+    elif sys.argv[1:] == ["curse_art"]:  # Cursed Coin, Greed Monster and the Knight
+        save(cursed_coin(), "symbols/cursed_coin.png")
+        save(from_map("greed_monster", ENEMIES["greed_monster"]), "enemies/greed_monster.png")
+        save(from_map("knight", UNITS["knight"]), "units/knight.png")
+    elif sys.argv[1:] == ["zombie_miner"]:
+        save(from_map("zombie_miner", ENEMIES["zombie_miner"]), "enemies/zombie_miner.png")
     elif sys.argv[1:] == ["ui"]:
         for rel_path, build in ui_kit().items():  # only the button and panel kit
             save(build(), rel_path)

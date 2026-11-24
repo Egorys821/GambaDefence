@@ -52,6 +52,7 @@ func _ready() -> void:
 	$Overlay.add_child(_tutorial)
 	$Overlay.move_child(_tutorial, 0)
 	_forge.settings_pressed.connect(_settings.open)
+	GameState.mechanic_triggered.connect(_on_mechanic_triggered)
 	_settings.quit_run_requested.connect(_on_quit_run_requested)
 	_day_phase.hide()
 	_hud.hide()
@@ -72,6 +73,11 @@ func _ready() -> void:
 		MetaProgress.save_progress()
 		await _message.confirmed
 		Audio.play(&"click")
+	if GameState.open_forge_next:
+		# "Upgrade Tree" on the results screen: forge first, then the menu.
+		GameState.open_forge_next = false
+		_forge.open()
+		await _forge.closed
 	_main_menu_loop()
 
 
@@ -152,6 +158,11 @@ func _start_day() -> void:
 
 
 func _start_night() -> void:
+	# First time a big army draws a bigger horde: explain it before the night.
+	if WaveGenerator.army_extra(_battlefield.get_troops().size()) > 0:
+		_on_mechanic_triggered(&"horde")
+		if _message.visible:
+			await _message.confirmed
 	Audio.play(&"night_start")
 	Audio.play_music(&"night")
 	await _day_phase.slide_out()
@@ -196,9 +207,11 @@ Every castle in the kingdom is free. You are a legend!"
 		subtitle += "
 Upkeep unpaid! Troops fight at %d%% strength." % roundi(_battlefield.morale * 100.0)
 	var curses := GameState.spread_curse()
-	if curses > 0:
-		subtitle += "
-The curse spreads: +%d Tombstone on the reels!" % curses
+	if not curses.is_empty():
+		var names: Array[String] = []
+		for symbol in curses:
+			names.append(symbol.display_name)
+		subtitle += "\nThe curse spreads: +%s on the reels!" % ", ".join(names)
 	if dawn_heal > 0 and not GameState.is_castle_full():
 		GameState.repair_castle(dawn_heal)
 		subtitle += "  +%d castle HP" % dawn_heal
@@ -226,6 +239,33 @@ func _on_quit_run_requested() -> void:
 	_finish_run(false, "Run Abandoned", "You left %s on night %d." % [GameState.castle.display_name, GameState.night])
 
 
+## The first time a thin-reels rule kicks in, explain it (once per save, not
+## during the tutorial run).
+func _on_mechanic_triggered(id: StringName) -> void:
+	if id in MetaProgress.seen_tips or not MetaProgress.tutorial_done or _message.visible or _run_over:
+		return
+	MetaProgress.seen_tips.append(id)
+	MetaProgress.save_progress()
+	match id:
+		&"empty_slots":
+			_message.show_message("Empty Slots",
+				("Your reels should hold %d symbols (this machine has %d cells), but they hold only %d.\n\n"
+				+ "Every missing symbol spins as an EMPTY SLOT that pays nothing. Buy symbols at the merchant to fill the reels.\n\n"
+				+ "With fewer than %d symbols the machine starts to hunger...")
+				% [GameState.slot_target(), GameState.reel_slots(), GameState.pool_total(), GameState.HUNGER_BELOW], "Got it")
+		&"horde":
+			_message.show_message("The Horde Answers",
+				("Your army is big: %d troops. In %s every troop above %d draws more spirits to the night, "
+				+ "and the horde grows a little bigger every night.\n\nA huge army now faces a huge horde - spend wisely!")
+				% [_battlefield.get_troops().size(), GameState.castle.display_name, WaveGenerator.ARMY_FREE_TROOPS], "To battle")
+		&"hunger":
+			_message.show_message("The Machine Hungers!",
+				("Your reels hold only %d symbols. Below %d, every spin angers the machine: "
+				+ "+%d spirits tonight for each missing symbol, and ghosts rush in much faster.\n\n"
+				+ "Keep your reels full! The Trading Post won't remove good symbols below %d.")
+				% [GameState.pool_total(), GameState.HUNGER_BELOW, GameState.HUNGER_PER_MISSING, GameState.MIN_KEPT_SYMBOLS], "Got it")
+
+
 ## Shows the results, awards Chrono Shards and returns to the Time Forge.
 func _finish_run(victory: bool, title: String, story: String) -> void:
 	_run_over = true
@@ -242,8 +282,9 @@ func _finish_run(victory: bool, title: String, story: String) -> void:
 		var machine := GameState.machine_reward(GameState.castle)
 		if machine:
 			body += "\nThe %s slot machine can now be bought with Crowns." % machine.display_name
-	_message.show_message(title, body, "Back to menu")
+	_message.show_message(title, body, "Back to menu", "Upgrade Tree")
 	await _message.confirmed
 	Audio.play(&"click")
+	GameState.open_forge_next = _message.chose_alt
 	GameState.reset()
 	get_tree().reload_current_scene()

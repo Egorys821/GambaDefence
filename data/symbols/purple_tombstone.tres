@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SymbolData" format=3]
+
+[ext_resource type="Script" path="res://src/data/symbol_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/purple_tombstone.png" id="2_tex"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"purple_tombstone"
+display_name = "Purple Tombstone"
+texture = ExtResource("2_tex")
+description = "DOUBLE CURSE: each one that lands adds 2 spirits to tonight, and a line adds a double group. From castle 6 on, the curse spreads these every dawn - banish them first!"
+effect = 5
+power = 8
+passive_threat = 2
+in_shop = false
+shop_cost = 0
+min_night = 1

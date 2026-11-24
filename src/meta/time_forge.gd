@@ -32,7 +32,7 @@ const BRANCHES := {
 	UpgradeData.Category.MACHINE: "All Machines",
 	UpgradeData.Category.MACHINES: "Machines and their upgrades",
 }
-const HINT := "Machine: %s.  Forge an upgrade to open the ones below it.  Crown nodes cost Crowns from conquered castles.  Wheel: zoom, drag: move."
+const HINT := "Machine: %s.  Double-click: forge.  Double right-click: refund it and everything below.  Wheel: zoom, drag: move."
 const TAB_ON := Color("#f8d038")
 const TAB_OFF := Color(0.75, 0.7, 0.62)
 const LINE_OWNED := Color("#c08820")
@@ -132,6 +132,9 @@ func _build_tree() -> void:
 		var node := UpgradeNode.new(upgrade)
 		node.position = _cell_center(upgrade) - UpgradeNode.NODE_SIZE * 0.5
 		node.pressed.connect(_select.bind(upgrade))
+		node.right_clicked.connect(_select.bind(upgrade))
+		node.forge_requested.connect(_forge_node.bind(upgrade))
+		node.refund_requested.connect(_refund_node.bind(upgrade))
 		_tree.add_child(node)
 		_nodes.append(node)
 	# Branch titles above each group of roots (windows with several categories).
@@ -322,15 +325,70 @@ func _on_use_pressed() -> void:
 
 
 func _on_buy_pressed() -> void:
-	if _selected == null or not MetaProgress.buy(_selected):
+	if _selected:
+		_forge_node(_selected)
+
+
+## Buys one level (Forge button or double-click).
+func _forge_node(upgrade: UpgradeData) -> void:
+	_selected = upgrade
+	if not MetaProgress.buy(upgrade):
 		Audio.play(&"denied")
+		_refresh()
 		return
 	Audio.play(&"buy")
+	var node := _node_for(upgrade)
+	if node:
+		node.pivot_offset = node.size * 0.5
+		Fx.pop(node, 1.25, 0.25)
+		Fx.burst(_tree, node.position + node.size * 0.5, Color("#60d8f8"), 18, 80.0)
+
+
+## Double right-click: gives back everything spent on this node and the ones below it.
+func _refund_node(upgrade: UpgradeData) -> void:
+	_selected = upgrade
+	var refund := MetaProgress.refund_subtree(upgrade)
+	if refund["shards"] == 0 and refund["crowns"] == 0:
+		Audio.play(&"denied")
+		_refresh()
+		return
+	Audio.play(&"coin")
+	var parts: Array[String] = []
+	if refund["shards"] > 0:
+		parts.append("+%d shards" % refund["shards"])
+	if refund["crowns"] > 0:
+		parts.append("+%d crown%s" % [refund["crowns"], "" if refund["crowns"] == 1 else "s"])
+	var node := _node_for(upgrade)
+	if node:
+		var center := node.position + node.size * 0.5
+		Fx.burst(_tree, center, Color("#f8d038"), 14, 60.0)
+		_float_text(center + Vector2(0, -26), "Refunded " + ", ".join(parts))
+
+
+func _node_for(upgrade: UpgradeData) -> UpgradeNode:
 	for node in _nodes:
-		if node.upgrade == _selected:
-			node.pivot_offset = node.size * 0.5
-			Fx.pop(node, 1.25, 0.25)
-			Fx.burst(_tree, node.position + node.size * 0.5, Color("#60d8f8"), 18, 80.0)
+		if node.upgrade == upgrade:
+			return node
+	return null
+
+
+## Short text rising over the tree, then fading.
+func _float_text(at: Vector2, text: String) -> void:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", 8)
+	label.add_theme_color_override("font_color", Color("#f8d038"))
+	label.add_theme_color_override("font_outline_color", Color.BLACK)
+	label.add_theme_constant_override("outline_size", 3)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.size = Vector2(160, 12)
+	label.position = at - Vector2(80, 6)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tree.add_child(label)
+	var tween := label.create_tween()
+	tween.tween_property(label, "position:y", label.position.y - 14, 1.0)
+	tween.parallel().tween_property(label, "modulate:a", 0.0, 1.0).set_delay(0.4)
+	tween.tween_callback(label.queue_free)
 
 
 func _on_back_pressed() -> void:

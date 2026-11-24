@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SymbolData" format=3]
+
+[ext_resource type="Script" path="res://src/data/symbol_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/cursed_coin.png" id="2_tex"]
+[ext_resource type="Resource" path="res://data/symbols/coin.tres" id="3_coin"]
+[ext_resource type="Resource" path="res://data/units/greed_monster.tres" id="4_greed"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"cursed_coin"
+display_name = "Cursed Coin"
+texture = ExtResource("2_tex")
+description = "CURSED: wild for Gold Coins, so it helps coin lines pay... but every winning line through it brings a Greed Monster to tonight's wave. The curse spreads it sometimes instead of a Tombstone - banish it!"
+effect = 4
+wild_for = Array[ExtResource("1_script")]([ExtResource("3_coin")])
+cursed = true
+win_spirit = ExtResource("4_greed")
+power = 5
+passive_gold = 0
+in_shop = false
+shop_cost = 0
+min_night = 1

@@ -23,6 +23,9 @@
 [ext_resource type="Resource" path="res://data/units/ghost.tres" id="unit_ghost"]
 [ext_resource type="Resource" path="res://data/units/ghoul.tres" id="unit_ghoul"]
 [ext_resource type="Resource" path="res://data/units/wraith.tres" id="unit_wraith"]
+[ext_resource type="Resource" path="res://data/units/rune_warden.tres" id="unit_rune_warden"]
+[ext_resource type="Resource" path="res://data/units/dread_howler.tres" id="unit_dread_howler"]
+[ext_resource type="Resource" path="res://data/units/shade_assassin.tres" id="unit_shade_assassin"]
 
 [sub_resource type="Resource" id="pool_0"]
 script = ExtResource("pool_script")
@@ -74,6 +77,24 @@ unit = ExtResource("unit_ghoul")
 cost = 3
 first_night = 6
 
+[sub_resource type="Resource" id="spawn_rune_warden"]
+script = ExtResource("spawn_script")
+unit = ExtResource("unit_rune_warden")
+cost = 3
+first_night = 5
+
+[sub_resource type="Resource" id="spawn_dread_howler"]
+script = ExtResource("spawn_script")
+unit = ExtResource("unit_dread_howler")
+cost = 4
+first_night = 6
+
+[sub_resource type="Resource" id="spawn_shade_assassin"]
+script = ExtResource("spawn_script")
+unit = ExtResource("unit_shade_assassin")
+cost = 4
+first_night = 7
+
 [resource]
 script = ExtResource("castle_script")
 id = &"frostpeak"
@@ -87,11 +108,13 @@ layout = ExtResource("layout")
 starting_pool = Array[ExtResource("pool_script")]([SubResource("pool_0"), SubResource("pool_1"), SubResource("pool_2"), SubResource("pool_3")])
 merchant_symbols = Array[ExtResource("symbol_script")]([ExtResource("sym_coin"), ExtResource("sym_sword"), ExtResource("sym_bow"), ExtResource("sym_pike"), ExtResource("sym_crossbow"), ExtResource("sym_hammer"), ExtResource("sym_helm"), ExtResource("sym_staff"), ExtResource("sym_quiver"), ExtResource("sym_banner"), ExtResource("sym_sigil")])
 payline_tier = 2
-enemies = Array[ExtResource("spawn_script")]([SubResource("spawn_0"), SubResource("spawn_1"), SubResource("spawn_2"), SubResource("spawn_3"), SubResource("spawn_4")])
+enemies = Array[ExtResource("spawn_script")]([SubResource("spawn_0"), SubResource("spawn_1"), SubResource("spawn_2"), SubResource("spawn_3"), SubResource("spawn_4"), SubResource("spawn_rune_warden"), SubResource("spawn_dread_howler"), SubResource("spawn_shade_assassin")])
 boss = ExtResource("unit_frost_king")
 budget_base = 1
 budget_per_night = 3
 budget_ramp_divisor = 6
+wave_growth = 1.05
+army_threat = 0.2
 power_base = 1.1
 power_per_night = 0.15
 spawn_interval = 1.4

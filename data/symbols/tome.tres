@@ -12,6 +12,7 @@ description = "Wild for any symbol AND scatter: Tomes on 3 reels pay gold and st
 effect = 4
 power = 4
 is_scatter = true
+static_chance = 0.07
 in_shop = true
 max_copies = 1
 shop_cost = 14

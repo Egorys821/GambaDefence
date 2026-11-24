@@ -52,6 +52,9 @@ const MIN_MORALE := 0.5
 ## (they still fight the nearest one rather than all rushing the boss).
 const BOSS_AGGRO_MULTIPLIER := 2.5
 
+## Ghosts arrive this much faster than the night's spawn interval.
+const GHOST_SPAWN_FACTOR := 0.4
+
 var is_night := false
 ## The terrain this castle is fought on, and its walking grid.
 var layout: BattleLayout
@@ -175,8 +178,10 @@ func _process(delta: float) -> void:
 	if not _spawn_queue.is_empty():
 		_spawn_timer -= delta
 		if _spawn_timer <= 0.0:
-			_spawn_enemy(_spawn_queue.pop_front())
-			_spawn_timer = _spawn_interval
+			var data: UnitData = _spawn_queue.pop_front()
+			_spawn_enemy(data)
+			# Ghosts (and the curse's ghosts) rush in much faster than other spirits.
+			_spawn_timer = _spawn_interval * (GHOST_SPAWN_FACTOR if data == WaveGenerator.CURSE_SPIRIT else 1.0)
 	elif _enemies_alive <= 0:
 		_end_night()
 
@@ -287,7 +292,7 @@ func _on_troop_died(_troop: Unit) -> void:
 # --- Night ------------------------------------------------------------------
 
 func start_night(night: int) -> void:
-	_spawn_queue = WaveGenerator.build(night)
+	_spawn_queue = WaveGenerator.build(night, get_troops().size())
 	GameState.clear_curse_threat()
 	_spawn_interval = WaveGenerator.spawn_interval(night)
 	_enemy_power = WaveGenerator.enemy_power(night)
@@ -317,10 +322,10 @@ func _end_night() -> void:
 	night_cleared.emit()
 
 
-func _spawn_enemy(data: UnitData) -> void:
+func _spawn_enemy(data: UnitData, at: Vector2 = Vector2.INF) -> void:
 	var enemy: Unit = UNIT_SCENE.instantiate()
 	enemy.setup(data, Unit.Team.ENEMY, _enemy_power, self)
-	enemy.position = _spawn_point()
+	enemy.position = _spawn_point() if at == Vector2.INF else at
 	enemy.died.connect(_on_enemy_died)
 	if data.is_boss:
 		_bosses_alive += 1
@@ -328,6 +333,25 @@ func _spawn_enemy(data: UnitData) -> void:
 	enemy.play_rise()
 	_enemies_alive += 1
 	_emit_status()
+
+
+## A boss calls `count` random non-boss spirits from this castle's roster
+## to rise around it.
+func summon_escorts(boss: Unit, count: int) -> void:
+	if not is_night:
+		return
+	var roster: Array[UnitData] = []
+	for entry in GameState.castle.enemies:
+		if not entry.unit.is_boss:
+			roster.append(entry.unit)
+	if roster.is_empty():
+		return
+	for i in count:
+		var spot := boss.position + Vector2(randf_range(-24.0, 24.0), randf_range(-6.0, 14.0))
+		spot = spot.clamp(FIELD.position, FIELD.end)
+		_spawn_enemy(roster.pick_random(), nav.nearest_free(spot) if nav else spot)
+	Fx.burst(_effects, boss.get_aim_point(), Color("#c060ff"), 18, 60.0)
+	Audio.play(&"magic", 0.7, -4.0, 0.1)
 
 
 ## A random open spot in one of the layout's graveyards (bigger ones more often).
@@ -479,6 +503,54 @@ func priority_target(troop: Unit) -> Unit:
 	return best
 
 
+## Where a siege engine aims: the troop closest to the middle of the army in
+## range, where melee troops count three times (they pull the shot towards
+## them). Null when no troop is within `max_distance`.
+func siege_target(from: Vector2, max_distance: float) -> Unit:
+	var in_range: Array[Unit] = []
+	var center := Vector2.ZERO
+	var weights := 0.0
+	for troop in get_troops():
+		if troop.is_dead or from.distance_to(troop.position) > max_distance:
+			continue
+		var weight := 1.0 if troop.data.is_ranged() or troop.data.is_healer() else 3.0
+		center += troop.position * weight
+		weights += weight
+		in_range.append(troop)
+	if in_range.is_empty():
+		return null
+	center /= weights
+	var best: Unit = null
+	var best_distance := INF
+	for troop in in_range:
+		var distance := troop.position.distance_to(center)
+		if distance < best_distance:
+			best = troop
+			best_distance = distance
+	return best
+
+
+## The ranged troop or healer (the back row) nearest to `from`; any troop
+## if none are left. Null when nothing is within `max_distance`.
+func back_row_troop(from: Vector2, max_distance: float = INF) -> Unit:
+	var best: Unit = null
+	var best_distance := max_distance
+	var fallback: Unit = null
+	var fallback_distance := max_distance
+	for troop in get_troops():
+		if troop.is_dead:
+			continue
+		var distance := from.distance_to(troop.position)
+		if troop.data.is_ranged() or troop.data.is_healer():
+			if distance <= best_distance:
+				best = troop
+				best_distance = distance
+		elif distance <= fallback_distance:
+			fallback = troop
+			fallback_distance = distance
+	return best if best != null else fallback
+
+
 ## Troop missing the most HP within `max_distance`, or null if all are healthy.
 func most_wounded_troop(from: Vector2, max_distance: float) -> Unit:
 	var best: Unit = null
@@ -496,21 +568,23 @@ func effects_layer() -> Node2D:
 	return _effects
 
 
-func fire_projectile(from: Vector2, target, damage: float, texture: Texture2D, splash: float, team: Unit.Team) -> void:
+## `magic` = magic damage (reduced by UnitData.magic_resist).
+func fire_projectile(from: Vector2, target, damage: float, texture: Texture2D, splash: float, team: Unit.Team, magic: bool = false) -> void:
 	var projectile: Projectile = PROJECTILE_SCENE.instantiate()
 	projectile.setup(self, from, target, damage, texture, splash, team)
+	projectile.magic = magic
 	_projectiles.add_child(projectile)
 
 
 ## Damages every opponent of `attacker_team` within `radius` of `point`.
-func damage_area(point: Vector2, radius: float, damage: float, attacker_team: Unit.Team, exclude = null) -> void:
+func damage_area(point: Vector2, radius: float, damage: float, attacker_team: Unit.Team, exclude = null, magic: bool = false) -> void:
 	var group := Unit.GROUP_ENEMIES if attacker_team == Unit.Team.PLAYER else Unit.GROUP_TROOPS
 	for node in get_tree().get_nodes_in_group(group):
 		var unit := node as Unit
-		if unit == exclude or unit.is_dead:
-			continue
+		if unit == exclude or unit.is_dead or not unit.is_active():
+			continue  # rising or burrowed spirits can't be hit
 		if unit.get_aim_point().distance_to(point) <= radius:
-			unit.take_damage(damage)
+			unit.take_damage(damage, magic)
 	var burst := BurstEffect.new()
 	burst.position = point
 	burst.radius = radius

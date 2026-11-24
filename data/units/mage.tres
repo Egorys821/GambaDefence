@@ -21,4 +21,5 @@ splash_radius = 22.0
 gold_reward = 0
 attack_sound = &"magic"
 death_sound = &"troop_death"
-upkeep = 2.0
+upkeep = 4.0
+magic_damage = true

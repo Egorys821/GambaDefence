@@ -69,6 +69,8 @@ func rebuild() -> void:
 
 	var ids: Array = GameState.pool.keys()
 	ids.sort_custom(func(a: StringName, b: StringName) -> bool: return GameState.copies_of(a) > GameState.copies_of(b))
+	if GameState.empty_slots() > 0:
+		ids.append(GameState.EMPTY_SLOT_ID)  # thin reels: blanks fill the missing cells
 	for id: StringName in ids:
 		var row := _symbol_row(GameState.get_symbol(id))
 		_rows[id] = row
@@ -106,7 +108,7 @@ func _symbol_row(symbol: SymbolData) -> Control:
 	row.add_theme_constant_override("separation", 3)
 	row.mouse_filter = Control.MOUSE_FILTER_PASS
 	row.tooltip_text = "%s (level %d) - %d on the reels\n%s" % [
-		symbol.display_name, level, GameState.copies_of(symbol.id), symbol.description]
+		symbol.display_name, level, GameState.reel_copies(symbol.id), symbol.description]
 
 	var icon := TextureRect.new()
 	icon.texture = symbol.texture
@@ -116,7 +118,7 @@ func _symbol_row(symbol: SymbolData) -> Control:
 	icon.mouse_filter = Control.MOUSE_FILTER_PASS
 	row.add_child(icon)
 	# Badge: how many copies are on the reels.
-	var copies := _label("x%d" % GameState.copies_of(symbol.id), 6, Color.WHITE)
+	var copies := _label("x%d" % GameState.reel_copies(symbol.id), 6, Color.WHITE)
 	copies.add_theme_color_override("font_outline_color", Color.BLACK)
 	copies.add_theme_constant_override("outline_size", 3)
 	copies.position = Vector2(7, 7)

@@ -18,9 +18,9 @@ enum Mode { SWAP_UP, SWAP_SAME, REMOVE }
 const UNLOCK_COST := 20
 ## Fixed price of each trade (before the Haggling discount).
 const COSTS := {
-	Mode.SWAP_UP: 6,
-	Mode.SWAP_SAME: 3,
-	Mode.REMOVE: 5,
+	Mode.SWAP_UP: 60,
+	Mode.SWAP_SAME: 30,
+	Mode.REMOVE: 50,
 }
 ## Copies given in each trade.
 const GIVE_COUNT := {
@@ -28,12 +28,10 @@ const GIVE_COUNT := {
 	Mode.SWAP_SAME: 1,
 	Mode.REMOVE: 1,
 }
-## Removing stops when the reels would hold fewer symbols than this.
-const MIN_REEL_SYMBOLS := 6
 
 const NAMES := {
-	Mode.SWAP_UP: "Swap Up",
-	Mode.SWAP_SAME: "Swap",
+	Mode.SWAP_UP: "Upgrade",
+	Mode.SWAP_SAME: "Replace",
 	Mode.REMOVE: "Remove",
 }
 const HINTS := {
@@ -54,7 +52,7 @@ static func unlock_cost() -> int:
 
 ## Skulls and Tombstones can be removed, never traded for something better.
 static func is_tradeable(symbol: SymbolData) -> bool:
-	return not symbol.is_junk() and symbol.effect != SymbolData.Effect.CURSE
+	return not symbol.is_junk() and not symbol.is_cursed() and not GameState.is_special_symbol(symbol)
 
 
 ## Owned symbols the player can give in this mode (that also have something to get).
@@ -65,7 +63,9 @@ static func give_options(mode: Mode) -> Array[SymbolData]:
 		if symbol == null or GameState.copies_of(id) < GIVE_COUNT[mode]:
 			continue
 		if mode == Mode.REMOVE:
-			if GameState.pool_total() > MIN_REEL_SYMBOLS:
+			# Junk and curses can always go; good symbols stop at the floor.
+			var junk := symbol.is_junk() or symbol.is_cursed()
+			if not GameState.is_special_symbol(symbol) and (junk or GameState.pool_total() > GameState.min_kept_symbols()):
 				result.append(symbol)
 		elif is_tradeable(symbol) and not get_options(mode, symbol).is_empty():
 			result.append(symbol)

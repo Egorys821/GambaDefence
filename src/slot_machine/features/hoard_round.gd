@@ -10,11 +10,18 @@ const BASE_CHEST_CHANCE := 0.07
 const BASE_CELLS := 15
 ## Hoard troops are capped like other big wins.
 const MAX_TROOPS := 16
+## One Hoard round in three hides the Dragon's Treasure: one of the starting
+## chests is the MAJOR jackpot (a big army and a pile of gold).
+const BIG_HOARD_CHANCE := 0.33
 
 var reels: int
 var rows: int
 var max_respins: int
 var respins_left: int
+## Treasure chests pay half the gold they used to (prizes, jackpots, the
+## Grand). Applied when a chest is rolled (HoardPrize), so its label is what it pays.
+const PAYOUT_SCALE := 0.5
+
 ## Locked cell (Vector2i) -> HoardPrize.
 var prizes: Dictionary = {}
 
@@ -24,6 +31,18 @@ func _init(p_reels: int, p_rows: int, p_respins: int) -> void:
 	rows = p_rows
 	max_respins = p_respins
 	respins_left = p_respins
+
+
+## Call once the starting chests are locked: with BIG_HOARD_CHANCE one of
+## them becomes the Dragon's Treasure (MAJOR jackpot). Returns its cell, or
+## Vector2i(-1, -1) when this round has none.
+func roll_big_prize(rng: RandomNumberGenerator, unit_symbols: Array) -> Vector2i:
+	if prizes.is_empty() or rng.randf() >= BIG_HOARD_CHANCE:
+		return Vector2i(-1, -1)
+	var cells: Array = prizes.keys()
+	var cell: Vector2i = cells[rng.randi() % cells.size()]
+	(prizes[cell] as HoardPrize).set_jackpot(HoardPrize.Kind.MAJOR, unit_symbols, rng)
+	return cell
 
 
 func lock(cell: Vector2i, prize: HoardPrize) -> void:

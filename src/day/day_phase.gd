@@ -178,6 +178,19 @@ func _on_symbols_landed(grid: Array, cells: Array[Vector2i]) -> void:
 		Audio.play(&"spirit_death", 0.7, -6.0)
 
 
+## A Cursed Coin (or any win_spirit symbol) on a winning line: its spirit
+## joins tonight's wave, once per line.
+func _check_greed(win: SlotWin) -> void:
+	for cell in win.cells:
+		var symbol: SymbolData = _slot_machine.grid[cell.x][cell.y]
+		if symbol and symbol.win_spirit:
+			GameState.add_greed(1)
+			var at := _slot_machine.cell_center(cell.x, cell.y)
+			_popup("GREED! +1 %s tonight" % symbol.win_spirit.display_name, at + Vector2(0, 10), CURSE_COLOR, 8)
+			Fx.shake_control(_slot_machine, 3.0, 0.25)
+			return
+
+
 func _on_won(win: SlotWin, _index: int) -> void:
 	var symbol := win.symbol
 	var cell := win.last_cell()
@@ -187,6 +200,7 @@ func _on_won(win: SlotWin, _index: int) -> void:
 	_paytable.flash(symbol.id)
 	# Says exactly what won: which line, how many, and the reward.
 	_popup(win.headline(), last_cell + Vector2(0, -26), win.color, 7)
+	_check_greed(win)
 	match win.effect():
 		SymbolData.Effect.GOLD, SymbolData.Effect.WILD:
 			GameState.add_gold(amount)
@@ -217,6 +231,7 @@ func _on_repair_arrived(amount: int) -> void:
 
 func _on_spin_finished(wins: Array[SlotWin]) -> void:
 	_refresh_buttons()
+	_check_thin_reels()
 	var best := 0
 	for win in wins:
 		best = maxi(best, win.count)
@@ -224,6 +239,21 @@ func _on_spin_finished(wins: Array[SlotWin]) -> void:
 		_celebrate("MEGA WIN!", 3)
 	elif best >= 4 or wins.size() >= 3:
 		_celebrate("BIG WIN!", 2)
+
+
+## Too few symbols: Empty Slots spin blank, and below the hunger line every
+## spin adds spirits tonight. Each rule gets a one-time explanation (main.gd).
+func _check_thin_reels() -> void:
+	var hunger := GameState.hunger()
+	if hunger > 0:
+		GameState.add_curse_threat(hunger)
+		var center := _slot_machine.global_position + _slot_machine.size * 0.5 - global_position
+		_popup("The machine hungers! +%d spirits tonight" % hunger, center + Vector2(0, -40), CURSE_COLOR, 9)
+		Fx.shake_control(_slot_machine, 3.0, 0.3)
+		Audio.play(&"spirit_death", 0.6, -4.0)
+		GameState.mechanic_triggered.emit(&"hunger")
+	elif GameState.empty_slots() > 0:
+		GameState.mechanic_triggered.emit(&"empty_slots")
 
 
 ## Banner, coin fountain and shake for big spins.

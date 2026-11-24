@@ -33,6 +33,9 @@ enum Effect {
 @export var passive_threat: int = 0
 ## WILD only: the symbols this wild can stand in for. Empty = any symbol.
 @export var wild_for: Array[SymbolData] = []
+## WILD only: also stands in for curse symbols (Tombstones), so it can
+## complete a cursed line too (the Magic Rune).
+@export var wild_for_curses: bool = false
 ## WILD only: a winning line through this wild is multiplied by this (Old Cellar's Crown).
 @export var wild_multiplier: int = 1
 ## Family for mixed wins: three different symbols of one group pay (MachineStyle.group_pays).
@@ -41,6 +44,17 @@ enum Effect {
 @export var is_scatter: bool = false
 ## Bonus symbol for a machine feature, never junk (Dragon's Hoard's chest).
 @export var is_bonus: bool = false
+## Bad symbol even though it can win (Cursed Coin): never traded, and the
+## merchant offers to banish it like a curse. CURSE symbols always count as cursed.
+@export var cursed: bool = false
+## A winning line through this symbol adds this spirit to tonight's wave
+## (the Cursed Coin's Greed Monster). One per winning line.
+@export var win_spirit: UnitData
+
+## Fixed chance per copy that any cell shows this symbol, no matter how many
+## other symbols are on the reels (special symbols: Crown, Jester, Chest, Tome).
+## 0 = normal: the chance is copies / all copies, so it shrinks as reels grow.
+@export_range(0.0, 0.5) var static_chance: float = 0.0
 
 @export_group("Shop")
 @export var in_shop: bool = true
@@ -105,6 +119,11 @@ func is_wild() -> bool:
 	return effect == Effect.WILD
 
 
+## Curse or cursed symbol: the merchant offers to banish it, it can't be traded.
+func is_cursed() -> bool:
+	return cursed or effect == Effect.CURSE
+
+
 ## Useless symbol the merchant offers to banish.
 func is_junk() -> bool:
 	return effect == Effect.NONE and not is_bonus
@@ -112,8 +131,10 @@ func is_junk() -> bool:
 
 ## True if this wild can count as `other` on a payline.
 func is_wild_for(other: SymbolData) -> bool:
-	if not is_wild() or other.is_wild() or other.effect == Effect.CURSE:
+	if not is_wild() or other.is_wild():
 		return false
+	if other.effect == Effect.CURSE:
+		return wild_for_curses
 	if wild_for.is_empty():
 		return true
 	for symbol in wild_for:

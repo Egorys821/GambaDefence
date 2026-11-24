@@ -27,6 +27,12 @@ func after_spin(_machine: SlotMachine, _wins: Array[SlotWin]) -> void:
 
 
 ## Extra suspense before reel `reels` (e.g. one scatter short of the feature).
+## True when this spin starts the feature right away: its line wins are paid
+## without the line-by-line animation (Dragon's Hoard goes straight to the round).
+func skips_win_show(_grid: Array) -> bool:
+	return false
+
+
 func wants_tease(_grid: Array, _reels: int) -> bool:
 	return false
 

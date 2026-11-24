@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="UnitData" format=3]
+
+[ext_resource type="Script" path="res://src/data/unit_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/shade_assassin.png" id="2_tex"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"shade_assassin"
+display_name = "Shade Assassin"
+texture = ExtResource("2_tex")
+max_hp = 16.0
+damage = 9.0
+attack_cooldown = 0.7
+move_speed = 48.0
+aggro_range = 40.0
+gold_reward = 3
+assassin = true
+death_sound = &"spirit_death"

@@ -32,6 +32,12 @@ extends Resource
 @export var budget_base: int = 3
 @export var budget_per_night: int = 4
 @export var budget_ramp_divisor: int = 5
+## Exponential horde: the night's threat budget is multiplied by this to the
+## power of (night - 1). 1.0 = no extra growth; later castles grow faster.
+@export var wave_growth: float = 1.0
+## Big armies draw a bigger horde: threat added for every troop above
+## WaveGenerator.ARMY_FREE_TROOPS on the field when the night starts.
+@export var army_threat: float = 0.0
 ## Spirit hp/damage multiplier on night 1, and its growth per night.
 @export var power_base: float = 1.0
 @export var power_per_night: float = 0.18
@@ -42,6 +48,9 @@ extends Resource
 ## From this night on, every dawn adds Tombstones to the reels.
 @export var curse_start_night: int = 4
 @export var curses_per_dawn: int = 1
+## What the curse adds every dawn (null = the Tombstone). Castles 6+ spread the
+## Purple Tombstone, which is worth double the curse.
+@export var curse_symbol: SymbolData
 
 @export_group("Rewards")
 ## Multiplies the Chrono Shards earned here.
@@ -52,6 +61,11 @@ extends Resource
 
 func budget_for(night: int) -> int:
 	return budget_base + night * budget_per_night + floori(night * night / float(maxi(1, budget_ramp_divisor)))
+
+
+## Exponential growth factor of the horde on `night` (capped by WaveGenerator.MAX_GROWTH).
+func growth_for(night: int) -> float:
+	return pow(wave_growth, maxi(0, night - 1))
 
 
 func power_for(night: int) -> float:

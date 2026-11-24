@@ -11,6 +11,7 @@ texture = ExtResource("2_tex")
 description = "Jester's 81 wild: counts as ANY symbol (not curses). While a Jester is on the reels, every left-to-right combination of 4 pays (81 ways). 4 Jesters pay gold."
 effect = 4
 power = 6
+static_chance = 0.04
 in_shop = true
 max_copies = 2
 shop_cost = 9

@@ -11,7 +11,7 @@ const WEIGHTS := {
 	Kind.REPAIR: 8.0,
 	Kind.MINI: 3.0,
 	Kind.MINOR: 0.9,
-	Kind.MAJOR: 0.1,
+	Kind.MAJOR: 0.0,  # only the Dragon's Treasure (HoardRound.BIG_HOARD_CHANCE)
 }
 ## Big gold chests are this rare among GOLD chests.
 const BIG_GOLD_CHANCE := 0.22
@@ -21,7 +21,7 @@ const REPAIR_PER_CHEST := 15
 const JACKPOTS := {
 	Kind.MINI: [15, 0, 0],
 	Kind.MINOR: [40, 3, 0],
-	Kind.MAJOR: [100, 0, -1],
+	Kind.MAJOR: [160, 10, -1],  # the Dragon's Treasure: a big army and a pile of gold
 	Kind.GRAND: [200, 8, -1],
 }
 const JACKPOT_NAMES := {Kind.MINI: "MINI", Kind.MINOR: "MINOR", Kind.MAJOR: "MAJOR", Kind.GRAND: "GRAND"}
@@ -45,7 +45,7 @@ static func roll(rng: RandomNumberGenerator, coin_power: int, unit_symbols: Arra
 	match prize.kind:
 		Kind.GOLD:
 			var big := rng.randf() < BIG_GOLD_CHANCE
-			prize.gold = coin_power * (4 if big else rng.randi_range(1, 2))
+			prize.gold = maxi(1, roundi(coin_power * (4 if big else rng.randi_range(1, 2)) * HoardRound.PAYOUT_SCALE))
 		Kind.TROOPS:
 			prize.troops = TROOPS_PER_CHEST
 			prize.unit_symbol = unit_symbols[rng.randi() % unit_symbols.size()]
@@ -65,7 +65,7 @@ static func grand(unit_symbols: Array, rng: RandomNumberGenerator) -> HoardPrize
 func set_jackpot(p_kind: Kind, unit_symbols: Array, rng: RandomNumberGenerator) -> void:
 	kind = p_kind
 	var values: Array = JACKPOTS[kind]
-	gold = values[0]
+	gold = roundi(values[0] * HoardRound.PAYOUT_SCALE)
 	troops = values[1] if not unit_symbols.is_empty() else 0
 	repair = values[2]
 	if troops > 0:

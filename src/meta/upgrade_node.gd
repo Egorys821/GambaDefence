@@ -3,12 +3,21 @@ extends Button
 ## One upgrade in the Time Forge tree: an icon with its level underneath.
 ## States: locked (parent not owned), available, maxed; plus selected.
 ## Crown nodes (paid with Crowns) get a gold double frame and a little crown.
+## Click / right-click: select. Double-click: forge it. Double right-click:
+## refund it and everything below it.
 
 const NODE_SIZE := Vector2(36, 36)
 const LOCKED_COLOR := Color(0.25, 0.22, 0.25)
 const GOLD := Color("#f8d038")
 const IN_USE := Color("#60f080")
 const CROWN_GOLD := Color("#ffc830")
+
+## Double left click on the node.
+signal forge_requested
+## Double right click on the node.
+signal refund_requested
+## Single right click (selects, like a left click).
+signal right_clicked
 
 var upgrade: UpgradeData
 var selected := false:
@@ -44,6 +53,21 @@ func _init(p_upgrade: UpgradeData) -> void:
 	_level.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_level)
 	refresh()
+
+
+func _gui_input(event: InputEvent) -> void:
+	var click := event as InputEventMouseButton
+	if click == null or not click.pressed:
+		return
+	if click.button_index == MOUSE_BUTTON_LEFT and click.double_click:
+		forge_requested.emit()
+		accept_event()
+	elif click.button_index == MOUSE_BUTTON_RIGHT:
+		if click.double_click:
+			refund_requested.emit()
+		else:
+			right_clicked.emit()
+		accept_event()
 
 
 func _process(delta: float) -> void:

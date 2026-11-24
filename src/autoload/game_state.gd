@@ -12,6 +12,9 @@ signal machine_changed
 signal upgrades_changed
 ## Extra threat (spirits) the curse has added to tonight's wave.
 signal curse_changed(threat: int)
+## A rule the player should learn about happened (main.gd shows its popup once):
+## &"empty_slots" or &"hunger".
+signal mechanic_triggered(id: StringName)
 
 const SYMBOLS_DIR := "res://data/symbols/"
 const UPGRADE_DIRS := ["res://data/upgrades/meta/", "res://data/upgrades/merchant/"]
@@ -20,6 +23,20 @@ const MACHINES_DIR := "res://data/machines/"
 const SKULL_ID := &"skull"
 ## The cursed symbol the curse spreads every dawn.
 const CURSE_ID := &"tombstone"
+## Blank symbol filling the reels when they hold fewer symbols than the machine has cells.
+const EMPTY_SLOT_ID := &"empty_slot"
+## Trading Post "Remove" stops at this many symbols (or the cell count, if smaller).
+const MIN_KEPT_SYMBOLS := 10
+## Below this many symbols the machine hungers: every spin adds spirits tonight...
+const HUNGER_BELOW := 10
+## ...this many for each missing symbol.
+const HUNGER_PER_MISSING := 2
+## Sometimes the curse spreads a Cursed Coin instead of a Tombstone.
+const CURSED_COIN_ID := &"cursed_coin"
+const CURSED_COIN_CHANCE := 0.35
+## From this night on, every dawn spreads at least this many cursed symbols.
+const LATE_CURSE_NIGHT := 5
+const LATE_CURSES_PER_DAWN := 2
 ## Troop hp/damage bonus per symbol level above 1 (0.35 = +35%).
 const LEVEL_POWER_BONUS := 0.35
 ## Extra feature symbols needed per row above 3, as a share (hoard chests).
@@ -55,10 +72,17 @@ var run_upgrades: Dictionary = {}
 var kills := 0
 ## Threat points added to tonight's wave by cursed symbols.
 var curse_threat := 0
+## Greed Monsters (and other win_spirit spirits) joining tonight's wave.
+var greed_spirits := 0
+## Symbols on the reels when this run began (Empty Slots never go above it).
+var start_symbols := 0
 ## Rarity tokens left in the merchant's hidden bag (see MerchantRarity).
 var merchant_bag: Array[int] = []
 ## The merchant's Trading Post was bought this run (see TradeRules).
 var trade_unlocked := false
+## The results screen's "Upgrade Tree" button: open the Time Forge right after
+## the scene reloads (main.gd clears it).
+var open_forge_next := false
 
 
 func _ready() -> void:
@@ -91,6 +115,7 @@ func reset() -> void:
 	night = 1
 	kills = 0
 	curse_threat = 0
+	greed_spirits = 0
 	run_upgrades.clear()
 	merchant_bag.clear()
 	trade_unlocked = stat(Stats.TRADE_CHARTER) >= 1.0
@@ -101,6 +126,7 @@ func reset() -> void:
 	machine = selected_machine()
 	machine_rows = machine.rows_for(stat_int(Stats.MACHINE_ROWS))
 	_fill_starting_pool()
+	start_symbols = pool_total()
 	_level_starting_troops()
 	_own_starting_shapes()
 	gold_changed.emit(gold)
@@ -313,19 +339,39 @@ func add_curse_threat(amount: int) -> void:
 	curse_changed.emit(curse_threat)
 
 
+## A winning line through a Cursed Coin: one more Greed Monster tonight.
+func add_greed(amount: int = 1) -> void:
+	greed_spirits += amount
+	curse_changed.emit(curse_threat)
+
+
 ## Called when the night starts: the threat has been added to the wave.
 func clear_curse_threat() -> void:
 	curse_threat = 0
+	greed_spirits = 0
 	curse_changed.emit(0)
 
 
-## Every dawn from the castle's curse night on, more Tombstones appear.
-## Returns how many were added.
-func spread_curse() -> int:
+## Every dawn from the castle's curse night on, more cursed symbols appear:
+## the castle's Tombstone, or sometimes a Cursed Coin. Returns what was added.
+func spread_curse() -> Array[SymbolData]:
+	var added: Array[SymbolData] = []
 	if night < castle.curse_start_night + stat_int(Stats.CURSE_DELAY) or castle.curses_per_dawn <= 0:
-		return 0
-	add_symbol(CURSE_ID, castle.curses_per_dawn)
-	return castle.curses_per_dawn
+		return added
+	var count := castle.curses_per_dawn
+	if night >= LATE_CURSE_NIGHT:
+		count = maxi(count, LATE_CURSES_PER_DAWN)  # the curse grows late in the run
+	for i in count:
+		var coin := get_symbol(CURSED_COIN_ID)
+		var symbol := coin if coin and randf() < CURSED_COIN_CHANCE else curse_symbol()
+		add_symbol(symbol.id)
+		added.append(symbol)
+	return added
+
+
+## The cursed symbol this castle's curse spreads.
+func curse_symbol() -> SymbolData:
+	return castle.curse_symbol if castle.curse_symbol else get_symbol(CURSE_ID)
 
 
 # --- Gold -------------------------------------------------------------------
@@ -390,8 +436,54 @@ func pool_total() -> int:
 
 
 ## Chance (0..1) that a given cell shows this symbol.
+# --- Thin reels ----------------------------------------------------------------
+
+## Cells on this machine's grid (variable-row machines count their average height).
+func reel_slots() -> int:
+	var rows := machine_rows
+	if machine.variable_rows:
+		rows = roundi((machine.min_rows + stat_int(machine.min_rows_stat) + machine.max_rows) * 0.5) \
+			if machine.min_rows_stat != &"" else roundi((machine.min_rows + machine.max_rows) * 0.5)
+	return machine.reel_count * rows
+
+
+## Symbols the reels should hold: the machine's cells, but never more than the
+## run started with (a fresh run has no Empty Slots).
+func slot_target() -> int:
+	return mini(reel_slots(), start_symbols) if start_symbols > 0 else reel_slots()
+
+
+## Empty Slots on the reels: one for every missing symbol below slot_target().
+func empty_slots() -> int:
+	return maxi(0, slot_target() - pool_total())
+
+
+## Fewest symbols the Trading Post leaves on the reels.
+func min_kept_symbols() -> int:
+	return mini(MIN_KEPT_SYMBOLS, reel_slots())
+
+
+## Spirits every spin adds tonight because the reels are too thin (0 = fine).
+func hunger() -> int:
+	return maxi(0, mini(HUNGER_BELOW, reel_slots()) - pool_total()) * HUNGER_PER_MISSING
+
+
+## Copies shown for a symbol, counting the Empty Slots.
+func reel_copies(id: StringName) -> int:
+	return empty_slots() if id == EMPTY_SLOT_ID else copies_of(id)
+
+
+## Static-chance symbols (special symbols) take a fixed share of every cell;
+## the rest is shared by the others (and the Empty Slots) by their copies.
 func chance_of(id: StringName) -> float:
-	return float(copies_of(id)) / maxi(1, pool_total())
+	var symbol := get_symbol(id)
+	if symbol == null or reel_copies(id) <= 0:
+		return 0.0
+	var static_share := _static_share()
+	if symbol.static_chance > 0.0:
+		return _static_weight(id) * _static_scale(static_share)
+	var normal := _normal_copies() + empty_slots()
+	return (1.0 - static_share) * reel_copies(id) / maxf(1.0, normal)
 
 
 ## Another machine's special symbol can never be added (see is_other_machine_symbol).
@@ -399,6 +491,10 @@ func add_symbol(id: StringName, copies: int = 1) -> void:
 	var symbol := get_symbol(id)
 	if symbol and is_other_machine_symbol(symbol):
 		return
+	if symbol and symbol.max_copies > 0:
+		copies = mini(copies, symbol.max_copies - copies_of(id))  # e.g. at most 1 Magic Rune a run
+		if copies <= 0:
+			return
 	pool[id] = copies_of(id) + copies
 	machine_changed.emit()
 
@@ -453,6 +549,18 @@ func is_other_machine_symbol(symbol: SymbolData) -> bool:
 	return false
 
 
+## A slot machine's own special symbol (Crown, Jester, Treasure Chest, Tome):
+## part of some machine's starting reels, merchant list or feature. The
+## merchant sells a special symbol only while playing its own machine (up to
+## max_copies); special symbols can't be upgraded, traded or removed, and they
+## land with a fixed chance (SymbolData.static_chance).
+func is_special_symbol(symbol: SymbolData) -> bool:
+	for style: MachineStyle in machines.values():
+		if style.feature_symbol == symbol or _machine_uses(style, symbol):
+			return true
+	return false
+
+
 func _machine_uses(style: MachineStyle, symbol: SymbolData) -> bool:
 	if symbol in style.merchant_symbols:
 		return true
@@ -468,6 +576,8 @@ func is_symbol_available(symbol: SymbolData) -> bool:
 		return false
 	if symbol.max_copies > 0 and copies_of(symbol.id) >= symbol.max_copies:
 		return false
+	if is_special_symbol(symbol):
+		return _machine_uses(machine, symbol)  # only this machine's own special symbol
 	if symbol in castle.merchant_symbols or symbol in machine.merchant_symbols:
 		return true
 	return symbol.unlock_stat != &"" and stat(symbol.unlock_stat) >= 1.0
@@ -475,12 +585,66 @@ func is_symbol_available(symbol: SymbolData) -> bool:
 
 ## Picks a random symbol, weighted by the number of copies on the reels.
 func roll_symbol() -> SymbolData:
-	var roll := randi() % pool_total()
+	var static_share := _static_share()
+	var roll := randf()
+	if roll < static_share:
+		# A special symbol, picked by its own fixed chance.
+		var scale := _static_scale(static_share)
+		for id: StringName in pool:
+			var weight := _static_weight(id) * scale
+			if weight <= 0.0:
+				continue
+			roll -= weight
+			if roll < 0.0:
+				return symbols[id]
+	var empty := empty_slots()
+	var normal := _normal_copies()
+	if normal + empty <= 0:
+		return symbols[pool.keys()[0]]
+	var pick := randi() % (normal + empty)
+	if pick >= normal:
+		return symbols[EMPTY_SLOT_ID]  # thin reels spin blanks
 	for id: StringName in pool:
-		roll -= pool[id]
-		if roll < 0:
+		if (symbols[id] as SymbolData).static_chance > 0.0:
+			continue
+		pick -= pool[id]
+		if pick < 0:
 			return symbols[id]
 	return symbols[pool.keys()[0]]
+
+
+## Most of a cell's chance the static symbols can take together.
+const MAX_STATIC_SHARE := 0.6
+
+
+func _static_weight(id: StringName) -> float:
+	return (symbols[id] as SymbolData).static_chance * copies_of(id)
+
+
+func _static_share() -> float:
+	var total := 0.0
+	for id: StringName in pool:
+		total += _static_weight(id)
+	if _normal_copies() + empty_slots() <= 0:
+		return 1.0 if total > 0.0 else 0.0
+	return minf(total, MAX_STATIC_SHARE)
+
+
+## Scales static weights down when they add up to more than MAX_STATIC_SHARE
+## (or up to 1 when nothing else is on the reels).
+func _static_scale(static_share: float) -> float:
+	var total := 0.0
+	for id: StringName in pool:
+		total += _static_weight(id)
+	return static_share / total if total > 0.0 else 0.0
+
+
+func _normal_copies() -> int:
+	var total := 0
+	for id: StringName in pool:
+		if (symbols[id] as SymbolData).static_chance <= 0.0:
+			total += pool[id]
+	return total
 
 
 func _fill_starting_pool() -> void:

@@ -70,13 +70,13 @@ static func candidate_offers() -> Array[ShopOffer]:
 	for symbol: SymbolData in GameState.symbols.values():
 		if GameState.is_symbol_available(symbol):
 			candidates.append(add_symbol_offer(symbol))
-		if GameState.copies_of(symbol.id) > 0:
-			if symbol.is_junk() or symbol.effect == SymbolData.Effect.CURSE:
-				candidates.append(banish_offer(symbol))
-				if symbol.effect == SymbolData.Effect.CURSE:
-					candidates.append(banish_offer(symbol))  # cursed symbols show up twice as often
-			elif not symbol.is_wild() and not symbol.is_bonus and GameState.level_of(symbol.id) < MAX_SYMBOL_LEVEL:
-				candidates.append(upgrade_symbol_offer(symbol))
+		var owned := GameState.copies_of(symbol.id) > 0
+		if owned and (symbol.is_junk() or symbol.is_cursed()):
+			candidates.append(banish_offer(symbol))
+			if symbol.is_cursed():
+				candidates.append(banish_offer(symbol))  # cursed symbols show up twice as often
+		elif can_upgrade(symbol):
+			candidates.append(upgrade_symbol_offer(symbol))
 	var shape := GameState.next_locked_shape()
 	if shape >= 0:
 		candidates.append(pattern_offer(shape))
@@ -96,11 +96,33 @@ static func add_symbol_offer(symbol: SymbolData) -> ShopOffer:
 		symbol.rarity)
 
 
+## A symbol "Upgrade" can be offered only while the player has that symbol on
+## the reels, or living troops it summons (upgrading also makes them stronger).
+static func can_upgrade(symbol: SymbolData) -> bool:
+	if symbol.is_wild() or symbol.is_bonus or symbol.is_junk() or symbol.is_cursed() \
+			or GameState.is_special_symbol(symbol) or GameState.level_of(symbol.id) >= MAX_SYMBOL_LEVEL:
+		return false
+	return GameState.copies_of(symbol.id) > 0 or not living_troops_of(symbol).is_empty()
+
+
+## Troops on the field summoned by this symbol (same unit type), alive.
+static func living_troops_of(symbol: SymbolData) -> Array[Unit]:
+	var result: Array[Unit] = []
+	if symbol.effect != SymbolData.Effect.SPAWN_UNIT or symbol.unit == null:
+		return result
+	var tree := Engine.get_main_loop() as SceneTree
+	for node in tree.get_nodes_in_group(Unit.GROUP_TROOPS):
+		var troop := node as Unit
+		if troop and not troop.is_dead and troop.data == symbol.unit:
+			result.append(troop)
+	return result
+
+
 static func upgrade_symbol_offer(symbol: SymbolData) -> ShopOffer:
 	var level := GameState.level_of(symbol.id)
 	var bonus := ""
 	if symbol.effect == SymbolData.Effect.SPAWN_UNIT:
-		bonus = "%s +%d%% HP and damage." % [symbol.unit.display_name, roundi(GameState.LEVEL_POWER_BONUS * 100)]
+		bonus = "%s +%d%% HP and damage (troops on the field too)." % [symbol.unit.display_name, roundi(GameState.LEVEL_POWER_BONUS * 100)]
 	else:
 		bonus = "3 in a row: %d -> %d %s." % [symbol.reward_amount(3, level), symbol.reward_amount(3, level + 1), symbol.reward_label()]
 	return ShopOffer.new(
@@ -108,7 +130,10 @@ static func upgrade_symbol_offer(symbol: SymbolData) -> ShopOffer:
 		bonus,
 		symbol.texture,
 		symbol.upgrade_cost_base + symbol.upgrade_cost_per_level * level,
-		func() -> void: GameState.upgrade_symbol(symbol.id))
+		func() -> void:
+			GameState.upgrade_symbol(symbol.id)
+			for troop in living_troops_of(symbol):
+				troop.set_power(GameState.power_for(symbol.id)))
 
 
 static func banish_offer(symbol: SymbolData) -> ShopOffer:
@@ -116,7 +141,7 @@ static func banish_offer(symbol: SymbolData) -> ShopOffer:
 		"Banish %s" % symbol.display_name,
 		"-1 on the reels, so better symbols land more often.",
 		symbol.texture,
-		BANISH_CURSE_COST if symbol.effect == SymbolData.Effect.CURSE else BANISH_COST,
+		BANISH_CURSE_COST if symbol.is_cursed() else BANISH_COST,
 		func() -> void: GameState.remove_symbol(symbol.id))
 
 
