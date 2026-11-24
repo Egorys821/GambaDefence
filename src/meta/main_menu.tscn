@@ -2,10 +2,21 @@
 
 [ext_resource type="Script" path="res://src/meta/main_menu.gd" id="1_menu"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/shard.png" id="2_shard"]
+[ext_resource type="Script" path="res://src/meta/menu_showcase.gd" id="3_showcase"]
+[ext_resource type="Texture2D" path="res://assets/sprites/symbols/crown.png" id="4_crown"]
+
+[sub_resource type="Gradient" id="Gradient_side"]
+offsets = PackedFloat32Array(0, 0.7, 1)
+colors = PackedColorArray(0.03, 0.02, 0.05, 0.92, 0.03, 0.02, 0.05, 0.75, 0.03, 0.02, 0.05, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_side"]
+gradient = SubResource("Gradient_side")
+width = 64
+height = 8
 
 [sub_resource type="Gradient" id="Gradient_fade"]
 offsets = PackedFloat32Array(0, 0.5, 1)
-colors = PackedColorArray(0.03, 0.02, 0.06, 0.25, 0.03, 0.02, 0.06, 0.55, 0.03, 0.02, 0.06, 0.9)
+colors = PackedColorArray(0.03, 0.02, 0.06, 0.15, 0.03, 0.02, 0.06, 0.35, 0.03, 0.02, 0.06, 0.75)
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_fade"]
 gradient = SubResource("Gradient_fade")
@@ -33,137 +44,156 @@ mouse_filter = 2
 texture = SubResource("GradientTexture2D_fade")
 expand_mode = 1
 
-[node name="Menu" type="VBoxContainer" parent="."]
+[node name="Side" type="TextureRect" parent="."]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
+anchors_preset = 9
 anchor_bottom = 1.0
-offset_top = 94.0
-offset_bottom = -28.0
-grow_horizontal = 2
+offset_right = 250.0
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_side")
+expand_mode = 1
+
+[node name="Menu" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_left = 14.0
+offset_top = 12.0
+offset_right = 204.0
+offset_bottom = -8.0
 grow_vertical = 2
 theme_override_constants/separation = 4
-alignment = 1
 
 [node name="Title" type="Label" parent="Menu"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.97, 0.82, 0.22, 1)
 theme_override_colors/font_outline_color = Color(0.35, 0.16, 0.04, 1)
-theme_override_constants/outline_size = 10
-theme_override_font_sizes/font_size = 40
-text = "GAMBA DEFENCE"
-horizontal_alignment = 1
+theme_override_constants/outline_size = 8
+theme_override_constants/line_spacing = -8
+theme_override_font_sizes/font_size = 28
+text = "GAMBA
+DEFENCE"
 
 [node name="Tagline" type="Label" parent="Menu"]
+custom_minimum_size = Vector2(190, 0)
 layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.84, 0.72, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 9
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 8
 text = "Spin the magic machine by day. Defend the castle by night."
-horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Gap" type="Control" parent="Menu"]
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 2
 
 [node name="Buttons" type="VBoxContainer" parent="Menu"]
 layout_mode = 2
-size_flags_horizontal = 4
-theme_override_constants/separation = 3
+theme_override_constants/separation = 4
 
 [node name="PlayButton" type="Button" parent="Menu/Buttons"]
-theme_type_variation = &"AccentButton"
 unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 28)
+custom_minimum_size = Vector2(186, 30)
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 15
 text = "Play"
+alignment = 0
 
 [node name="UpgradesButton" type="Button" parent="Menu/Buttons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 18)
+custom_minimum_size = Vector2(186, 24)
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 10
-text = "Upgrades - Time Forge"
+theme_override_font_sizes/font_size = 11
+text = "Time Forge - Upgrades"
+alignment = 0
 
 [node name="MerchantButton" type="Button" parent="Menu/Buttons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 18)
+custom_minimum_size = Vector2(186, 20)
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 10
 text = "Merchant Wares"
+alignment = 0
+
+[node name="PreviewButton" type="Button" parent="Menu/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(186, 20)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 10
+text = "Troops & Spirits"
+alignment = 0
 
 [node name="SettingsButton" type="Button" parent="Menu/Buttons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 18)
+custom_minimum_size = Vector2(186, 20)
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 10
 text = "Settings"
-
-[node name="PreviewButton" type="Button" parent="Menu/Buttons"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 18)
-layout_mode = 2
-focus_mode = 0
-theme_override_font_sizes/font_size = 10
-text = "Preview - Troops & Spirits"
+alignment = 0
 
 [node name="AboutButton" type="Button" parent="Menu/Buttons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 18)
+custom_minimum_size = Vector2(186, 20)
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 10
 text = "About"
+alignment = 0
 
 [node name="QuitButton" type="Button" parent="Menu/Buttons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 18)
+custom_minimum_size = Vector2(186, 20)
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 10
 text = "Quit"
+alignment = 0
 
-[node name="Footer" type="HBoxContainer" parent="."]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 8.0
-offset_top = -26.0
-offset_right = -8.0
-offset_bottom = -4.0
-grow_horizontal = 2
-grow_vertical = 0
-
-[node name="ProgressLabel" type="Label" parent="Footer"]
-unique_name_in_owner = true
+[node name="Push" type="Control" parent="Menu"]
 layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 8
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 8
-text = "Castles conquered"
+size_flags_vertical = 3
 
-[node name="TutorialButton" type="Button" parent="Footer"]
+[node name="TutorialButton" type="Button" parent="Menu"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(150, 20)
+custom_minimum_size = Vector2(186, 20)
 layout_mode = 2
-size_flags_vertical = 8
 focus_mode = 0
 theme_override_font_sizes/font_size = 9
 text = "How to Play - Tutorial"
+alignment = 0
 
-[node name="Shards" type="HBoxContainer" parent="Footer"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 8
+[node name="Showcase" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 222.0
+offset_top = 34.0
+offset_right = 628.0
+offset_bottom = 304.0
+script = ExtResource("3_showcase")
+
+[node name="Wallet" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -240.0
+offset_top = 10.0
+offset_right = -12.0
+offset_bottom = 26.0
+grow_horizontal = 0
+theme_override_constants/separation = 4
 alignment = 2
 
-[node name="ShardIcon" type="TextureRect" parent="Footer/Shards"]
+[node name="ShardIcon" type="TextureRect" parent="Wallet"]
 custom_minimum_size = Vector2(12, 12)
 layout_mode = 2
 size_flags_vertical = 4
@@ -171,7 +201,7 @@ texture = ExtResource("2_shard")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ShardLabel" type="Label" parent="Footer/Shards"]
+[node name="ShardLabel" type="Label" parent="Wallet"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.38, 0.85, 0.97, 1)
@@ -179,3 +209,40 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 9
 text = "0 Chrono Shards"
+
+[node name="CrownIcon" type="TextureRect" parent="Wallet"]
+custom_minimum_size = Vector2(12, 12)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("4_crown")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CrownLabel" type="Label" parent="Wallet"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.97, 0.82, 0.22, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 9
+text = "0 Crowns"
+
+[node name="ProgressLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -406.0
+offset_top = -50.0
+offset_right = -12.0
+offset_bottom = -36.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 8
+text = "Castles conquered"
+horizontal_alignment = 1

@@ -30,6 +30,8 @@ var best_night := 0
 var runs := 0
 ## The first-run tutorial has been shown.
 var tutorial_done := false
+## One-time rule popups already shown (GameState.mechanic_triggered ids).
+var seen_tips: Array[StringName] = []
 ## Upgrade id -> level.
 var levels: Dictionary = {}
 ## Ids of castles won at least once.
@@ -149,6 +151,40 @@ func refund_upgrades() -> int:
 	return refunded
 
 
+## Refunds `upgrade` and every owned upgrade below it in the tree (shards and
+## Crowns). Returns {"shards": n, "crowns": n}; both 0 if nothing was owned.
+func refund_subtree(upgrade: UpgradeData) -> Dictionary:
+	var result := {"shards": 0, "crowns": 0}
+	for each in subtree_of(upgrade):
+		var owned := level_of(each.id)
+		if owned <= 0:
+			continue
+		if each.is_crown_node():
+			result["crowns"] += each.crown_cost * owned
+		else:
+			for level in owned:
+				result["shards"] += each.cost_at(level)
+		levels.erase(each.id)
+	if result["shards"] == 0 and result["crowns"] == 0:
+		return result
+	shards += result["shards"]
+	save_progress()
+	changed.emit()
+	return result
+
+
+## `upgrade` and every upgrade below it (children, their children...).
+func subtree_of(upgrade: UpgradeData) -> Array[UpgradeData]:
+	var result: Array[UpgradeData] = [upgrade]
+	var i := 0
+	while i < result.size():
+		for each: UpgradeData in GameState.upgrades.values():
+			if each.requires == result[i] and each not in result:
+				result.append(each)
+		i += 1
+	return result
+
+
 func shards_spent() -> int:
 	var spent := 0
 	for id: StringName in levels:
@@ -180,6 +216,7 @@ func save_progress() -> void:
 	file.set_value("progress", "version", SAVE_VERSION)
 	file.set_value("progress", "runs", runs)
 	file.set_value("progress", "tutorial_done", tutorial_done)
+	file.set_value("progress", "seen_tips", seen_tips.map(func(id: StringName) -> String: return String(id)))
 	file.set_value("progress", "migrated_shards", migrated_shards)
 	file.set_value("progress", "machine", String(selected_machine))
 	file.set_value("progress", "conquered", conquered.map(func(id: StringName) -> String: return String(id)))
@@ -196,6 +233,9 @@ func load_progress() -> void:
 	best_night = file.get_value("progress", "best_night", 0)
 	runs = file.get_value("progress", "runs", 0)
 	tutorial_done = file.get_value("progress", "tutorial_done", false)
+	seen_tips.clear()
+	for id in file.get_value("progress", "seen_tips", []):
+		seen_tips.append(StringName(id))
 	migrated_shards = file.get_value("progress", "migrated_shards", 0)
 	selected_machine = StringName(file.get_value("progress", "machine", String(MachineStyle.STANDARD_ID)))
 	conquered.clear()

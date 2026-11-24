@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="UnitData" format=3]
+
+[ext_resource type="Script" path="res://src/data/unit_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/zombie_miner.png" id="2_tex"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"zombie_miner"
+display_name = "Zombie Miner"
+texture = ExtResource("2_tex")
+max_hp = 38.0
+damage = 7.0
+attack_cooldown = 1.1
+move_speed = 26.0
+aggro_range = 30.0
+gold_reward = 3
+burrower = true
+
+death_sound = &"spirit_death"
+death_damage = 14.0
+death_radius = 22.0

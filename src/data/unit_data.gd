@@ -49,10 +49,40 @@ extends Resource
 ## Flat damage removed from every hit (a hit always does at least 15%).
 ## Punishes many weak hits; heavy hitters ignore it.
 @export var armor: float = 0.0
+## Share of magic damage (mages, mage towers) ignored. 0.75 = takes a quarter.
+@export_range(0.0, 1.0) var magic_resist: float = 0.0
+## Deals magic damage (troops only; enemy magic_resist reduces it).
+@export var magic_damage: bool = false
+## Teleports behind the army's back row (archers, mages, clerics) shortly
+## after rising and hunts them first.
+@export var assassin: bool = false
+## Digs a tunnel from its grave: underground it can't be seen, hit or
+## attacked, and it passes under the army and the terrain. It comes up just
+## behind the army's back row (castle side) and attacks the troops from behind.
+@export var burrower: bool = false
+## Siege engine (Orc Catapult): lobs splash shots into the middle of the army,
+## aiming mostly at melee troops, from far away.
+@export var siege: bool = false
+
+@export_group("Death")
+## Explodes when it dies, hitting every opponent within death_radius (Zombie Miner).
+@export var death_damage: float = 0.0
+@export var death_radius: float = 22.0
+
+@export_group("Shockwave")
+## Every wave_cooldown seconds sends out a ring that hits every opponent
+## (and the castle) within wave_radius. 0 = no shockwave.
+@export var wave_damage: float = 0.0
+@export var wave_radius: float = 40.0
+@export var wave_cooldown: float = 3.5
 
 
 func is_ranged() -> bool:
 	return projectile_texture != null
+
+
+func has_shockwave() -> bool:
+	return wave_damage > 0.0
 
 
 func is_healer() -> bool:

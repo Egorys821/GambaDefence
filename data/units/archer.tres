@@ -21,3 +21,4 @@ splash_radius = 0.0
 gold_reward = 0
 attack_sound = &"arrow"
 death_sound = &"troop_death"
+upkeep = 2.0

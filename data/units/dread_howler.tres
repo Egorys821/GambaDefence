@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="UnitData" format=3]
+
+[ext_resource type="Script" path="res://src/data/unit_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/dread_howler.png" id="2_tex"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"dread_howler"
+display_name = "Dread Howler"
+texture = ExtResource("2_tex")
+max_hp = 26.0
+damage = 3.0
+attack_cooldown = 1.2
+move_speed = 26.0
+aggro_range = 45.0
+gold_reward = 3
+wave_damage = 4.0
+wave_radius = 42.0
+wave_cooldown = 3.2
+death_sound = &"spirit_death"

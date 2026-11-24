@@ -66,10 +66,16 @@ func bump_gold() -> void:
 
 
 func _on_curse_changed(threat: int) -> void:
-	_curse_label.visible = threat > 0
-	_curse_label.text = "Curse +%d" % threat
-	_curse_label.tooltip_text = "Cursed symbols add %d spirits to tonight's wave." % threat
+	var greed := GameState.greed_spirits
+	_curse_label.visible = threat > 0 or greed > 0
+	var parts: Array[String] = []
 	if threat > 0:
+		parts.append("Curse +%d" % threat)
+	if greed > 0:
+		parts.append("Greed +%d" % greed)
+	_curse_label.text = "  ".join(parts)
+	_curse_label.tooltip_text = "Cursed symbols add %d ghosts and Cursed Coins add %d Greed Monsters to tonight's wave." % [threat, greed]
+	if _curse_label.visible:
 		_curse_label.pivot_offset = _curse_label.size * 0.5
 		Fx.pop(_curse_label, 1.2, 0.2)
 

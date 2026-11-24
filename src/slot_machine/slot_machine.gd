@@ -115,7 +115,7 @@ func spin() -> void:
 		cabinet.set_ways(0)
 	await wait(0.15)
 	var wins := evaluate(grid)
-	await present(wins)
+	await present(wins, _feature.skips_win_show(grid))
 	await _feature.after_spin(self, wins)
 	is_spinning = false
 	spin_finished.emit(_spin_wins)
@@ -158,14 +158,17 @@ func spin_to(result: Array) -> void:
 	symbols_landed.emit(grid, GridOps.all_cells(grid))
 
 
-## Shows each win in turn and fires `won` for its reward.
-func present(wins: Array[SlotWin]) -> void:
+## Shows each win in turn and fires `won` for its reward. `quick` pays them
+## all at once without tracing the lines (a feature is about to start).
+func present(wins: Array[SlotWin], quick := false) -> void:
 	for win in wins:
 		var index := _spin_wins.size()
 		_spin_wins.append(win)
-		_present_win(win, index)
+		if not quick:
+			_present_win(win, index)
 		won.emit(win, index)
-		await wait(LINE_SHOW_TIME)
+		if not quick:
+			await wait(LINE_SHOW_TIME)
 
 
 ## Asks the player a question at the bottom of the reels; returns the option
@@ -249,11 +252,12 @@ func cascade_to(result: Dictionary) -> void:
 
 
 ## Hold and win: every cell becomes its own reel. Cells not showing `keep`
-## turn into `empty`.
-func enter_cell_mode(keep: SymbolData, empty: SymbolData) -> void:
+## turn into `empty` (null = they keep showing their symbol).
+func enter_cell_mode(keep: SymbolData, empty: SymbolData = null) -> void:
+	_overlay.clear()
 	for reel_index in grid.size():
 		for row in grid[reel_index].size():
-			if (grid[reel_index][row] as SymbolData).id != keep.id:
+			if empty and (grid[reel_index][row] as SymbolData).id != keep.id:
 				grid[reel_index][row] = empty
 	_build_cell_reels()
 	await wait(0.3)

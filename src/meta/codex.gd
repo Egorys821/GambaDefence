@@ -122,6 +122,20 @@ func _stat_line(unit: UnitData) -> String:
 		text += "   FLYING: only ranged troops and towers hit it"
 	if unit.armor > 0.0:
 		text += "   ARMOR %d: weak hits barely hurt" % unit.armor
+	if unit.magic_resist > 0.0:
+		text += "   MAGIC RESIST %d%%: mages and mage towers barely hurt it" % roundi(unit.magic_resist * 100.0)
+	if unit.has_shockwave():
+		text += "   SHOCKWAVE: hits every troop nearby (%d dmg) every %.1fs" % [unit.wave_damage, unit.wave_cooldown]
+	if unit.assassin:
+		text += "   ASSASSIN: teleports behind your army and hunts archers, mages and clerics"
+	if unit.siege:
+		text += "   SIEGE: lobs boulders into the middle of your army, mostly at melee troops"
+	if unit.death_damage > 0.0:
+		text += "   EXPLODES on death (%d dmg around it)" % unit.death_damage
+	if unit.burrower:
+		text += "   BURROWS: digs under your army (can't be hit), comes up behind it and attacks from the back"
+	if unit.is_boss:
+		text += "   Calls escorts and ENRAGES at half HP"
 	return text
 
 

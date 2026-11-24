@@ -244,6 +244,7 @@ func _hoard(result: Dictionary, grid: Array) -> bool:
 	var hoard := HoardRound.new(grid.size(), GameState.machine_rows, GameState.feature_length())
 	for cell in start:
 		hoard.lock(cell, roll_prize.call())
+	hoard.roll_big_prize(rng, units)
 	while not hoard.is_over():
 		hoard.respin(hoard.chest_chance(), rng, roll_prize)
 	var grand := HoardPrize.grand(units, rng) if hoard.is_full() else null

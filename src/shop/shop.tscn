@@ -1,26 +1,26 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://cblaxcoc1fe30"]
 
-[ext_resource type="Script" path="res://src/shop/shop.gd" id="1_shop"]
+[ext_resource type="Script" uid="uid://piws0h6veks8" path="res://src/shop/shop.gd" id="1_shop"]
 
-[node name="Shop" type="VBoxContainer"]
+[node name="Shop" type="VBoxContainer" unique_id=493487201]
 size_flags_vertical = 3
 theme_override_constants/separation = 3
 script = ExtResource("1_shop")
 
-[node name="Title" type="Label" parent="."]
+[node name="Title" type="Label" parent="." unique_id=235546595]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.97, 0.82, 0.22, 1)
 theme_override_font_sizes/font_size = 10
 text = "Merchant"
 
-[node name="Cards" type="GridContainer" parent="."]
+[node name="Cards" type="GridContainer" parent="." unique_id=1725215410]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/h_separation = 3
 theme_override_constants/v_separation = 3
 columns = 2
 
-[node name="Detail" type="Label" parent="."]
+[node name="Detail" type="Label" parent="." unique_id=2028837271]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(138, 26)
 layout_mode = 2
@@ -31,17 +31,17 @@ text = "Point at a ware to read about it."
 autowrap_mode = 3
 max_lines_visible = 3
 
-[node name="Spacer" type="Control" parent="."]
+[node name="Spacer" type="Control" parent="." unique_id=101568031]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="TradeChoice" type="VBoxContainer" parent="."]
+[node name="TradeChoice" type="VBoxContainer" parent="." unique_id=1968427843]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="ChoiceLabel" type="Label" parent="TradeChoice"]
+[node name="ChoiceLabel" type="Label" parent="TradeChoice" unique_id=583289030]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(138, 0)
 layout_mode = 2
@@ -50,20 +50,20 @@ theme_override_font_sizes/font_size = 7
 text = "Pick what you get:"
 autowrap_mode = 3
 
-[node name="ChoiceGrid" type="GridContainer" parent="TradeChoice"]
+[node name="ChoiceGrid" type="GridContainer" parent="TradeChoice" unique_id=1459484537]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/h_separation = 2
 theme_override_constants/v_separation = 2
 columns = 5
 
-[node name="TradeTitle" type="Label" parent="."]
+[node name="TradeTitle" type="Label" parent="." unique_id=390455282]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.97, 0.82, 0.22, 1)
 theme_override_font_sizes/font_size = 8
 text = "Trading Post"
 
-[node name="UnlockTradeButton" type="Button" parent="."]
+[node name="UnlockTradeButton" type="Button" parent="." unique_id=197617066]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
@@ -71,16 +71,16 @@ focus_mode = 0
 theme_override_font_sizes/font_size = 8
 text = "Open Trading Post"
 
-[node name="TradeButtons" type="HBoxContainer" parent="."]
+[node name="TradeButtons" type="HBoxContainer" parent="." unique_id=384467541]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 3
 
-[node name="Buttons" type="HBoxContainer" parent="."]
+[node name="Buttons" type="HBoxContainer" parent="." unique_id=857447680]
 layout_mode = 2
 theme_override_constants/separation = 3
 
-[node name="RepairButton" type="Button" parent="Buttons"]
+[node name="RepairButton" type="Button" parent="Buttons" unique_id=629336117]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -88,7 +88,7 @@ focus_mode = 0
 theme_override_font_sizes/font_size = 7
 text = "Repair"
 
-[node name="RerollButton" type="Button" parent="Buttons"]
+[node name="RerollButton" type="Button" parent="Buttons" unique_id=1280526924]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3

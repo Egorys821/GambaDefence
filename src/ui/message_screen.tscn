@@ -52,11 +52,24 @@ text = "Body"
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="ConfirmButton" type="Button" parent="Center/Panel/Box"]
+[node name="Buttons" type="HBoxContainer" parent="Center/Panel/Box"]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="AltButton" type="Button" parent="Center/Panel/Box/Buttons"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(120, 24)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 12
+text = "Upgrade Tree"
+
+[node name="ConfirmButton" type="Button" parent="Center/Panel/Box/Buttons"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(120, 24)
 layout_mode = 2
-size_flags_horizontal = 4
 focus_mode = 0
 theme_override_font_sizes/font_size = 12
 text = "OK"

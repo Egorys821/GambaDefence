@@ -18,3 +18,4 @@ aggro_range = 70.0
 gold_reward = 0
 attack_sound = &"sword"
 death_sound = &"troop_death"
+upkeep = 2.0

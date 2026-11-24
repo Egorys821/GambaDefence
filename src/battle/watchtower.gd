@@ -64,7 +64,7 @@ func _process(delta: float) -> void:
 	if target == null:
 		return
 	var damage: float = GameState.stat(Stats.TOWER_DAMAGE) * config["damage"]
-	battlefield.fire_projectile(from, target, damage, config["projectile"], config["splash"], Unit.Team.PLAYER)
+	battlefield.fire_projectile(from, target, damage, config["projectile"], config["splash"], Unit.Team.PLAYER, kind == Kind.MAGE)
 	Audio.play(config["sound"], 0.8 if kind == Kind.BALLISTA else 1.2, -8.0, 0.1)
 	_cooldown = 1.0 / maxf(0.1, GameState.stat(Stats.TOWER_SPEED) * config["rate"])
 
