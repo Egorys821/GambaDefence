@@ -129,7 +129,7 @@ func _stat_line(unit: UnitData) -> String:
 	if unit.assassin:
 		text += "   ASSASSIN: teleports behind your army and hunts archers, mages and clerics"
 	if unit.siege:
-		text += "   SIEGE: lobs boulders into the middle of your army, mostly at melee troops"
+		text += "   SIEGE: lobs boulders into the middle of your army, mostly at melee troops; your troops march out to destroy it"
 	if unit.death_damage > 0.0:
 		text += "   EXPLODES on death (%d dmg around it)" % unit.death_damage
 	if unit.burrower:

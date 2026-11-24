@@ -55,6 +55,8 @@ func _ready() -> void:
 	MetaProgress.shards = _shards
 	MetaProgress.runs = 1
 	MetaProgress.tutorial_done = not _tutorial
+	# One-time rule popups would wait for a click the bot never makes.
+	MetaProgress.seen_tips.assign([&"empty_slots", &"hunger", &"horde"])
 	MetaProgress.conquered.clear()
 	for i in _castle - 1:
 		MetaProgress.conquered.append(GameState.castles[i].id)

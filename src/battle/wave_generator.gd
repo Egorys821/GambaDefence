@@ -22,6 +22,8 @@ const ARMY_FREE_TROOPS := 20
 ## With more threat than this left to spend, the wave buys the heavier half of
 ## the roster, so huge late waves are tougher spirits instead of endless swarms.
 const HEAVY_BUDGET := 60
+## Siege engines (Orc Catapults) per wave: 1, plus 1 more every this many nights.
+const SIEGE_NIGHTS_PER_EXTRA := 4
 
 
 ## Threat points tonight: the castle's budget, its exponential growth and the
@@ -38,11 +40,17 @@ static func army_extra(troops: int) -> int:
 	return roundi(maxi(0, troops - ARMY_FREE_TROOPS) * GameState.castle.army_threat)
 
 
+## Most siege engines one night can bring.
+static func max_siege(night: int) -> int:
+	return 1 + night / SIEGE_NIGHTS_PER_EXTRA
+
+
 static func build(night: int, troops: int = 0) -> Array[UnitData]:
 	var castle := GameState.castle
 	var wave: Array[UnitData] = []
 	var budget := threat_for(night, troops)
 	var available := castle.enemies.filter(func(entry: SpawnEntry) -> bool: return entry.first_night <= night)
+	var siege_left := max_siege(night)
 	while budget > 0 and not available.is_empty():
 		var affordable := available.filter(func(entry: SpawnEntry) -> bool: return entry.cost <= budget)
 		if affordable.is_empty():
@@ -53,6 +61,10 @@ static func build(night: int, troops: int = 0) -> Array[UnitData]:
 		var pick: SpawnEntry = affordable.pick_random()
 		wave.append(pick.unit)
 		budget -= pick.cost
+		if pick.unit.siege:
+			siege_left -= 1
+			if siege_left <= 0:  # enough catapults: the rest of the budget buys other spirits
+				available = available.filter(func(entry: SpawnEntry) -> bool: return not entry.unit.siege)
 	# Cursed ghosts are mixed into the wave, not all at the end.
 	for i in GameState.curse_threat:
 		wave.insert(randi_range(0, wave.size()), CURSE_SPIRIT)

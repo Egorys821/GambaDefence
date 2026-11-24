@@ -39,6 +39,9 @@ const ENRAGE_TINT := Color(2.0, 0.8, 0.8)
 const ASSASSIN_BLINK_DELAY := 1.2
 ## How far an assassin looks for back-row prey once it has blinked.
 const ASSASSIN_HUNT_RANGE := 160.0
+## Melee troops leave the spirit they are guarding against for a catapult
+## unless that spirit is this close.
+const SIEGE_IGNORE_RANGE := 24.0
 ## Burrowers come up this far behind the army's rearmost troop (towards the castle)...
 const SURFACE_BEHIND := 14.0
 ## ...and give up digging after this long, surfacing wherever they are.
@@ -197,6 +200,17 @@ func _think_troop(delta: float) -> void:
 	if target != null and not _can_engage(target):
 		target = null  # across a river or behind rocks: hold the line instead
 	var charging := false
+	# Orc Catapults draw the army out: melee troops with no spirit right next
+	# to them march on the nearest catapult; ranged troops shoot one in reach first.
+	var siege := battlefield.nearest_siege(position)
+	if siege != null:
+		var in_reach := position.distance_to(siege.position) <= data.attack_range
+		if data.is_ranged():
+			if in_reach:
+				target = siege
+		elif target == null or position.distance_to(target.position) > SIEGE_IGNORE_RANGE:
+			target = siege
+			charging = true
 	if target == null:
 		# Nothing close: go after a boss, or a ranged spirit that can hit us.
 		target = battlefield.priority_target(self)

@@ -1109,3 +1109,12 @@ func test_horde_grows_exponentially_and_with_the_army() -> void:
 	_check(WaveGenerator.army_extra(15) == 0, "small armies add nothing")
 	var wave := WaveGenerator.build(10, 100)
 	_check(wave.size() < 200, "huge budgets buy heavier spirits, not endless swarms (%d spirits)" % wave.size())
+
+
+func test_catapults_are_capped_per_wave() -> void:
+	GameState.start_run(GameState.castles[9])
+	for night in [3, 6, 10]:
+		for i in 20:
+			var wave := WaveGenerator.build(night, 60)
+			var catapults := wave.filter(func(unit: UnitData) -> bool: return unit.siege).size()
+			_check(catapults <= WaveGenerator.max_siege(night), "night %d: at most %d catapults (%d)" % [night, WaveGenerator.max_siege(night), catapults])

@@ -479,6 +479,21 @@ func nearest_unit(from: Vector2, max_distance: float, team: Unit.Team, can_hit_f
 	return best
 
 
+## The closest active siege engine (Orc Catapult), anywhere on the field. Troops are drawn to it.
+func nearest_siege(from: Vector2) -> Unit:
+	var best: Unit = null
+	var best_distance := INF
+	for node in get_tree().get_nodes_in_group(Unit.GROUP_ENEMIES):
+		var enemy := node as Unit
+		if enemy.is_dead or not enemy.is_active() or not enemy.data.siege:
+			continue
+		var distance := from.distance_to(enemy.position)
+		if distance < best_distance:
+			best = enemy
+			best_distance = distance
+	return best
+
+
 ## Multiplier on troops' aggro range (bigger while a boss is on the field).
 func troop_aggro_multiplier() -> float:
 	return BOSS_AGGRO_MULTIPLIER if _bosses_alive > 0 else 1.0
